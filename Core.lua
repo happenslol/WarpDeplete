@@ -131,6 +131,10 @@ function WarpDeplete:OnChallengeModeCompleted(ev)
 end
 
 function WarpDeplete:OnKeystoneOpen(ev)
+  if not self.db.profile.insertKeystoneAutomatically then
+    return
+  end
+
   local difficulty = select(3, GetInstanceInfo())
   if difficulty ~= 8 and difficulty ~= 23 then
     return

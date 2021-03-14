@@ -37,7 +37,9 @@ local defaults = {
     barFramePaddingBottom = 16,
 
     -- The vertical offset between elements
-    verticalOffset = 2
+    verticalOffset = 2,
+
+    insertKeystoneAutomatically = true
   }
 }
 
