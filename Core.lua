@@ -6,6 +6,7 @@ WarpDeplete = LibStub("AceAddon-3.0"):NewAddon(
 )
 
 local wdp = WarpDeplete
+
 wdp.LSM = LibStub("LibSharedMedia-3.0")
 wdp.Glow = LibStub("LibCustomGlow-1.0")
 
@@ -13,6 +14,8 @@ wdp.challengeState = {
   demoModeActive = false,
   inChallenge = false,
   challengeCompleted = false,
+
+  startTime = nil
 }
 
 function WarpDeplete:OnInitialize()
@@ -33,6 +36,8 @@ function WarpDeplete:OnEnable()
   wdp:RegisterGlobalEvents()
 
   wdp:Hide()
+
+  wdp:EnableDemoMode()
 end
 
 function WarpDeplete:OnDisable()
@@ -94,6 +99,9 @@ function WarpDeplete:EnableDemoMode()
   self:SetTimerRemaining(8 * 60)
   self:SetForcesCurrent(34)
   self:SetForcesPull(7)
+  self:SetDeaths(3)
+
+  self:OnChallengeModeStart()
 
   self:Show()
 end
@@ -114,16 +122,55 @@ function WarpDeplete:Hide()
   ObjectiveTrackerFrame:Show()
 end
 
+function WarpDeplete:ResetState()
+  self.challengeState.demoModeActive = false
+  self.challengeState.inChallenge = false
+  self.challengeState.challengeCompleted = false
+
+  self.challengeState.startTime = nil
+
+  self.forcesState = WarpDeplete.Util.copy(self.defaultForcesState)
+  self.timerState = WarpDeplete.Util.copy(self.defaultTimerState)
+end
+
 function WarpDeplete:OnCheckChallengeMode(ev)
   self:Print("|cFF09ED3AG_EVENT|r: " .. ev)
 end
 
 function WarpDeplete:OnChallengeModeStart(ev)
-  self:Print("|cFFA134EBEVENT|r: " .. ev)
+  -- self:Print("|cFFA134EBEVENT|r: " .. ev)
+  self:ResetState()
+
+  self.challengeState.inChallenge = true
+  self.challengeState.startTime = GetTime()
+  self:Timer()
+end
+
+function WarpDeplete:Timer() 
+  if not self.challengeState.inChallenge then
+    return
+  end
+
+  local deaths = C_ChallengeMode.GetDeathCount() or 3
+  local deathPenalty = deaths * 5
+
+  local current = GetTime() - self.challengeState.startTime + deathPenalty
+  if current < 0 then
+    return
+  end
+
+  self:SetTimerCurrent(current)
+  self:UpdateTimerDisplay()
+
+  C_Timer.After(0.1, function()
+    self:Timer()
+  end)
 end
 
 function WarpDeplete:OnChallengeModeReset(ev)
   self:Print("|cFFA134EBEVENT|r: " .. ev)
+
+  self:ResetState()
 end
 
 function WarpDeplete:OnChallengeModeCompleted(ev)
