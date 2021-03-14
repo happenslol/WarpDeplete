@@ -44,6 +44,8 @@ function WarpDeplete:RegisterGlobalEvents()
   self:RegisterEvent("PLAYER_ENTERING_WORLD", WarpDeplete.OnCheckChallengeMode, self)
   self:RegisterEvent("WORLD_STATE_TIMER_START", WarpDeplete.OnCheckChallengeMode, self)
   self:RegisterEvent("ZONE_CHANGED_NEW_AREA", WarpDeplete.OnCheckChallengeMode, self)
+
+  self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN", WarpDeplete.OnKeystoneOpen, self)
 end
 
 function WarpDeplete:RegisterChallengeEvents()
@@ -53,7 +55,6 @@ function WarpDeplete:RegisterChallengeEvents()
   self:RegisterEvent("CHALLENGE_MODE_START", WarpDeplete.OnChallengeModeStart, self)
   self:RegisterEvent("CHALLENGE_MODE_RESET", WarpDeplete.OnChallengeModeReset, self)
   self:RegisterEvent("CHALLENGE_MODE_COMPLETED", WarpDeplete.OnChallengeModeCompleted, self)
-  self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN", WarpDeplete.OnKeystoneOpen, self)
 
   -- Scenario Triggers
   self:RegisterEvent("SCENARIO_POI_UPDATE", WarpDeplete.OnScenarioPOIUpdate, self)
@@ -71,7 +72,6 @@ function WarpDeplete:UnregisterChallengeEvents()
   self:UnregisterEvent("CHALLENGE_MODE_START")
   self:UnregisterEvent("CHALLENGE_MODE_RESET")
   self:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
-  self:UnregisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN")
   self:UnregisterEvent("SCENARIO_POI_UPDATE")
   self:UnregisterEvent("SCENARIO_CRITERIA_UPDATE")
   self:UnregisterEvent("ENCOUNTER_START")
@@ -131,7 +131,24 @@ function WarpDeplete:OnChallengeModeCompleted(ev)
 end
 
 function WarpDeplete:OnKeystoneOpen(ev)
-  self:Print("|cFFA134EBEVENT|r: " .. ev)
+  local difficulty = select(3, GetInstanceInfo())
+  if difficulty ~= 8 and difficulty ~= 23 then
+    return
+  end
+
+  for bagIndex = 0, NUM_BAG_SLOTS do
+    for invIndex = 1, GetContainerNumSlots(bagIndex) do
+      local itemID = GetContainerItemID(bagIndex, invIndex)
+      if itemID and (itemID == 180653) then
+        PickupContainerItem(bagIndex, invIndex)
+        C_Timer.After(0.1, function()
+          if CursorHasItem() then
+            C_ChallengeMode.SlotKeystone()
+          end
+        end)
+      end
+    end
+  end
 end
 
 function WarpDeplete:OnScenarioPOIUpdate(ev)
