@@ -1,0 +1,11 @@
+## Interface: 90005
+## Title: WarpDeplete
+## Author: Happens
+## Version: 0.1.0
+## SavedVariables: WarpDepleteDB
+
+embeds.xml
+
+Core.lua
+Options.lua
+Display.lua
