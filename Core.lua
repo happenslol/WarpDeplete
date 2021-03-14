@@ -29,7 +29,8 @@ function WarpDeplete:OnEnable()
   wdp:InitChatCommands()
   wdp:InitDisplay()
 
-  wdp:RegisterEvents()
+  C_ChatInfo.RegisterAddonMessagePrefix("WarpDeplete")
+  wdp:RegisterGlobalEvents()
 
   wdp:Hide()
 end
@@ -37,38 +38,47 @@ end
 function WarpDeplete:OnDisable()
 end
 
-function WarpDeplete:RegisterEvents()
-  C_ChatInfo.RegisterAddonMessagePrefix("WarpDeplete")
-
-  self:RegisterEvent("CHALLENGE_MODE_START")
-  self:RegisterEvent("CHALLENGE_MODE_RESET")
-  self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-
-  self:RegisterEvent("PLAYER_ENTERING_WORLD")
-  self:RegisterEvent("SCENARIO_POI_UPDATE")
-  self:RegisterEvent("WORLD_STATE_TIMER_START")
-  self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+-- These events are used to detect whether we are in challenge mode
+-- and will always stay registered.
+function WarpDeplete:RegisterGlobalEvents()
+  self:RegisterEvent("PLAYER_ENTERING_WORLD", WarpDeplete.OnCheckChallengeMode, self)
+  self:RegisterEvent("WORLD_STATE_TIMER_START", WarpDeplete.OnCheckChallengeMode, self)
+  self:RegisterEvent("ZONE_CHANGED_NEW_AREA", WarpDeplete.OnCheckChallengeMode, self)
 end
 
-function WarpDeplete:CHALLENGE_MODE_START()
+function WarpDeplete:RegisterChallengeEvents()
+  -- TODO: Implement unit_died event from COMBAT_LOG_EVENT_UNFILTERED
+
+  -- Challenge mode triggers
+  self:RegisterEvent("CHALLENGE_MODE_START", WarpDeplete.OnChallengeModeStart, self)
+  self:RegisterEvent("CHALLENGE_MODE_RESET", WarpDeplete.OnChallengeModeReset, self)
+  self:RegisterEvent("CHALLENGE_MODE_COMPLETED", WarpDeplete.OnChallengeModeCompleted, self)
+  self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN", WarpDeplete.OnKeystoneOpen, self)
+
+  -- Scenario Triggers
+  self:RegisterEvent("SCENARIO_POI_UPDATE", WarpDeplete.OnScenarioPOIUpdate, self)
+  self:RegisterEvent("SCENARIO_CRITERIA_UPDATE", WarpDeplete.OnScenarioCriteriaUpdate, self)
+
+  -- Combat triggers
+  self:RegisterEvent("ENCOUNTER_START", WarpDeplete.OnEncounterStart, self)
+  self:RegisterEvent("ENCOUNTER_END", WarpDeplete.OnEncounterEnd, self)
+  self:RegisterEvent("PLAYER_DEAD", WarpDeplete.OnPlayerDead, self)
+  self:RegisterEvent("PLAYER_REGEN_ENABLED", WarpDeplete.OnPlayerRegenEnabled, self)
+  self:RegisterEvent("UNIT_THREAT_LIST_UPDATE", WarpDeplete.OnThreatListUpdate, self)
 end
 
-function WarpDeplete:CHALLENGE_MODE_RESET()
-end
-
-function WarpDeplete:CHALLENGE_MODE_COMPLETED()
-end
-
-function WarpDeplete:PLAYER_ENTERING_WORLD()
-end
-
-function WarpDeplete:SCENARIO_POI_UPDATE()
-end
-
-function WarpDeplete:WORLD_STATE_TIMER_START()
-end
-
-function WarpDeplete:ZONE_CHANGED_NEW_AREA()
+function WarpDeplete:UnregisterChallengeEvents()
+  self:UnregisterEvent("CHALLENGE_MODE_START")
+  self:UnregisterEvent("CHALLENGE_MODE_RESET")
+  self:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
+  self:UnregisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN")
+  self:UnregisterEvent("SCENARIO_POI_UPDATE")
+  self:UnregisterEvent("SCENARIO_CRITERIA_UPDATE")
+  self:UnregisterEvent("ENCOUNTER_START")
+  self:UnregisterEvent("ENCOUNTER_END")
+  self:UnregisterEvent("PLAYER_DEAD")
+  self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+  self:UnregisterEvent("UNIT_THREAT_LIST_UPDATE")
 end
 
 function WarpDeplete:EnableDemoMode()
@@ -102,4 +112,52 @@ end
 function WarpDeplete:Hide()
   self.frames.root:Hide()
   ObjectiveTrackerFrame:Show()
+end
+
+function WarpDeplete:OnCheckChallengeMode(ev)
+  self:Print("|cFF09ED3AG_EVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnChallengeModeStart(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnChallengeModeReset(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnChallengeModeCompleted(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnKeystoneOpen(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnScenarioPOIUpdate(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnScenarioCriteriaUpdate(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnEncounterStart(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnEncounterEnd(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnPlayerDead(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnPlayerRegenEnabled(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
+end
+
+function WarpDeplete:OnThreatListUpdate(ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
 end

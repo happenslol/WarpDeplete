@@ -8,7 +8,9 @@ WarpDeplete.defaultForcesState = {
   pullPercent = 0,
   currentPercent = 0,
 
-  prideGlowActive = false
+  prideGlowActive = false,
+  completed = false,
+  completedTime = 0,
 }
 
 WarpDeplete.defaultTimeLimit = 60 * 30
@@ -356,7 +358,13 @@ end
 function WarpDeplete:SetForcesTotal(totalCount)
   self.forcesState.totalCount = totalCount
   self.forcesState.pullPercent = self.forcesState.pullCount / totalCount
-  self.forcesState.currentPercent = self.forcesState.currentPercent / totalCount
+
+  local currentPercent = self.forcesState.currentCount / totalCount
+  if currentPercent > 1.0 then currentPercent = 1.0 end
+  self.forcesState.currentPercent = currentPercent
+
+  self.forcesState.completed = false
+  self.forcesState.completedTime = 0
   self:UpdateForcesDisplay()
 end
 
@@ -369,18 +377,30 @@ end
 
 -- Expects direct forces value
 function WarpDeplete:SetForcesCurrent(currentCount)
+  if self.forcesState.currentCount < self.forcesState.totalCount and
+    currentCount >= self.forcesState.totalCount
+  then
+    self.forcesState.completed = true
+    self.forcesState.completedTime = self.timerState.current
+  end
+
   self.forcesState.currentCount = currentCount
-  self.forcesState.currentPercent = currentCount / self.forcesState.totalCount
+
+  local currentPercent = self.forcesState.currentCount / self.forcesState.totalCount
+  if currentPercent > 1.0 then currentPercent = 1.0 end
+  self.forcesState.currentPercent = currentPercent
+
   self:UpdateForcesDisplay()
 end
 
 function WarpDeplete:UpdateForcesDisplay()
   -- clamp pull progress so that the bar won't exceed 100%
+  local pullPercent = self.forcesState.pullPercent
   if self.forcesState.pullPercent + self.forcesState.currentPercent > 1 then
-    self.forcesState.pullPercent = 1 - self.forcesState.currentPercent
+    pullPercent = 1 - self.forcesState.currentPercent
   end
 
-  self.forces.overlayBar:SetValue(self.forcesState.pullPercent)
+  self.forces.overlayBar:SetValue(pullPercent - 0.005)
   self.forces.overlayBar:SetPoint("LEFT", 1 + self.db.profile.barWidth * self.forcesState.currentPercent, 0)
   self.forces.bar:SetValue(self.forcesState.currentPercent)
 
@@ -388,7 +408,8 @@ function WarpDeplete:UpdateForcesDisplay()
     Util.formatForcesText(
       self.forcesState.pullCount,
       self.forcesState.currentCount,
-      self.forcesState.totalCount
+      self.forcesState.totalCount,
+      self.forcesState.completed and self.forcesState.completedTime or nil
     )
   )
 

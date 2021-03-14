@@ -1,8 +1,15 @@
 local Util = {}
 
-function Util.formatForcesText(pullCount, currentCount, totalCount)
+function Util.formatForcesText(pullCount, currentCount, totalCount, completedTime)
   local currentPercent = (currentCount / totalCount) * 100
+  if currentPercent > 100.0 then currentPercent = 100.0 end
+
   local result = ("%.2f%%"):format(currentPercent)
+
+  if completedTime then
+    local completedText = Util.formatTime(completedTime)
+    result = "|cFF00FF24" .. completedText .. " - " .. result .. "|r"
+  end
 
   if pullCount > 0 then
     local pullPercent = (pullCount / totalCount) * 100
