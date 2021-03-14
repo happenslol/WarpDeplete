@@ -47,8 +47,9 @@ end
 -- and will always stay registered.
 function WarpDeplete:RegisterGlobalEvents()
   self:RegisterEvent("PLAYER_ENTERING_WORLD", WarpDeplete.OnCheckChallengeMode, self)
-  self:RegisterEvent("WORLD_STATE_TIMER_START", WarpDeplete.OnCheckChallengeMode, self)
   self:RegisterEvent("ZONE_CHANGED_NEW_AREA", WarpDeplete.OnCheckChallengeMode, self)
+
+  self:RegisterEvent("WORLD_STATE_TIMER_START", WarpDeplete.OnChallengeModeStart, self)
 
   self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN", WarpDeplete.OnKeystoneOpen, self)
 end
@@ -101,7 +102,7 @@ function WarpDeplete:EnableDemoMode()
   self:SetForcesPull(7)
   self:SetDeaths(3)
 
-  self:OnChallengeModeStart()
+  -- self:OnChallengeModeStart()
 
   self:Show()
 end
@@ -138,11 +139,12 @@ function WarpDeplete:OnCheckChallengeMode(ev)
 end
 
 function WarpDeplete:OnChallengeModeStart(ev)
-  -- self:Print("|cFFA134EBEVENT|r: " .. ev)
+  self:Print("|cFFA134EBEVENT|r: " .. ev)
   self:ResetState()
 
   self.challengeState.inChallenge = true
   self.challengeState.startTime = GetTime()
+  self:Show()
   self:Timer()
 end
 
