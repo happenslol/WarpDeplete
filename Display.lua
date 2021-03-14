@@ -326,6 +326,12 @@ function WarpDeplete:SetTimerRemaining(remaining)
   self:UpdateTimerDisplay()
 end
 
+-- Expects value in seconds
+function WarpDeplete:SetTimerCurrent(time)
+  self.timerState.remaining = self.timerState.limit - time
+  self.timerState.current = time
+end
+
 function WarpDeplete:UpdateTimerDisplay()
   local percent = self.timerState.current / self.timerState.limit
   local bars = {self.bar1, self.bar2, self.bar3}
@@ -446,4 +452,9 @@ function WarpDeplete:UpdatePrideGlow()
   else
     self.Glow.PixelGlow_Stop(self.forces.bar, "pride")
   end
+end
+
+function WarpDeplete:SetDeaths(count)
+  local deathText = Util.formatDeathText(count)
+  self.frames.root.deathsText:SetText(deathText)
 end
