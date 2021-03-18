@@ -1,4 +1,10 @@
 local defaults = {
+  --TODO(happens): Add vars for:
+  -- * show forces count instead of percent, or both
+  -- * font family for all texts
+  -- * bar textures
+  -- * bar colors
+
   profile = {
     frameAnchor = "RIGHT",
     frameX = -20,
@@ -27,7 +33,7 @@ local defaults = {
     -- Bar dimensions
     barWidth = 360,
     barHeight = 10,
-    barPadding = 9,
+    barPadding = 0,
 
     -- Frame and bar frame padding
     framePadding = 20,
@@ -73,6 +79,23 @@ function WarpDeplete:InitOptions()
               else
                 WarpDeplete:DisableDemoMode()
               end
+            end
+          },
+
+          --TODO(happens): Improve layout for options (sections for different texts and bars?)
+          --TODO(happens): Implement all options
+          forcesFontSize = {
+            order = 3,
+            type = "range",
+            name = "Forces Font Size",
+            desc = "Changes the font size for the forces count text",
+            min = 8,
+            max = 40,
+            step = 1,
+            get = function(info) return WarpDeplete.db.profile.forcesFontSize end,
+            set = function(info, value)
+              WarpDeplete.db.profile.forcesFontSize = value
+              WarpDeplete:UpdateLayout()
             end
           }
         }

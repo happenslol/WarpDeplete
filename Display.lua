@@ -154,12 +154,14 @@ function WarpDeplete:UpdateLayout()
 
   local verticalOffset = self.db.profile.verticalOffset
   
+  --TODO(happens): Figure out how to calculate this better, this doesn't seem
+  -- accurate at all. Maybe we need to use GetTextHeight or something?
   local barFrameHeight =
     -- Add max font height for timer bars
-    math.max(bar1FontSize, bar2FontSize, bar3FontSize) +
+    math.max(bar1FontSize, bar2FontSize, bar3FontSize) * 1.25 +
     2 + -- Account for status bar borders
     (barPadding / 2) + -- Account for padding between bars
-    forcesFontSize -- Add forces font size
+    forcesFontSize * 1.25 -- Add forces font size
 
   local frameHeight = deathsFontSize + verticalOffset +
     timerFontSize + verticalOffset +
