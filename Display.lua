@@ -1,34 +1,132 @@
 local Util = WarpDeplete.Util
 
-WarpDeplete.defaultForcesState = {
-  pullCount = 0,
-  currentCount = 0,
-  totalCount = 100,
-
-  pullPercent = 0,
-  currentPercent = 0,
-
-  prideGlowActive = false,
-  completed = false,
-  completedTime = 0,
-}
-
-WarpDeplete.defaultTimeLimit = 60 * 30
-WarpDeplete.defaultTimerState = {
-  current = 0,
-  remaining = WarpDeplete.defaultTimeLimit,
-  limit = WarpDeplete.defaultTimeLimit,
-
-  plusTwo = WarpDeplete.defaultTimeLimit * 0.8,
-  plusThree = WarpDeplete.defaultTimeLimit * 0.6
-}
-
 function WarpDeplete:InitDisplay()
-  self.forcesState = Util.copy(self.defaultForcesState)
-  self.timerState = Util.copy(self.defaultTimerState)
-
   local frameBackgroundAlpha = 0
 
+  self.frames.root.texture = self.frames.root:CreateTexture(nil, "BACKGROUND")
+  self.frames.root.texture:SetColorTexture(0, 0, 0, frameBackgroundAlpha)
+
+  -- Deaths text
+  self.frames.root.deathsText = self.frames.root:CreateFontString(nil, "ARTWORK")
+
+  -- Timer text
+  self.frames.root.timerText = self.frames.root:CreateFontString(nil, "ARTWORK")
+
+  -- Key details text
+  local keyDetailsText = self.frames.root:CreateFontString(nil, "ARTWORK")
+  self.frames.root.keyDetailsText = keyDetailsText
+
+  local barFrameTexture = self.frames.bars:CreateTexture(nil, "BACKGROUND")
+  barFrameTexture:SetColorTexture(0, 0, 0, frameBackgroundAlpha)
+  self.frames.bars.texture = barFrameTexture
+
+  -- +3 bar
+  local bar3 = self:CreateProgressBar(self.frames.bars)
+
+  local bar3Text = bar3.bar:CreateFontString(nil, "ARTWORK")
+  bar3.text = bar3Text
+  self.bar3 = bar3
+
+  -- +2 bar
+  local bar2 = self:CreateProgressBar(self.frames.bars)
+  local bar2Text = bar2.bar:CreateFontString(nil, "ARTWORK")
+  bar2.text = bar2Text
+  self.bar2 = bar2
+
+  -- +1 bar
+  local bar1 = self:CreateProgressBar(self.frames.bars)
+  local bar1Text = bar1.bar:CreateFontString(nil, "ARTWORK")
+  bar1.text = bar1Text
+  self.bar1 = bar1
+
+  -- Forces bar
+  local forces = self:CreateProgressBar(self.frames.bars)
+  local forcesText = forces.bar:CreateFontString(nil, "ARTWORK")
+  forces.text = forcesText
+
+  local forcesOverlayBar = CreateFrame("StatusBar", nil, forces.frame)
+  forces.overlayBar = forcesOverlayBar
+  self.forces = forces
+
+  -- Objectives
+  local objectiveTexts = {}
+
+  for i = 1, 5 do
+    local objectiveText = self.frames.root:CreateFontString(nil, "ARTWORK")
+    objectiveTexts[i] = objectiveText
+  end
+
+  self.frames.root.objectiveTexts = objectiveTexts
+
+  self:UpdateLayout()
+
+  self.frames.root:SetMovable(self.isUnlocked)
+  self.frames.root:SetScript("OnMouseDown", function(frame, button)
+    if self.isUnlocked and button == "LeftButton" and not frame.isMoving then
+      frame:StartMoving()
+      frame.isMoving = true
+    end
+  end)
+
+  self.frames.root:SetScript("OnMouseUp", function(frame, button)
+    if button == "LeftButton" and frame.isMoving then
+      frame:StopMovingOrSizing()
+      frame.isMoving = false
+
+      local frameAnchor, _, _, frameX, frameY = self.frames.root:GetPoint(1)
+      self.db.profile.frameAnchor = frameAnchor
+      self.db.profile.frameX = frameX
+      self.db.profile.frameY = frameY
+    end
+  end)
+
+  self.frames.root:SetScript("OnHide", function(frame)
+    if frame.isMoving then
+      frame:StopMovingOrSizing()
+      frame.isMoving = false
+    end
+  end)
+
+  -- Disable mouse for the entire frame
+  self.frames.root:EnableMouse(false)
+end
+
+function WarpDeplete:CreateProgressBar(frame)
+  local result = {}
+  local progress = 0
+
+  local barFrame = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
+  result.frame = barFrame
+
+  local bar = CreateFrame("StatusBar", nil, barFrame)
+  bar:SetValue(0)
+  bar:SetMinMaxValues(0, 1)
+  result.bar = bar
+
+  function result:SetLayout(color, width, height, xOffset, yOffset)
+    local r, g, b = Util.hexToRGB(color)
+
+    barFrame:SetSize(width, height)
+    barFrame:SetPoint("LEFT", xOffset, yOffset)
+    barFrame:SetBackdrop({
+      bgFile = WarpDeplete.LSM:Fetch("statusbar", "ElvUI Blank"),
+      edgeFile = WarpDeplete.LSM:Fetch("border", "Square Full White"),
+      edgeSize = 1,
+      insets = { top = 1, right = 1, bottom = 1, left = 1 }
+    })
+    barFrame:SetBackdropColor(0, 0, 0, 0.5)
+    barFrame:SetBackdropBorderColor(0, 0, 0, 1)
+
+    bar:SetPoint("CENTER", 0, 0)
+    bar:SetSize(width - 2, height - 2)
+    bar:SetStatusBarTexture(WarpDeplete.LSM:Fetch("statusbar", "ElvUI Blank"))
+    bar:SetStatusBarColor(r, g, b)
+  end
+
+  return result
+end
+
+function WarpDeplete:UpdateLayout()
   -- Retrieve values from profile config
   local deathsFontSize = self.db.profile.deathsFontSize
   local timerFontSize = self.db.profile.timerFontSize
@@ -78,235 +176,105 @@ function WarpDeplete:InitDisplay()
     self.db.profile.frameY
   )
 
-  local rootFrameTexture = self.frames.root:CreateTexture(nil, "BACKGROUND")
-  rootFrameTexture:SetAllPoints(self.frames.root)
-  rootFrameTexture:SetColorTexture(0, 0, 0, frameBackgroundAlpha)
-  self.frames.root.texture = rootFrameTexture
+  self.frames.root.texture:SetAllPoints(self.frames.root)
+
+  local r, g, b
 
   local currentOffset = 0 - framePadding
 
   -- Deaths text
-
-  local deathsText = self.frames.root:CreateFontString(nil, "ARTWORK")
+  local deathsText = self.frames.root.deathsText
   deathsText:SetFont(self.LSM:Fetch("font", "Expressway"), deathsFontSize, "OUTLINE")
   deathsText:SetJustifyH("RIGHT")
-  deathsText:SetText("5 Deaths")
   deathsText:SetTextColor(1, 1, 1, 1)
   deathsText:SetPoint("TOPRIGHT", -framePadding - 4, currentOffset)
-  self.frames.root.deathsText = deathsText
 
   currentOffset = currentOffset - (deathsFontSize + verticalOffset)
 
   -- Timer text
-
-  local timerText = self.frames.root:CreateFontString(nil, "ARTWORK")
+  local timerText = self.frames.root.timerText
   timerText:SetFont(self.LSM:Fetch("font", "Expressway"), timerFontSize, "OUTLINE")
   timerText:SetJustifyH("RIGHT")
-  timerText:SetText("00:00 / 00:00")
   timerText:SetTextColor(1, 1, 1, 1)
   timerText:SetPoint("TOPRIGHT", -framePadding, currentOffset)
-  self.frames.root.timerText = timerText
 
   currentOffset = currentOffset - (timerFontSize + verticalOffset)
 
   -- Key details text
-
-  local keyDetailsText = self.frames.root:CreateFontString(nil, "ARTWORK")
+  local keyDetailsText = self.frames.root.keyDetailsText
   keyDetailsText:SetFont(self.LSM:Fetch("font", "Expressway"), keyDetailsFontSize, "OUTLINE")
   keyDetailsText:SetJustifyH("RIGHT")
-  keyDetailsText:SetText("[30] Tyrannical - Bolstering - Spiteful - Prideful")
-  local r, g, b = Util.hexToRGB("#B1B1B1")
+  r, g, b = Util.hexToRGB("#B1B1B1")
   keyDetailsText:SetTextColor(r, g, b, 1)
   keyDetailsText:SetPoint("TOPRIGHT", -framePadding - 3, currentOffset)
-  self.frames.root.keyDetailsText = keyDetailsText
 
   currentOffset = currentOffset - (keyDetailsFontSize + barFramePaddingTop)
 
   -- Bars frame
-
   self.frames.bars:SetWidth(barWidth)
   self.frames.bars:SetHeight(barFrameHeight)
   self.frames.bars:SetPoint("TOPRIGHT", -framePadding, currentOffset)
 
-  local barFrameTexture = self.frames.bars:CreateTexture(nil, "BACKGROUND")
-  barFrameTexture:SetAllPoints()
-  barFrameTexture:SetColorTexture(0, 0, 0, frameBackgroundAlpha)
-  self.frames.bars.texture = barFrameTexture
+  self.frames.bars.texture:SetAllPoints()
 
   -- Bars
   local barPixelAdjust = 0.5
 
   -- +3 bar
   local bar3Width = barWidth / 100 * 60
-  local bar3 = self:CreateProgressBar(
-    self.frames.bars, "#979797",
-    bar3Width, barHeight,
-    0, timerBarOffsetY - barPixelAdjust
-  )
-
-  local bar3Text = bar3.bar:CreateFontString(nil, "ARTWORK")
-  bar3Text:SetFont(self.LSM:Fetch("font", "Expressway"), bar3FontSize, "OUTLINE")
-  bar3Text:SetJustifyH("RIGHT")
-  bar3Text:SetText("")
-  bar3Text:SetTextColor(1, 1, 1, 1)
-  bar3Text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
-  bar3.text = bar3Text
-
-  self.bar3 = bar3
+  self.bar3:SetLayout("#979797", bar3Width, barHeight, 0,
+    timerBarOffsetY - barPixelAdjust)
+  self.bar3.text:SetFont(self.LSM:Fetch("font", "Expressway"), bar3FontSize, "OUTLINE")
+  self.bar3.text:SetJustifyH("RIGHT")
+  self.bar3.text:SetTextColor(1, 1, 1, 1)
+  self.bar3.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
 
   -- +2 bar
   local bar2Width = barWidth / 100 * 20 - timerBarOffsetX
-  local bar2 = self:CreateProgressBar(
-    self.frames.bars, "#979797",
-    bar2Width, barHeight,
-    bar3Width + timerBarOffsetX, timerBarOffsetY - barPixelAdjust
-  )
-
-  local bar2Text = bar2.bar:CreateFontString(nil, "ARTWORK")
-  bar2Text:SetFont(self.LSM:Fetch("font", "Expressway"), bar2FontSize, "OUTLINE")
-  bar2Text:SetJustifyH("RIGHT")
-  bar2Text:SetText("")
-  bar2Text:SetTextColor(1, 1, 1, 1)
-  bar2Text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
-  bar2.text = bar2Text
-
-  self.bar2 = bar2
+  self.bar2:SetLayout("#979797", bar2Width, barHeight,
+    bar3Width + timerBarOffsetX, timerBarOffsetY - barPixelAdjust)
+  self.bar2.text:SetFont(self.LSM:Fetch("font", "Expressway"), bar2FontSize, "OUTLINE")
+  self.bar2.text:SetJustifyH("RIGHT")
+  self.bar2.text:SetTextColor(1, 1, 1, 1)
+  self.bar2.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
 
   -- +1 bar
   local bar1Width = barWidth / 100 * 20 - timerBarOffsetX
-  local bar1 = self:CreateProgressBar(
-    self.frames.bars, "#979797",
-    bar1Width, barHeight,
-    bar3Width + bar2Width + timerBarOffsetX * 2, timerBarOffsetY - barPixelAdjust
-  )
-
-  local bar1Text = bar1.bar:CreateFontString(nil, "ARTWORK")
-  bar1Text:SetFont(self.LSM:Fetch("font", "Expressway"), bar1FontSize, "OUTLINE")
-  bar1Text:SetJustifyH("RIGHT")
-  bar1Text:SetText("")
-  bar1Text:SetTextColor(1, 1, 1, 1)
-  bar1Text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
-  bar1.text = bar1Text
-
-  self.bar1 = bar1
+  self.bar1:SetLayout("#979797", bar1Width, barHeight,
+    bar3Width + bar2Width + timerBarOffsetX * 2, timerBarOffsetY - barPixelAdjust)
+  self.bar1.text:SetFont(self.LSM:Fetch("font", "Expressway"), bar1FontSize, "OUTLINE")
+  self.bar1.text:SetJustifyH("RIGHT")
+  self.bar1.text:SetTextColor(1, 1, 1, 1)
+  self.bar1.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
 
   -- Forces bar
-  local forces = self:CreateProgressBar(
-    self.frames.bars, "#bb9e22",
-    barWidth, barHeight,
-    0, -timerBarOffsetY
-  )
+  self.forces:SetLayout("#bb9e22", barWidth, barHeight, 0, -timerBarOffsetY)
+  self.forces.text:SetFont(self.LSM:Fetch("font", "Expressway"), forcesFontSize, "OUTLINE")
+  self.forces.text:SetJustifyH("RIGHT")
+  self.forces.text:SetTextColor(1, 1, 1, 1)
+  self.forces.text:SetPoint("TOPRIGHT", -barFontOffsetX, -barFontOffsetY)
 
-  local forcesText = forces.bar:CreateFontString(nil, "ARTWORK")
-  forcesText:SetFont(self.LSM:Fetch("font", "Expressway"), forcesFontSize, "OUTLINE")
-  forcesText:SetJustifyH("RIGHT")
-  forcesText:SetText("")
-  forcesText:SetTextColor(1, 1, 1, 1)
-  forcesText:SetPoint("TOPRIGHT", -barFontOffsetX, -barFontOffsetY)
-  forces.text = forcesText
-
-  local r, g, b = Util.hexToRGB("#ff5515")
-  local forcesOverlayBar = CreateFrame("StatusBar", nil, forces.frame)
-  forcesOverlayBar:SetPoint("LEFT", 0, 0)
-  forcesOverlayBar:SetSize(barWidth - 2, barHeight - 2)
-  forcesOverlayBar:SetMinMaxValues(0, 1)
-  forcesOverlayBar:SetValue(0)
-  forcesOverlayBar:SetStatusBarTexture(self.LSM:Fetch("statusbar", "ElvUI Blank"))
-  forcesOverlayBar:SetStatusBarColor(r, g, b, 0.7)
-  forces.overlayBar = forcesOverlayBar
-
-  self.forces = forces
+  r, g, b = Util.hexToRGB("#ff5515")
+  self.forces.overlayBar:SetMinMaxValues(0, 1)
+  self.forces.overlayBar:SetValue(0)
+  self.forces.overlayBar:SetPoint("LEFT", 0, 0)
+  self.forces.overlayBar:SetSize(barWidth - 2, barHeight - 2)
+  self.forces.overlayBar:SetStatusBarTexture(self.LSM:Fetch("statusbar", "ElvUI Blank"))
+  self.forces.overlayBar:SetStatusBarColor(r, g, b, 0.7)
 
   currentOffset = currentOffset - (barFrameHeight + barFramePaddingBottom)
 
   -- Objectives
-
-  local objectiveTexts = {}
   local objectivesOffset = 4
-
   for i = 1, 5 do
-    local objectiveText = self.frames.root:CreateFontString(nil, "ARTWORK")
+    local objectiveText = self.frames.root.objectiveTexts[i]
     objectiveText:SetFont(self.LSM:Fetch("font", "Expressway"), objectivesFontSize, "OUTLINE")
-
-    local objectiveTextStr = "Test Boss Name " .. i
-    if i < 3 then
-      objectiveTextStr = "|cFF00FF24[10:53] " .. objectiveTextStr .. "|r"
-    end
-
     objectiveText:SetJustifyH("RIGHT")
-    objectiveText:SetText(objectiveTextStr)
     objectiveText:SetTextColor(1, 1, 1, 1)
     objectiveText:SetPoint("TOPRIGHT", -framePadding, currentOffset)
-    objectiveTexts[i] = objectiveText
 
     currentOffset = currentOffset - (objectivesFontSize + objectivesOffset)
   end
-
-  self.frames.root.objectiveTexts = objectiveTexts
-
-  self.frames.root:SetMovable(self.isUnlocked)
-  self.frames.root:SetScript("OnMouseDown", function(frame, button)
-    if self.isUnlocked and button == "LeftButton" and not frame.isMoving then
-      frame:StartMoving()
-      frame.isMoving = true
-    end
-  end)
-
-  self.frames.root:SetScript("OnMouseUp", function(frame, button)
-    if button == "LeftButton" and frame.isMoving then
-      frame:StopMovingOrSizing()
-      frame.isMoving = false
-
-      local frameAnchor, _, _, frameX, frameY = self.frames.root:GetPoint(1)
-      self.db.profile.frameAnchor = frameAnchor
-      self.db.profile.frameX = frameX
-      self.db.profile.frameY = frameY
-    end
-  end)
-
-  self.frames.root:SetScript("OnHide", function(frame)
-    if frame.isMoving then
-      frame:StopMovingOrSizing()
-      frame.isMoving = false
-    end
-  end)
-
-  -- Disable mouse for the entire frame
-  self.frames.root:EnableMouse(false)
-
-  -- Update for initial values
-  self:UpdateTimerDisplay()
-  self:UpdateForcesDisplay()
-end
-
-function WarpDeplete:CreateProgressBar(frame, color, width, height, xOffset, yOffset)
-  local result = {}
-  local r, g, b = Util.hexToRGB(color)
-  local progress = 0.5
-
-  local barFrame = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
-  barFrame:SetSize(width, height)
-  barFrame:SetPoint("LEFT", xOffset, yOffset)
-  barFrame:SetBackdrop({
-    bgFile = self.LSM:Fetch("statusbar", "ElvUI Blank"),
-    edgeFile = self.LSM:Fetch("border", "Square Full White"),
-    edgeSize = 1,
-    insets = { top = 1, right = 1, bottom = 1, left = 1 }
-  })
-  barFrame:SetBackdropColor(0, 0, 0, 0.5)
-  barFrame:SetBackdropBorderColor(0, 0, 0, 1)
-  result.frame = barFrame
-
-  local bar = CreateFrame("StatusBar", nil, barFrame)
-  bar:SetPoint("CENTER", 0, 0)
-  bar:SetSize(width - 2, height - 2)
-  bar:SetMinMaxValues(0, 1)
-  bar:SetValue(0)
-  bar:SetStatusBarTexture(self.LSM:Fetch("statusbar", "ElvUI Blank"))
-  bar:SetStatusBarColor(r, g, b)
-  result.bar = bar
-
-  return result
 end
 
 -- Expects value in seconds
@@ -454,7 +422,49 @@ function WarpDeplete:UpdatePrideGlow()
   end
 end
 
+-- Expect death count as number
 function WarpDeplete:SetDeaths(count)
   local deathText = Util.formatDeathText(count)
   self.frames.root.deathsText:SetText(deathText)
+end
+
+-- Expects objective list in format {{name: "Boss1", time: nil}, {name: "Boss2", time: 123}}
+-- Completion time is nil if not completed, or completion time in seconds from start
+function WarpDeplete:SetObjectives(objectives)
+  self.objectivesState = objectives
+  self:UpdateObjectivesDisplay()
+end
+
+function WarpDeplete:UpdateObjectivesDisplay()
+  local completionColor = Util.removeHexPrefix("#00FF24")
+
+  -- Clear existing objective list
+  for i = 1, 5 do
+    self.frames.root.objectiveTexts[i]:SetText("")
+  end
+
+  for i, boss in ipairs(self.objectivesState) do
+    local objectiveStr = boss.name
+
+    if boss.time ~= nil then
+      local completionTimeStr = Util.formatTime(boss.time)
+      objectiveStr = "|cFF" .. completionColor .. "[" .. completionTimeStr .. "] " .. objectiveStr .. "|r"
+    end
+
+    self.frames.root.objectiveTexts[i]:SetText(objectiveStr)
+  end
+end
+
+-- Expects level as number and affixes as string array, e.g. {"Tyrannical", "Bolstering"}
+function WarpDeplete:SetKeyDetails(level, affixes)
+  self.keyDetailsState.level = level
+  self.keyDetailsState.affixes = affixes
+
+  self:UpdateKeyDetailsDisplay()
+end
+
+function WarpDeplete:UpdateKeyDetailsDisplay()
+  local affixesStr = Util.joinStrings(self.keyDetailsState.affixes or {}, " - ")
+  local keyDetails = ("[%d] %s"):format(self.keyDetailsState.level, affixesStr)
+  self.frames.root.keyDetailsText:SetText(keyDetails)
 end

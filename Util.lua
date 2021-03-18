@@ -58,12 +58,21 @@ function Util.formatDeathTimeMinutes(time)
   return ("%d:%02d"):format(timeMin, timeSec)
 end
 
+function Util.removeHexPrefix(hex)
+  return hex:gsub("#", "")
+end
+
 function Util.hexToRGB(hex)
-  local hex = hex:gsub("#","")
+  local hex = Util.removeHexPrefix(hex)
   if hex:len() == 3 then
-    return (tonumber("0x"..hex:sub(1,1))*17)/255, (tonumber("0x"..hex:sub(2,2))*17)/255, (tonumber("0x"..hex:sub(3,3))*17)/255
+    return (tonumber("0x" .. hex:sub(1, 1)) * 17) / 255,
+      (tonumber("0x" .. hex:sub(2, 2)) * 17) / 255,
+      (tonumber("0x" .. hex:sub(3, 3)) * 17) / 255
+
   else
-    return tonumber("0x"..hex:sub(1,2))/255, tonumber("0x"..hex:sub(3,4))/255, tonumber("0x"..hex:sub(5,6))/255
+    return tonumber("0x" .. hex:sub(1, 2)) / 255,
+      tonumber("0x" .. hex:sub(3, 4)) / 255,
+      tonumber("0x" .. hex:sub(5, 6)) / 255
   end
 end
 
@@ -75,6 +84,30 @@ function Util.copy(obj, seen)
   s[obj] = res
   for k, v in pairs(obj) do res[Util.copy(k, s)] = Util.copy(v, s) end
   return res
+end
+
+function Util.getListLength(list)
+  local result = 0
+  for i, e in pairs(list) do
+    result = result + 1
+  end
+
+  return result
+end
+
+function Util.joinStrings(strings, delim)
+  local result = ""
+  local stringCount = Util.getListLength(strings)
+
+  for i, s in ipairs(strings) do
+    result = result .. s
+
+    if i < stringCount then
+      result = result .. delim
+    end
+  end
+
+  return result
 end
 
 WarpDeplete.Util = Util

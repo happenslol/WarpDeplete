@@ -1,5 +1,3 @@
-local DEBUG = true
-
 local defaults = {
   profile = {
     frameAnchor = "RIGHT",
@@ -140,7 +138,7 @@ function WarpDeplete:InitOptions()
     }
   }
 
-  if DEBUG then options.args.debug = debugOptions end
+  if self.DEBUG then options.args.debug = debugOptions end
 
   self.db = LibStub("AceDB-3.0"):New("WarpDepleteDB", defaults, true)
   options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
@@ -152,7 +150,7 @@ function WarpDeplete:InitOptions()
     nil, "general"
   )
 
-  if DEBUG then
+  if self.DEBUG then
     self.optionsProfileFrame = AceConfigDialog:AddToBlizOptions(
       "WarpDeplete", "Debug",
       "WarpDeplete", "debug"

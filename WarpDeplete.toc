@@ -10,3 +10,5 @@ Core.lua
 Util.lua
 Options.lua
 Display.lua
+Events.lua
+Comms.lua
