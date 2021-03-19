@@ -300,10 +300,11 @@ end
 function WarpDeplete:SetTimerCurrent(time)
   self.timerState.remaining = self.timerState.limit - time
   self.timerState.current = time
+  self:UpdateTimerDisplay()
 end
 
 function WarpDeplete:UpdateTimerDisplay()
-  local percent = self.timerState.current / self.timerState.limit
+  local percent = self.timerState.limit > 0 and self.timerState.current / self.timerState.limit or 0
   local bars = {self.bar1, self.bar2, self.bar3}
   local timeLimits = {self.timerState.limit, self.timerState.plusTwo, self.timerState.plusThree}
 
@@ -333,9 +334,9 @@ end
 
 function WarpDeplete:SetForcesTotal(totalCount)
   self.forcesState.totalCount = totalCount
-  self.forcesState.pullPercent = self.forcesState.pullCount / totalCount
+  self.forcesState.pullPercent = totalCount > 0 and self.forcesState.pullCount / totalCount or 0
 
-  local currentPercent = self.forcesState.currentCount / totalCount
+  local currentPercent = totalCount > 0 and self.forcesState.currentCount / totalCount or 0
   if currentPercent > 1.0 then currentPercent = 1.0 end
   self.forcesState.currentPercent = currentPercent
 
@@ -347,7 +348,9 @@ end
 -- Expects direct forces value
 function WarpDeplete:SetForcesPull(pullCount)
   self.forcesState.pullCount = pullCount
-  self.forcesState.pullPercent = pullCount / self.forcesState.totalCount
+  self.forcesState.pullPercent = self.forcesState.totalCount > 0
+    and pullCount / self.forcesState.totalCount or 0
+
   self:UpdateForcesDisplay()
 end
 
@@ -362,7 +365,9 @@ function WarpDeplete:SetForcesCurrent(currentCount)
 
   self.forcesState.currentCount = currentCount
 
-  local currentPercent = self.forcesState.currentCount / self.forcesState.totalCount
+  local currentPercent = self.forcesState.totalCount > 0
+    and self.forcesState.currentCount / self.forcesState.totalCount or 0
+
   if currentPercent > 1.0 then currentPercent = 1.0 end
   self.forcesState.currentPercent = currentPercent
 
@@ -382,6 +387,8 @@ function WarpDeplete:UpdateForcesDisplay()
 
   self.forces.text:SetText(
     Util.formatForcesText(
+      self.db.profile.showForcesPercent,
+      self.db.profile.showForcesCount,
       self.forcesState.pullCount,
       self.forcesState.currentCount,
       self.forcesState.totalCount,
@@ -393,6 +400,8 @@ function WarpDeplete:UpdateForcesDisplay()
 end
 
 function WarpDeplete:UpdatePrideGlow()
+  if self.keyDetailsState.level < 10 then return end
+
   local percentBeforePull = self.forcesState.currentPercent
   local currentPrideFraction = (percentBeforePull % 0.2)
   local prideFractionAfterPull = currentPrideFraction + self.forcesState.pullPercent
@@ -400,32 +409,37 @@ function WarpDeplete:UpdatePrideGlow()
 
   -- Already in the correct state
   if shouldGlow == self.forcesState.prideGlowActive then return end
-
   self.forcesState.prideGlowActive = shouldGlow
-  local glowColor = "#CB091E"
 
-  if shouldGlow then
-    local glowR, glowG, glowB = Util.hexToRGB(glowColor)
-    self.Glow.PixelGlow_Start(
-      self.forces.bar, -- frame
-      {glowR, glowG, glowB, 1}, -- color
-      16, -- line count
-      0.13, -- frequency
-      18, -- length
-      2, -- thiccness
-      1.5, -- x offset
-      1.5, -- y offset
-      false, -- draw border
-      "pride", -- tag
-      0 -- draw layer
-    )
-  else
-    self.Glow.PixelGlow_Stop(self.forces.bar, "pride")
-  end
+  if shouldGlow then self:ShowPrideGlow()
+  else self:HidePrideGlow() end
+end
+
+function WarpDeplete:ShowPrideGlow()
+  local glowColor = "#CB091E"
+  local glowR, glowG, glowB = Util.hexToRGB(glowColor)
+  self.Glow.PixelGlow_Start(
+    self.forces.bar, -- frame
+    {glowR, glowG, glowB, 1}, -- color
+    16, -- line count
+    0.13, -- frequency
+    18, -- length
+    2, -- thiccness
+    1.5, -- x offset
+    1.5, -- y offset
+    false, -- draw border
+    "pride", -- tag
+    0 -- draw layer
+  )
+end
+
+function WarpDeplete:HidePrideGlow()
+  self.Glow.PixelGlow_Stop(self.forces.bar, "pride")
 end
 
 -- Expect death count as number
 function WarpDeplete:SetDeaths(count)
+  self.timerState.deaths = count
   local deathText = Util.formatDeathText(count)
   self.frames.root.deathsText:SetText(deathText)
 end
@@ -449,8 +463,12 @@ function WarpDeplete:UpdateObjectivesDisplay()
     local objectiveStr = boss.name
 
     if boss.time ~= nil then
-      local completionTimeStr = Util.formatTime(boss.time)
-      objectiveStr = "|cFF" .. completionColor .. "[" .. completionTimeStr .. "] " .. objectiveStr .. "|r"
+      if boss.time > 0 then
+        local completionTimeStr = Util.formatTime(boss.time)
+        objectiveStr = "[" .. completionTimeStr .. "] " .. objectiveStr
+      end
+
+      objectiveStr = "|cFF" .. completionColor .. objectiveStr .. "|r"
     end
 
     self.frames.root.objectiveTexts[i]:SetText(objectiveStr)

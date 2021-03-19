@@ -10,6 +10,10 @@ local defaults = {
     frameX = -20,
     frameY = 0,
 
+    -- Element display options
+    showForcesPercent = true,
+    showForcesCount = true,
+
     -- Font sizes for text parts
     deathsFontSize = 16,
     timerFontSize = 34,
@@ -43,6 +47,7 @@ local defaults = {
     -- The vertical offset between elements
     verticalOffset = 2,
 
+    -- Utility options
     insertKeystoneAutomatically = true
   }
 }
@@ -165,6 +170,10 @@ function WarpDeplete:InitOptions()
 
   self.db = LibStub("AceDB-3.0"):New("WarpDepleteDB", defaults, true)
   options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
+
+  self.db.RegisterCallback(self, "OnProfileChanged", "UpdateLayout")
+  self.db.RegisterCallback(self, "OnProfileCopied", "UpdateLayout")
+  self.db.RegisterCallback(self, "OnProfileReset", "UpdateLayout")
 
   local AceConfigDialog = LibStub("AceConfigDialog-3.0")
   LibStub("AceConfig-3.0"):RegisterOptionsTable("WarpDeplete", options)

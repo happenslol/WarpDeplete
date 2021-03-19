@@ -35,7 +35,7 @@ function WarpDeplete:OnTimerSyncRequest(prefix, message, dist, sender)
   if message ~= requestMessage then return end
 
   local text = ("%d"):format(self.timerState.current)
-  if self.timerState.current.isBlizzardTimer then
+  if self.timerState.isBlizzardTimer then
     text = text .. "|blizz"
   else
     text = text .. "|gettime"

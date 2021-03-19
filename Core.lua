@@ -7,6 +7,8 @@ WarpDeplete = LibStub("AceAddon-3.0"):NewAddon(
 )
 
 WarpDeplete.DEBUG = true
+WarpDeplete.Util = {}
+local Util = WarpDeplete.Util
 
 WarpDeplete.LSM = LibStub("LibSharedMedia-3.0")
 WarpDeplete.Glow = LibStub("LibCustomGlow-1.0")
@@ -25,23 +27,26 @@ WarpDeplete.defaultForcesState = {
   pullPercent = 0,
   currentPercent = 0,
 
+  currentPull = {},
+
   prideGlowActive = false,
   completed = false,
-  completedTime = 0,
+  completedTime = 0
 }
-
-WarpDeplete.defaultTimeLimit = 60 * 30
 
 WarpDeplete.defaultTimerState = {
   startTime = nil,
   isBlizzardTimer = false,
+  running = false,
+  deaths = 0,
 
   current = 0,
-  remaining = WarpDeplete.defaultTimeLimit,
-  limit = WarpDeplete.defaultTimeLimit,
+  remaining = 0,
+  limit = 0,
+  startOffset = 0,
 
-  plusTwo = WarpDeplete.defaultTimeLimit * 0.8,
-  plusThree = WarpDeplete.defaultTimeLimit * 0.6
+  plusTwo = 0,
+  plusThree = 0
 }
 
 WarpDeplete.defaultObjectivesState = {}
@@ -72,7 +77,7 @@ function WarpDeplete:OnEnable()
   self:Hide()
 
   if self.DEBUG then
-    self:EnableDemoMode()
+    -- self:EnableDemoMode()
   end
 end
 
@@ -80,30 +85,33 @@ function WarpDeplete:OnDisable()
 end
 
 function WarpDeplete:EnableDemoMode()
+  if self.challengeState.inChallenge then
+    self:Print("Can't enable demo mode while in an active challenge!")
+    return
+  end
+
   if self.challengeState.demoModeActive then return end
   self.challengeState.demoModeActive = true
 
   self:ResetState()
-
-  self:SetTimerLimit(35 * 60)
-  self:SetTimerRemaining(8 * 60)
-  self:SetForcesCurrent(34)
-  self:SetForcesPull(7)
-  self:SetDeaths(3)
 
   local objectives = {}
   for i = 1, 5 do
     objectives[i] = { name = "Test Boss Name " .. i }
 
     if i < 3 then
-      objectives[i].time = 530 * i
+      objectives[i].time = 520 * i
     end
   end
 
   self:SetObjectives(objectives)
   self:SetKeyDetails(30, {"Tyrannical", "Bolstering", "Spiteful", "Prideful"})
 
-  -- self:OnChallengeModeStart()
+  self:SetTimerLimit(35 * 60)
+  self:SetTimerRemaining(8 * 60)
+  self:SetForcesCurrent(34)
+  self:SetForcesPull(7)
+  self:SetDeaths(3)
 
   self:Show()
 end
@@ -128,28 +136,13 @@ function WarpDeplete:Hide()
 end
 
 function WarpDeplete:ResetState()
-  self.forcesState = self.Util.copy(self.defaultForcesState)
-  self.timerState = self.Util.copy(self.defaultTimerState)
-  self.challengeState = self.Util.copy(self.defaultChallengeState)
-  self.objectivesState = self.Util.copy(self.defaultObjectivesState)
-  self.keyDetailsState = self.Util.copy(self.defaultKeyDetailsState)
-end
+  self:PrintDebug("Resetting state")
 
-function WarpDeplete:OnTimerTick() 
-  if not self.challengeState.inChallenge then
-    return
-  end
+  self.forcesState = Util.copy(self.defaultForcesState)
+  self.timerState = Util.copy(self.defaultTimerState)
+  self.challengeState = Util.copy(self.defaultChallengeState)
+  self.objectivesState = Util.copy(self.defaultObjectivesState)
+  self.keyDetailsState = Util.copy(self.defaultKeyDetailsState)
 
-  local deaths = C_ChallengeMode.GetDeathCount() or 3
-  local deathPenalty = deaths * 5
-
-  local current = GetTime() - self.timerState.startTime + deathPenalty
-  if current < 0 then
-    return
-  end
-
-  self:SetTimerCurrent(current)
-  self:UpdateTimerDisplay()
-
-  C_Timer.After(0.1, function() self:OnTimerTick() end)
+  self:HidePrideGlow()
 end

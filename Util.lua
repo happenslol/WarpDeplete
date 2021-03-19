@@ -1,22 +1,46 @@
-local Util = {}
+local Util = WarpDeplete.Util
 
-function Util.formatForcesText(pullCount, currentCount, totalCount, completedTime)
+function Util.formatForcesText(showPercent, showCount, pullCount, currentCount, totalCount, completedTime)
   local currentPercent = (currentCount / totalCount) * 100
   if currentPercent > 100.0 then currentPercent = 100.0 end
 
-  local result = ("%.2f%%"):format(currentPercent)
+  local percentText = ("%.2f%%"):format(currentPercent)
+  local countText = ("%d/%d"):format(currentCount, totalCount)
+  local result = nil
 
-  if completedTime then
-    local completedText = Util.formatTime(completedTime)
-    result = "|cFF00FF24" .. completedText .. " - " .. result .. "|r"
+  if showPercent and not showCount then
+    result = percentText
+  elseif showCount and not showPercent then
+    result = countText
+  elseif showPercent and showCount then
+    result = ("%s - %s"):format(countText, percentText)
   end
 
   if pullCount > 0 then
     local pullPercent = (pullCount / totalCount) * 100
-    result = ("(+%.2f%%)"):format(pullPercent) .. "  " .. result
+    local pullPercentText = ("%.2f%%"):format(pullPercent)
+    local pullCountText = ("%d"):format(pullCount)
+
+    local pullText = nil
+    if showPercent and not showCount then
+      pullText = pullPercentText
+    elseif showCount and not showPercent then
+      pullText = pullCountText
+    elseif showPercent and showCount then
+      pullText = ("%s - %s"):format(pullCountText, pullPercentText)
+    end
+
+    if pullText then
+      result = ("(+%s)"):format(pullText) .. "  " .. result
+    end
   end
 
-  return result
+  if completedTime and result then
+    local completedText = ("[%s] "):format(Util.formatTime(completedTime))
+    result = "|cFF00FF24" .. completedText .. result .. "|r"
+  end
+
+  return result or ""
 end
 
 function Util.getBarPercent(bar, percent)
@@ -86,23 +110,25 @@ function Util.copy(obj, seen)
   return res
 end
 
-function Util.getListLength(list)
-  local result = 0
-  for i, e in pairs(list) do
-    result = result + 1
+-- Expects a table of guids to count values, as well as the total count value
+-- Returns count, percent
+function Util.calcPullCount(pull, total)
+  local totalPull = 0
+  for _, c in pairs(pull) do
+    totalPull = totalPull + c
   end
 
-  return result
+  local percent = total > 0 and totalPull / total or 0
+  return totalPull, percent
 end
 
 function Util.joinStrings(strings, delim)
   local result = ""
-  local stringCount = Util.getListLength(strings)
 
   for i, s in ipairs(strings) do
     result = result .. s
 
-    if i < stringCount then
+    if i < #strings then
       result = result .. delim
     end
   end
@@ -110,4 +136,33 @@ function Util.joinStrings(strings, delim)
   return result
 end
 
-WarpDeplete.Util = Util
+Util.MapIDToInstanceID = {
+  [1677] = 1188, -- De Other Side
+  [1678] = 1188, -- De Other Side
+  [1679] = 1188, -- De Other Side
+  [1680] = 1188, -- De Other Side
+  [1669] = 1184, -- Mists of Tirna Scithe
+  [1697] = 1183, -- Plaguefall
+  [1675] = 1189, -- Sanguine Depths
+  [1676] = 1189, -- Sanguine Depths
+  [1692] = 1186, -- Spires of Ascension
+  [1693] = 1186, -- Spires of Ascension
+  [1694] = 1186, -- Spires of Ascension
+  [1695] = 1186, -- Spires of Ascension
+  [1666] = 1182, -- The Necrotic Wake
+  [1667] = 1182, -- The Necrotic Wake
+  [1668] = 1182, -- The Necrotic Wake
+  [1683] = 1187, -- Theater of Pain
+  [1684] = 1187, -- Theater of Pain
+  [1685] = 1187, -- Theater of Pain
+  [1686] = 1187, -- Theater of Pain
+  [1687] = 1187, -- Theater of Pain
+  [1663] = 1185, -- Halls of Atonement
+  [1664] = 1185, -- Halls of Atonement
+  [1665] = 1185, -- Halls of Atonement
+}
+
+function WarpDeplete:PrintDebug(str)
+  if not self.DEBUG then return end
+  self:Print("|cFF479AEDDEBUG|r " .. str)
+end
