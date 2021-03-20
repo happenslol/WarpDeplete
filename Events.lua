@@ -106,6 +106,9 @@ function WarpDeplete:GetTimerInfo()
       self.timerState.startOffset = trueTime
       self.timerState.startTime = GetTime()
       self.timerState.isBlizzardTimer = true
+
+      self:RequestTimerSync()
+      self:RequestObjectiveSync()
     end)
   end
 
@@ -271,6 +274,7 @@ function WarpDeplete:OnTimerTick()
 
   local deathPenalty = self.timerState.deaths * 5
   local current = GetTime() + self.timerState.startOffset - self.timerState.startTime + deathPenalty
+  
 
   if current < 0 then return end
 
