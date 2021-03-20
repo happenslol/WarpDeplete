@@ -314,6 +314,23 @@ end
 function WarpDeplete:HandleChatCommand(input)
   local cmd = string.lower(input)
 
+  if cmd == "timerStatus" then
+    self:PrintDebug("Offset: " .. self.timerState.startOffset .. ", " .. WarpDeplete.Util.formatTime(self.timerState.startOffset))
+    self:PrintDebug("Start time: " .. self.timerState.startTime)
+    self:PrintDebug("Deaths: " .. self.timerState.deaths)
+    local deathPenalty = self.timerState.deaths * 5
+    local current = GetTime() - self.timerState.startTime 
+    local currentWithOffset = current + self.timerState.startOffset
+    self:PrintDebug("Current: " .. current .. ", " .. WarpDeplete.Util.formatTime(current))
+    self:PrintDebug("Current With Offset: " .. currentWithOffset .. ", " .. WarpDeplete.Util.formatTime(currentWithOffset))
+    local blizzardCurrent = select(2, GetWorldElapsedTime(1))
+    self:PrintDebug("Blizzard Current: " .. blizzardCurrent .. ", " .. WarpDeplete.Util.formatTime(blizzardCurrent))
+    local blizzardCurrentWODeaths = blizzardCurrent - deathPenalty
+    self:PrintDebug("Blizzard Current w/o deaths: " .. blizzardCurrentWODeaths .. ", " .. WarpDeplete.Util.formatTime(blizzardCurrentWODeaths))
+    self:PrintDebug("isBlizzardTimer" .. self.timerState.isBlizzardTimer)
+    return
+  end
+
   if cmd == "toggle" then
     self:SetUnlocked(not self.isUnlocked)
     return

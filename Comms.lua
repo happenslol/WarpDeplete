@@ -53,12 +53,16 @@ function WarpDeplete:OnTimerSyncResponse(prefix, message, dist, sender)
 
   self:PrintDebug("Received time from " .. sender .. ": "
     .. tonumber(current) .. ", type: " .. typeRaw)
-
-  --TODO(happens): Set start time, current and remaining, possibly using an offset?
-  -- This should always prefer a gettime timer, if we get any. So check for our
-  -- own isBlizzard (which will be set if we log back in after being offline during
-  -- a key) and set our own either if the received time is higher than our own
-  -- or if the timer is gettime and ours isn't.
+  
+  if self.timerState.isBlizzard and not isBlizzard then
+    local deaths = C_ChallengeMode.GetDeathCount()
+    self.timerState.current = current
+    self.timerState.deaths = deaths
+    local trueTime = current - deaths * 5
+    self.timerState.startOffset = trueTime
+    self.timerState.startTime = GetTime()
+    self.timerState.isBlizzardTimer = false
+  end
 end
 
 function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
