@@ -323,6 +323,12 @@ end
 
 -- Expects value in seconds
 function WarpDeplete:SetTimerCurrent(time)
+  if self.timerState.limit - time == self.timerState.remaining then
+    return
+  end
+  if self.timerState.current == time then
+    return
+  end
   self.timerState.remaining = self.timerState.limit - time
   self.timerState.current = time
   self:UpdateTimerDisplay()
