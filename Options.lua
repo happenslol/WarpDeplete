@@ -86,13 +86,8 @@ local defaults = {
   }
 }
 
-local function group(name)
-  local order = 0
-end
-
-local function font(order, name, profileVar, updateFn)
+local function font(name, profileVar, updateFn)
   return {
-    order = order,
     type = "select",
     dialogControl = "LSM30_Font",
     name = name,
@@ -105,9 +100,8 @@ local function font(order, name, profileVar, updateFn)
   }
 end
 
-local function range(order, name, profileVar, updateFn)
+local function range(name, profileVar, updateFn)
   return {
-    order = order,
     type = "range",
     name = name,
     min = 8,
@@ -121,9 +115,8 @@ local function range(order, name, profileVar, updateFn)
   }
 end
 
-local function toggle(order, name, profileVar, updateFn)
+local function toggle(name, profileVar, updateFn)
   return {
-    order = order,
     type = "toggle",
     name = name,
     get = function(info) return WarpDeplete.db.profile[profileVar] end,
@@ -134,9 +127,8 @@ local function toggle(order, name, profileVar, updateFn)
   }
 end
 
-local function fontFlags(order, name, profileVar, updateFn)
+local function fontFlags(name, profileVar, updateFn)
   return {
-    order = order,
     type = "select",
     name = name,
     desc = "Default: OUTLINE",
@@ -154,17 +146,15 @@ local function fontFlags(order, name, profileVar, updateFn)
   }
 end
 
-local function lineBreak(order)
+local function lineBreak()
   return {
-    order = order,
     type = "description",
-    name = ""
+    name = "\n"
   }
 end
 
-local function color(order, name, profileVar, updateFn)
+local function color(name, profileVar, updateFn)
   return {
-    order = order,
     type = "color",
     name = name,
     get = function(info)
@@ -178,6 +168,25 @@ local function color(order, name, profileVar, updateFn)
   }
 end
 
+local function group(name, inline, args)
+  local order = 1
+
+  local g = {
+    name = name,
+    inline = inline,
+    type = "group",
+    args = {}
+  }
+
+  for _, arg in pairs(args) do
+    arg.order = order
+    g.args[arg.type .. order] = arg
+    order = order + 1
+  end
+
+  return g
+end
+
 function WarpDeplete:InitOptions()
   self.isUnlocked = false
 
@@ -186,151 +195,128 @@ function WarpDeplete:InitOptions()
     handler = self,
     type = "group",
     args = {
-      general = {
-        name = "General",
-        type = "group",
-        args = {
-          unlocked = {
-            order = 1,
-            type = "toggle",
-            name = "Unlocked",
-            desc = "Unlocks the timer window and allows it to be moved around",
-            get = function(info) return WarpDeplete.isUnlocked end,
-            set = WarpDeplete.SetUnlocked
-          },
-          demoMode = {
-            order = 2,
-            type = "toggle",
-            name = "Demo Mode",
-            desc = "Enables the demo mode, used for configuring the timer",
-            get = function(info) return WarpDeplete.challengeState.demoModeActive end,
-            set = function(info, value)
-              if value then WarpDeplete:EnableDemoMode()
-              else WarpDeplete:DisableDemoMode() end
-            end
-          },
+      general = group("General", false, {
+        {
+          type = "toggle",
+          name = "Unlocked",
+          desc = "Unlocks the timer window and allows it to be moved around",
+          get = function(info) return WarpDeplete.isUnlocked end,
+          set = WarpDeplete.SetUnlocked
+        },
 
-          display = {
-            order = 3,
-            type = "group",
-            inline = true,
-            name = "Display",
-            args = {
-              showForcesPercent = toggle(1, "Show forces percent", "showForcesPercent", "UpdateForcesDisplay"),
-              showForcesCount = toggle(2, "Show forces count", "showForcesCount", "UpdateForcesDisplay"),
-            }
-          },
+        {
+          type = "toggle",
+          name = "Demo Mode",
+          desc = "Enables the demo mode, used for configuring the timer",
+          get = function(info) return WarpDeplete.challengeState.demoModeActive end,
+          set = function(info, value)
+            if value then WarpDeplete:EnableDemoMode()
+            else WarpDeplete:DisableDemoMode() end
+          end
+        },
 
-          fonts = {
-            order = 3,
-            type = "group",
-            name = "Fonts",
-            inline = true,
-            args = {
-              timerFont = font(1, "Timer font", "timerFont", "UpdateLayout"),
-              timerFontSize = range(2, "Timer font size", "timerFontSize", "UpdateLayout"),
-              timerFontFlags = fontFlags(3, "Timer font flags", "timerFontFlags", "UpdateLayout"),
-              timerColor = color(4, "Timer color", "timerRunningColor", "UpdateLayout"),
-              timerSuccessColor = color(5, "Timer success color", "timerSuccessColor", "UpdateLayout"),
-              timerExpiredColor = color(6, "Timer expired color", "timerExpiredColor", "UpdateLayout"),
+        group("Display", true, {
+          toggle("Show forces percent", "showForcesPercent", "UpdateForcesDisplay"),
+          toggle("Show forces count", "showForcesCount", "UpdateForcesDisplay"),
+        }),
 
-              b1 = lineBreak(7),
+        group("Fonts", true, {
+          font("Timer font", "timerFont", "UpdateLayout"),
+          range("Timer font size", "timerFontSize", "UpdateLayout"),
+          fontFlags("Timer font flags", "timerFontFlags", "UpdateLayout"),
+          color("Timer color", "timerRunningColor", "UpdateLayout"),
+          color("Timer success color", "timerSuccessColor", "UpdateLayout"),
+          color("Timer expired color", "timerExpiredColor", "UpdateLayout"),
 
-              forcesFont = font(8, "Forces font", "forcesFont", "UpdateLayout"),
-              forcesFontSize = range(9, "Forces font size", "forcesFontSize", "UpdateLayout"),
-              forcesFontFlags = fontFlags(10, "Forces font flags", "forcesFontFlags", "UpdateLayout"),
-              forcesColor = color(11, "Forces color", "forcesColor", "UpdateLayout"),
-              completedForcesColor = color(12, "Completed forces color", "completedForcesColor", "UpdateLayout"),
+          lineBreak(),
 
-              b2 = lineBreak(13),
+          font("Forces font", "forcesFont", "UpdateLayout"),
+          range("Forces font size", "forcesFontSize", "UpdateLayout"),
+          fontFlags("Forces font flags", "forcesFontFlags", "UpdateLayout"),
+          color("Forces color", "forcesColor", "UpdateLayout"),
+          color("Completed forces color", "completedForcesColor", "UpdateLayout"),
 
-              bar1Font = font(14, "+1 Timer font", "bar1Font", "UpdateLayout"),
-              bar1FontSize = range(15, "+1 Timer font size", "bar1FontSize", "UpdateLayout"),
-              bar1FontFlags = fontFlags(16, "+1 Timer font flags", "bar1FontFlags", "UpdateLayout"),
+          lineBreak(),
 
-              b3 = lineBreak(17),
+          font("+1 Timer font", "bar1Font", "UpdateLayout"),
+          range("+1 Timer font size", "bar1FontSize", "UpdateLayout"),
+          fontFlags("+1 Timer font flags", "bar1FontFlags", "UpdateLayout"),
 
-              bar2Font = font(18, "+2 Timer font", "bar2Font", "UpdateLayout"),
-              bar2FontSize = range(19, "+2 Timer font size", "bar2FontSize", "UpdateLayout"),
-              bar2FontFlags = fontFlags(20, "+2 Timer font flags", "bar2FontFlags", "UpdateLayout"),
+          lineBreak(),
 
-              b4 = lineBreak(18),
+          font("+2 Timer font", "bar2Font", "UpdateLayout"),
+          range("+2 Timer font size", "bar2FontSize", "UpdateLayout"),
+          fontFlags("+2 Timer font flags", "bar2FontFlags", "UpdateLayout"),
 
-              bar3Font = font(19, "+2 Timer font", "bar3Font", "UpdateLayout"),
-              bar3FontSize = range(20, "+2 Timer font size", "bar3FontSize", "UpdateLayout"),
-              bar3FontFlags = fontFlags(21, "+2 Timer font flags", "bar3FontFlags", "UpdateLayout"),
+          lineBreak(),
 
-              b5 = lineBreak(22),
+          font("+2 Timer font", "bar3Font", "UpdateLayout"),
+          range("+2 Timer font size", "bar3FontSize", "UpdateLayout"),
+          fontFlags("+2 Timer font flags", "bar3FontFlags", "UpdateLayout"),
 
-              objectivesFont = font(23, "Objectives font", "objectivesFont", "UpdateLayout"),
-              objectivesFontSize = range(24, "Objectives font size", "objectivesFontSize", "UpdateLayout"),
-              objectivesFontFlags = fontFlags(25, "Objectives font flags", "objectivesFontFlags", "UpdateLayout"),
-              objectivesColor = color(26, "Objectives color", "objectivesColor", "UpdateLayout"),
-              completedObjectivesColor = color(27, "Completed objective color", "completedObjectivesColor", "UpdateLayout"),
-            },
-          }
-        }
-      }
+          lineBreak(),
+
+          font("Objectives font", "objectivesFont", "UpdateLayout"),
+          range("Objectives font size", "objectivesFontSize", "UpdateLayout"),
+          fontFlags("Objectives font flags", "objectivesFontFlags", "UpdateLayout"),
+          color("Objectives color", "objectivesColor", "UpdateLayout"),
+          color("Completed objective color", "completedObjectivesColor", "UpdateLayout"),
+        })
+      })
     }
   }
 
-  local debugOptions = {
-    name = "Debug",
-    handler = self,
-    type = "group",
-    args = {
-      timerLimit = {
-        order = 2,
-        type = "range",
-        name = "Timer limit (Minutes)",
-        min = 1,
-        max = 100,
-        step = 1,
-        get = function(info) return math.floor(WarpDeplete.timerState.limit / 60) end,
-        set = function(info, value) WarpDeplete:SetTimerLimit(value * 60) end
-      },
-      timerRemaining = {
-        order = 3,
-        type = "range",
-        name = "Timer current (Minutes)",
-        min = -50,
-        max = 100,
-        step = 1,
-        get = function(info) return math.floor(WarpDeplete.timerState.remaining / 60) end,
-        set = function(info, value) WarpDeplete:SetTimerRemaining(value * 60) end
-      },
-      forcesTotal = {
-        order = 4,
-        type = "range",
-        name = "Forces total",
-        min = 1,
-        max = 500,
-        step = 1,
-        get = function(info) return WarpDeplete.forcesState.totalCount end,
-        set = function(info, value) WarpDeplete:SetForcesTotal(value) end
-      },
-      forcesPull = {
-        order = 5,
-        type = "range",
-        name = "Forces pull",
-        min = 1,
-        max = 500,
-        step = 1,
-        get = function(info) return WarpDeplete.forcesState.pullCount end,
-        set = function(info, value) WarpDeplete:SetForcesPull(value) end
-      },
-      forcesCurrent = {
-        order = 6,
-        type = "range",
-        name = "Forces current",
-        min = 1,
-        max = 500,
-        step = 1,
-        get = function(info) return WarpDeplete.forcesState.currentCount end,
-        set = function(info, value) WarpDeplete:SetForcesCurrent(value) end
-      }
+  local debugOptions = group("Debug", false, {
+    {
+      type = "range",
+      name = "Timer limit (Minutes)",
+      min = 1,
+      max = 100,
+      step = 1,
+      get = function(info) return math.floor(WarpDeplete.timerState.limit / 60) end,
+      set = function(info, value) WarpDeplete:SetTimerLimit(value * 60) end
+    },
+
+    {
+      type = "range",
+      name = "Timer current (Minutes)",
+      min = -50,
+      max = 100,
+      step = 1,
+      get = function(info) return math.floor(WarpDeplete.timerState.remaining / 60) end,
+      set = function(info, value) WarpDeplete:SetTimerRemaining(value * 60) end
+    },
+
+    {
+      type = "range",
+      name = "Forces total",
+      min = 1,
+      max = 500,
+      step = 1,
+      get = function(info) return WarpDeplete.forcesState.totalCount end,
+      set = function(info, value) WarpDeplete:SetForcesTotal(value) end
+    },
+
+    {
+      type = "range",
+      name = "Forces pull",
+      min = 1,
+      max = 500,
+      step = 1,
+      get = function(info) return WarpDeplete.forcesState.pullCount end,
+      set = function(info, value) WarpDeplete:SetForcesPull(value) end
+    },
+
+    {
+      type = "range",
+      name = "Forces current",
+      min = 1,
+      max = 500,
+      step = 1,
+      get = function(info) return WarpDeplete.forcesState.currentCount end,
+      set = function(info, value) WarpDeplete:SetForcesCurrent(value) end
     }
-  }
+  })
 
   self.db = LibStub("AceDB-3.0"):New("WarpDepleteDB", defaults, true)
   options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
