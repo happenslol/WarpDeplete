@@ -1,5 +1,8 @@
 local Util = WarpDeplete.Util
 
+--NOTE(happens): functions with the _OnUpdate suffix are
+-- called in the frame update loop and should not use any local vars.
+
 function Util.formatForcesText(completedColor, showPercent, showCount, pullCount, currentCount, totalCount, completedTime)
   local currentPercent = (currentCount / totalCount) * 100
   if currentPercent > 100.0 then currentPercent = 100.0 end
@@ -44,13 +47,13 @@ function Util.formatForcesText(completedColor, showPercent, showCount, pullCount
   return result or ""
 end
 
-function Util.getBarPercent(bar, percent)
+function Util.getBarPercent_OnUpdate(bar, percent)
   if bar == 3 then
     return (percent >= 0.6 and 1.0) or (percent * (10 / 6))
   elseif bar == 2 then
-      return (percent >= 0.8 and 1.0) or (percent < 0.6 and 0) or ((percent - 0.6) * 5)
+    return (percent >= 0.8 and 1.0) or (percent < 0.6 and 0) or ((percent - 0.6) * 5)
   elseif bar == 1 then
-      return (percent < 0.8 and 0) or ((percent - 0.8) * 5)
+    return (percent < 0.8 and 0) or ((percent - 0.8) * 5)
   end
 end
 
@@ -74,6 +77,13 @@ end
 function Util.formatTime(time)
   local timeMin = math.floor(time / 60)
   local timeSec = math.floor(time - (timeMin * 60))
+  return ("%d:%02d"):format(timeMin, timeSec)
+end
+
+local formatTime_OnUpdate_state = {}
+function Util.formatTime_OnUpdate(time)
+  formatTime_OnUpdate_state.timeMin = math.floor(time / 60)
+  formatTime_OnUpdate_state.timeSec = math.floor(time - (formatTime_OnUpdate_state.timeMin * 60))
   return ("%d:%02d"):format(timeMin, timeSec)
 end
 

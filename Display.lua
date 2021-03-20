@@ -325,46 +325,54 @@ function WarpDeplete:SetTimerCurrent(time)
   self:UpdateTimerDisplay()
 end
 
+local function getBarAndLimitFor(wdp, index)
+  if index == 1 then return wdp.bar1, wdp.timerState.limit
+  elseif index == 2 then return wdp.bar2, wdp.timerState.plusTwo
+  elseif index == 3 then return wdp.bar3, wdp.timerState.plusThree end
+end
+
 function WarpDeplete:UpdateTimerDisplay()
-  local expiredColor = Util.removeHexPrefix(self.db.profile.timerExpiredColor)
-  local successColor = Util.removeHexPrefix(self.db.profile.timerSuccessColor)
+  local state = self.tickState
 
-  local percent = self.timerState.limit > 0 and self.timerState.current / self.timerState.limit or 0
-  local bars = {self.bar1, self.bar2, self.bar3}
-  local timeLimits = {self.timerState.limit, self.timerState.plusTwo, self.timerState.plusThree}
+  --TODO(happens): Remove hex prefixes everywhere
+  state.expiredColor = Util.removeHexPrefix(self.db.profile.timerExpiredColor)
+  state.successColor = Util.removeHexPrefix(self.db.profile.timerSuccessColor)
 
-  local timerText = Util.formatTime(self.timerState.current) ..
-    " / " .. Util.formatTime(self.timerState.limit)
+  state.percent = self.timerState.limit > 0 and self.timerState.current / self.timerState.limit or 0
+
+  state.timerText = Util.formatTime_OnUpdate(self.timerState.current) ..
+    " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
 
   if self.challengeState.challengeCompleted and self.timerState.current <= self.timerState.limit then
-    timerText = "|c" .. successColor .. timerText .. "|r"
+    state.timerText = "|c" .. state.successColor .. state.timerText .. "|r"
   elseif self.challengeState.challengeCompleted and self.timerState.current > self.timerState.limit then
-    timerText = "|c" .. expiredColor .. timerText .. "|r"
+    state.timerText = "|c" .. state.expiredColor .. state.timerText .. "|r"
   end
 
-  self.frames.root.timerText:SetText(timerText)
+  self.frames.root.timerText:SetText(state.timerText)
 
   for i = 1, 3 do
-    local timeRemaining = timeLimits[i] - self.timerState.current
+    state.bar, state.limit = getBarAndLimitFor(self, i)
+    state.timeRemaining = state.limit - self.timerState.current
 
-    local barValue = Util.getBarPercent(i, percent)
-    local timeText = Util.formatTime(math.abs(timeRemaining))
+    state.barValue = Util.getBarPercent_OnUpdate(i, state.percent)
+    state.timeText = Util.formatTime_OnUpdate(math.abs(state.timeRemaining))
 
     if not self.challengeState.challengeCompleted then
-      if i == 1 and timeRemaining < 0 then
-        timeText = "|c" .. expiredColor .. "-".. timeText .. "|r"
+      if i == 1 and state.timeRemaining < 0 then
+        state.timeText = "|c" .. state.expiredColor .. "-".. state.timeText .. "|r"
       end
 
-      if i ~= 1 and timeRemaining < 0 then
-        timeText = ""
+      if i ~= 1 and state.timeRemaining < 0 then
+        state.timeText = ""
       end
     else
-      local color = timeRemaining <= 0 and expiredColor or successColor
-      timeText = "|c" .. color .. timeText .. "|r"
+      local color = state.timeRemaining <= 0 and state.expiredColor or state.successColor
+      state.timeText = "|c" .. color .. state.timeText .. "|r"
     end
 
-    bars[i].bar:SetValue(barValue)
-    bars[i].text:SetText(timeText)
+    state.bar.bar:SetValue(state.barValue)
+    state.bar.text:SetText(state.timeText)
   end
 end
 

@@ -309,7 +309,7 @@ function WarpDeplete:OnTimerTick(elapsed)
   local deathPenalty = self.timerState.deaths * 5
   local current = GetTime() + self.timerState.startOffset - self.timerState.startTime + deathPenalty
 
-  if current < 0 then return end
+  -- if current < 0 then return end
 
   self:SetTimerCurrent(current)
 end
