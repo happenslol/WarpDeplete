@@ -86,6 +86,10 @@ local defaults = {
   }
 }
 
+local function group(name)
+  local order = 0
+end
+
 local function font(order, name, profileVar, updateFn)
   return {
     order = order,
@@ -367,7 +371,7 @@ end
 function WarpDeplete:HandleChatCommand(input)
   local cmd = string.lower(input)
 
-  if cmd == "timerStatus" then
+  if cmd == "timerstatus" then
     self:PrintDebug("Offset: " .. self.timerState.startOffset .. ", " .. WarpDeplete.Util.formatTime(self.timerState.startOffset))
     self:PrintDebug("Start time: " .. self.timerState.startTime)
     self:PrintDebug("Deaths: " .. self.timerState.deaths)

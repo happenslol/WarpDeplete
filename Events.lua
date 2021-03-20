@@ -1,5 +1,8 @@
 local Util = WarpDeplete.Util
 
+local UPDATE_INTERVAL = 0.1
+local sinceLastUpdate = 0
+
 --TODO(happens): For some reason the timer is off by 10 seconds after the first death.
 -- The blizzard timer seems to jump up by 5 seconds while ours goes down 5 seconds,
 -- but the end of the timer seems to be correct for the blizzard timer. If we reload the
@@ -55,7 +58,15 @@ function WarpDeplete:StartChallengeTimer()
   self.timerState.startTime = GetTime()
   self.timerState.running = true
 
-  self:OnTimerTick()
+  sinceLastUpdate = 0
+  self.frames.root:SetScript("OnUpdate", function(self, elapsed)
+    WarpDeplete:OnTimerTick(elapsed)
+  end)
+end
+
+function WarpDeplete:StopChallengeTimer()
+  sinceLastUpdate = 0
+  self.frames.root:SetScript("OnUpdate", nil)
 end
 
 function WarpDeplete:StopChallengeMode()
@@ -99,6 +110,10 @@ function WarpDeplete:GetTimerInfo()
   -- someone else.
   if current > 2 then --TODO(happens): The WA is using 2 here, is that fine?
     self.timerState.isBlizzardTimer = true
+
+    -- If we call this without any delay, the timer will be off by 10
+    -- seconds. The blizzard timer also has this bug and corrects it
+    -- after the first death. Lmao
     C_Timer.After(0.5, function() 
       local current = select(2, GetWorldElapsedTime(1))
       local deaths = C_ChallengeMode.GetDeathCount()
@@ -180,7 +195,7 @@ function WarpDeplete:UpdateForces()
   if not self.challengeState.inChallenge then return end
 
   local stepCount = select(3, C_Scenario.GetStepInfo())
-  local _, _, _, currentCount = C_Scenario.GetCriteriaInfo(stepCount)
+  local currentCount = select(4, C_Scenario.GetCriteriaInfo(stepCount))
   self:PrintDebug("currentCount: " .. currentCount)
 
   if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
@@ -261,10 +276,20 @@ function WarpDeplete:UnregisterChallengeEvents()
   self:UnregisterEvent("PLAYER_REGEN_ENABLED")
   self:UnregisterEvent("UNIT_THREAT_LIST_UPDATE")
   self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+  self:UnregisterEvent("ON_UPDATE")
 end
 
-function WarpDeplete:OnTimerTick() 
-  if not self.challengeState.inChallenge or self.challengeState.challengeCompleted then return end
+function WarpDeplete:OnTimerTick(elapsed) 
+  if not self.challengeState.inChallenge or
+    self.challengeState.challengeCompleted or
+    not self.timerState.running then
+    self:StopChallengeTimer()
+    return
+  end
+
+  sinceLastUpdate = sinceLastUpdate + elapsed
+  if sinceLastUpdate <= UPDATE_INTERVAL then return end
+  sinceLastUpdate = 0
 
   --TODO(happens): We update this a lot, can we do this
   -- in a better way so it's not called 10 times a second?
@@ -275,12 +300,10 @@ function WarpDeplete:OnTimerTick()
 
   local deathPenalty = self.timerState.deaths * 5
   local current = GetTime() + self.timerState.startOffset - self.timerState.startTime + deathPenalty
-  
 
   if current < 0 then return end
 
   self:SetTimerCurrent(current)
-  C_Timer.After(0.1, function() self:OnTimerTick() end)
 end
 
 function WarpDeplete:OnCheckChallengeMode(ev)
@@ -392,9 +415,9 @@ function WarpDeplete:OnThreatListUpdate(ev, unit)
   self:PrintDebug("Getting npc id for unit " .. tostring(unit))
   local npcID = select(6, strsplit("-", guid))
   local count = MDT:GetEnemyForces(tonumber(npcID))
-  self:PrintDebug("Got forces for unit: " .. tonumber(count))
 
   if not count or count <= 0 then return end
+  self:PrintDebug("Got forces for unit: " .. count)
 
   self.forcesState.currentPull[guid] = count
 
