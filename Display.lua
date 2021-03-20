@@ -246,7 +246,7 @@ function WarpDeplete:UpdateLayout()
 
   -- +3 bar
   local bar3Width = barWidth / 100 * 60
-  self.bar3:SetLayout("#979797", bar3Width, barHeight, 0,
+  self.bar3:SetLayout("979797", bar3Width, barHeight, 0,
     timerBarOffsetY - barPixelAdjust)
   self.bar3.text:SetFont(self.LSM:Fetch("font", bar3Font), bar3FontSize, bar3FontFlags)
   self.bar3.text:SetJustifyH("RIGHT")
@@ -255,7 +255,7 @@ function WarpDeplete:UpdateLayout()
 
   -- +2 bar
   local bar2Width = barWidth / 100 * 20 - timerBarOffsetX
-  self.bar2:SetLayout("#979797", bar2Width, barHeight,
+  self.bar2:SetLayout("979797", bar2Width, barHeight,
     bar3Width + timerBarOffsetX, timerBarOffsetY - barPixelAdjust)
   self.bar2.text:SetFont(self.LSM:Fetch("font", bar2Font), bar2FontSize, bar2FontFlags)
   self.bar2.text:SetJustifyH("RIGHT")
@@ -264,7 +264,7 @@ function WarpDeplete:UpdateLayout()
 
   -- +1 bar
   local bar1Width = barWidth / 100 * 20 - timerBarOffsetX
-  self.bar1:SetLayout("#979797", bar1Width, barHeight,
+  self.bar1:SetLayout("979797", bar1Width, barHeight,
     bar3Width + bar2Width + timerBarOffsetX * 2, timerBarOffsetY - barPixelAdjust)
   self.bar1.text:SetFont(self.LSM:Fetch("font", bar1Font), bar1FontSize, bar1FontFlags)
   self.bar1.text:SetJustifyH("RIGHT")
@@ -273,13 +273,13 @@ function WarpDeplete:UpdateLayout()
 
   -- Forces bar
   local r, g, b = Util.hexToRGB(self.db.profile.forcesColor)
-  self.forces:SetLayout("#bb9e22", barWidth, barHeight, 0, -timerBarOffsetY)
+  self.forces:SetLayout("bb9e22", barWidth, barHeight, 0, -timerBarOffsetY)
   self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont), forcesFontSize, forcesFontFlags)
   self.forces.text:SetJustifyH("RIGHT")
   self.forces.text:SetTextColor(r, g, b, 1)
   self.forces.text:SetPoint("TOPRIGHT", -barFontOffsetX, -barFontOffsetY)
 
-  r, g, b = Util.hexToRGB("#ff5515")
+  r, g, b = Util.hexToRGB("ff5515")
   self.forces.overlayBar:SetMinMaxValues(0, 1)
   self.forces.overlayBar:SetValue(0)
   self.forces.overlayBar:SetPoint("LEFT", 0, 0)
@@ -335,46 +335,45 @@ function WarpDeplete:SetTimerCurrent(time)
 end
 
 function WarpDeplete:UpdateTimerDisplay()
-  local state = self.tickState
+  self.tickState.expiredColor = self.db.profile.timerExpiredColor
+  self.tickState.successColor = self.db.profile.timerSuccessColor
 
-  --TODO(happens): Remove hex prefixes everywhere
-  state.expiredColor = Util.removeHexPrefix(self.db.profile.timerExpiredColor)
-  state.successColor = Util.removeHexPrefix(self.db.profile.timerSuccessColor)
+  self.tickState.percent = self.timerState.limit > 0 and self.timerState.current / self.timerState.limit or 0
 
-  state.percent = self.timerState.limit > 0 and self.timerState.current / self.timerState.limit or 0
-
-  state.timerText = Util.formatTime_OnUpdate(self.timerState.current) ..
+  self.tickState.timerText = Util.formatTime_OnUpdate(self.timerState.current) ..
     " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
 
   if self.challengeState.challengeCompleted and self.timerState.current <= self.timerState.limit then
-    state.timerText = "|c" .. state.successColor .. state.timerText .. "|r"
+    self.tickState.timerText = "|c" .. self.tickState.successColor .. self.tickState.timerText .. "|r"
   elseif self.challengeState.challengeCompleted and self.timerState.current > self.timerState.limit then
-    state.timerText = "|c" .. state.expiredColor .. state.timerText .. "|r"
+    self.tickState.timerText = "|c" .. self.tickState.expiredColor .. self.tickState.timerText .. "|r"
   end
 
-  self.frames.root.timerText:SetText(state.timerText)
+  self.frames.root.timerText:SetText(self.tickState.timerText)
 
   for i = 1, 3 do
-    state.timeRemaining = self.timerState.limits[i] - self.timerState.current
+    self.tickState.timeRemaining = self.timerState.limits[i] - self.timerState.current
 
-    state.barValue = Util.getBarPercent_OnUpdate(i, state.percent)
-    state.timeText = Util.formatTime_OnUpdate(math.abs(state.timeRemaining))
+    self.tickState.barValue = Util.getBarPercent_OnUpdate(i, self.tickState.percent)
+    self.tickState.timeText = Util.formatTime_OnUpdate(math.abs(self.tickState.timeRemaining))
 
     if not self.challengeState.challengeCompleted then
-      if i == 1 and state.timeRemaining < 0 then
-        state.timeText = "|c" .. state.expiredColor .. "-".. state.timeText .. "|r"
+      if i == 1 and self.tickState.timeRemaining < 0 then
+        self.tickState.timeText = "|c" .. self.tickState.expiredColor .. "-".. self.tickState.timeText .. "|r"
       end
 
-      if i ~= 1 and state.timeRemaining < 0 then
-        state.timeText = ""
+      if i ~= 1 and self.tickState.timeRemaining < 0 then
+        self.tickState.timeText = ""
       end
     else
-      local color = state.timeRemaining <= 0 and state.expiredColor or state.successColor
-      state.timeText = "|c" .. color .. state.timeText .. "|r"
+      self.tickState.color = self.tickState.timeRemaining <= 0 and
+        self.tickState.expiredColor or self.tickState.successColor
+
+      self.tickState.timeText = "|c" .. self.tickState.color .. self.tickState.timeText .. "|r"
     end
 
-    self.bars[i].bar:SetValue(state.barValue)
-    self.bars[i].text:SetText(state.timeText)
+    self.bars[i].bar:SetValue(self.tickState.barValue)
+    self.bars[i].text:SetText(self.tickState.timeText)
   end
 end
 
@@ -468,7 +467,7 @@ function WarpDeplete:UpdatePrideGlow()
 end
 
 function WarpDeplete:ShowPrideGlow()
-  local glowColor = "#CB091E"
+  local glowColor = "CB091E"
   local glowR, glowG, glowB = Util.hexToRGB(glowColor)
   self.Glow.PixelGlow_Start(
     self.forces.bar, -- frame
@@ -504,7 +503,7 @@ function WarpDeplete:SetObjectives(objectives)
 end
 
 function WarpDeplete:UpdateObjectivesDisplay()
-  local completionColor = Util.removeHexPrefix(self.db.profile.completedObjectivesColor)
+  local completionColor = self.db.profile.completedObjectivesColor
 
   -- Clear existing objective list
   for i = 1, 5 do

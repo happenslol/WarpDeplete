@@ -39,14 +39,14 @@ local defaults = {
     objectivesFontFlags = "OUTLINE",
 
     -- Font colors
-    timerRunningColor = "#FFFFFFFF",
-    timerExpiredColor = "#FFFF2A2E",
-    timerSuccessColor = "#FF00FF24",
-    keyDetailsColor = "#FFB1B1B1",
-    forcesColor = "#FFFFFFFF",
-    completedForcesColor = "#FF00FF24",
-    objectivesColor = "#FFFFFFFF",
-    completedObjectivesColor = "#FF00FF24",
+    timerRunningColor = "FFFFFFFF",
+    timerExpiredColor = "FFFF2A2E",
+    timerSuccessColor = "FF00FF24",
+    keyDetailsColor = "FFB1B1B1",
+    forcesColor = "FFFFFFFF",
+    completedForcesColor = "FF00FF24",
+    objectivesColor = "FFFFFFFF",
+    completedObjectivesColor = "FF00FF24",
 
     -- Font sizes for text parts
     deathsFontSize = 16,

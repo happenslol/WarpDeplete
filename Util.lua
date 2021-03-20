@@ -39,9 +39,8 @@ function Util.formatForcesText(completedColor, showPercent, showCount, pullCount
   end
 
   if completedTime and result then
-    local color = Util.removeHexPrefix(completedColor)
     local completedText = ("[%s] "):format(Util.formatTime(completedTime))
-    result = "|c" .. color .. completedText .. result .. "|r"
+    result = "|c" .. completedColor .. completedText .. result .. "|r"
   end
 
   return result or ""
@@ -93,13 +92,7 @@ function Util.formatDeathTimeMinutes(time)
   return ("%d:%02d"):format(timeMin, timeSec)
 end
 
-function Util.removeHexPrefix(hex)
-  return hex:gsub("#", "")
-end
-
-function Util.hexToRGB(v)
-  local hex = Util.removeHexPrefix(v)
-
+function Util.hexToRGB(hex)
 	if string.len(hex) == 8 then
     return tonumber("0x" .. hex:sub(3, 4)) / 255,
       tonumber("0x" .. hex:sub(5, 6)) / 255,
@@ -117,11 +110,11 @@ function Util.rgbToHex(r, g, b, a)
 	g = math.ceil(255 * g)
 	b = math.ceil(255 * b)
 	if not a then
-    return string.format("#FF%02x%02x%02x", r, g, b)
+    return string.format("FF%02x%02x%02x", r, g, b)
   end
 
   a = math.ceil(255 * a)
-  return string.format("#%02x%02x%02x%02x", a, r, g, b)
+  return string.format("%02x%02x%02x%02x", a, r, g, b)
 end
 
 function Util.copy(obj, seen)
