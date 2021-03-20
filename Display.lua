@@ -39,6 +39,8 @@ function WarpDeplete:InitDisplay()
   bar1.text = bar1Text
   self.bar1 = bar1
 
+  self.bars = {self.bar1, self.bar2, self.bar3}
+
   -- Forces bar
   local forces = self:CreateProgressBar(self.frames.bars)
   local forcesText = forces.bar:CreateFontString(nil, "ARTWORK")
@@ -306,6 +308,7 @@ function WarpDeplete:SetTimerLimit(limit)
   self.timerState.limit = limit
   self.timerState.plusTwo = limit * 0.8
   self.timerState.plusThree = limit * 0.6
+  self.timerState.limits = { self.timerState.limit, self.timerState.plusTwo, self.timerState.plusThree }
 
   self.timerState.remaining = limit - self.timerState.current
   self:UpdateTimerDisplay()
@@ -320,6 +323,12 @@ end
 
 -- Expects value in seconds
 function WarpDeplete:SetTimerCurrent(time)
+  if self.timerState.limit - time == self.timerState.remaining then
+    return
+  end
+  if self.timerState.current == time then
+    return
+  end
   self.timerState.remaining = self.timerState.limit - time
   self.timerState.current = time
   self:UpdateTimerDisplay()
@@ -352,8 +361,7 @@ function WarpDeplete:UpdateTimerDisplay()
   self.frames.root.timerText:SetText(state.timerText)
 
   for i = 1, 3 do
-    state.bar, state.limit = getBarAndLimitFor(self, i)
-    state.timeRemaining = state.limit - self.timerState.current
+    state.timeRemaining = self.timerState.limits[i] - self.timerState.current
 
     state.barValue = Util.getBarPercent_OnUpdate(i, state.percent)
     state.timeText = Util.formatTime_OnUpdate(math.abs(state.timeRemaining))
@@ -371,8 +379,8 @@ function WarpDeplete:UpdateTimerDisplay()
       state.timeText = "|c" .. color .. state.timeText .. "|r"
     end
 
-    state.bar.bar:SetValue(state.barValue)
-    state.bar.text:SetText(state.timeText)
+    self.bars[i].bar:SetValue(state.barValue)
+    self.bars[i].text:SetText(state.timeText)
   end
 end
 
