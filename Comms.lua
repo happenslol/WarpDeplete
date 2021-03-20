@@ -47,7 +47,7 @@ function WarpDeplete:OnTimerSyncRequest(prefix, message, dist, sender)
 end
 
 function WarpDeplete:OnTimerSyncResponse(prefix, message, dist, sender)
-  local currentRaw, typeRaw = strsplit(message, "|")
+  local currentRaw, typeRaw = strsplit("|", message)
   local isBlizzard = typeRaw == "blizz"
   local current = tonumber(currentRaw)
 
@@ -68,7 +68,7 @@ end
 function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
   if message ~= requestMessage then return end
 
-  local completionTimes = {}
+  local completionTimes = ""
   local hasAny = false
   for i, obj in ipairs(self.objectivesState) do
     hasAny = obj.time ~= nil or hasAny
@@ -84,7 +84,7 @@ function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
 end
 
 function WarpDeplete:OnObjectiveSyncResponse(prefix, message, dist, sender)
-  local parts = strsplit(message, "|")
+  local parts = strsplit("|", message)
 
   for i, objTimeRaw in ipairs(parts) do
     local objTime = tonumber(objTimeRaw)
