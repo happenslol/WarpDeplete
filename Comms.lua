@@ -24,11 +24,13 @@ function WarpDeplete:RegisterComms()
 end
 
 function WarpDeplete:RequestTimerSync()
-  self:SendCommMessage(timerRequestPrefix, requestMessage, "PARTY")
+  self:PrintDebug("Requesting timer sync")
+  self:SendCommMessage(timerRequestPrefix, requestMessage, "PARTY", nil, "ALERT")
 end
 
 function WarpDeplete:RequestObjectiveSync()
-  self:SendCommMessage(objectiveRequestPrefix, requestMessage, "PARTY")
+  self:PrintDebug("Requesting objective sync")
+  self:SendCommMessage(objectiveRequestPrefix, requestMessage, "PARTY", nil, "ALERT")
 end
 
 function WarpDeplete:OnTimerSyncRequest(prefix, message, dist, sender)
@@ -41,13 +43,16 @@ function WarpDeplete:OnTimerSyncRequest(prefix, message, dist, sender)
     text = text .. "|gettime"
   end
 
-  self:SendCommMessage(timerResponsePrefix, text, "WHISPER", sender)
+  self:SendCommMessage(timerResponsePrefix, text, "WHISPER", sender, "ALERT")
 end
 
 function WarpDeplete:OnTimerSyncResponse(prefix, message, dist, sender)
   local currentRaw, typeRaw = strsplit(message, "|")
   local isBlizzard = typeRaw == "blizz"
   local current = tonumber(currentRaw)
+
+  self:PrintDebug("Received time from " .. sender .. ": "
+    .. tonumber(current) .. ", type: " .. typeRaw)
 
   --TODO(happens): Set start time, current and remaining, possibly using an offset?
   -- This should always prefer a gettime timer, if we get any. So check for our
@@ -71,7 +76,7 @@ function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
   if not hasAny then return end
 
   local text = Util.joinStrings(completionTimes, "|")
-  self:SendCommMessage(objectiveResponsePrefix, text, "WHISPER", sender)
+  self:SendCommMessage(objectiveResponsePrefix, text, "WHISPER", sender, "ALERT")
 end
 
 function WarpDeplete:OnObjectiveSyncResponse(prefix, message, dist, sender)

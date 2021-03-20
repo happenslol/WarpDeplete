@@ -66,6 +66,14 @@ function WarpDeplete:StopChallengeMode()
 end
 
 function WarpDeplete:CompleteChallengeMode()
+  --TODO(happens): Refresh information from blizzard timer so we have
+  -- an accurate finish time. If we load in afterwards this is done automatically,
+  -- but if we used our own timer we should redo it.
+  self.challengeState.completed = true
+
+  self:UpdateTimerDisplay()
+  self:UpdateObjectivesDisplay()
+  self:UpdateForcesDisplay()
 end
 
 function WarpDeplete:GetTimerInfo()
@@ -291,15 +299,7 @@ end
 
 function WarpDeplete:OnChallengeModeCompleted(ev)
   self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
-
-  --TODO(happens): Refresh information from blizzard timer so we have
-  -- an accurate finish time. If we load in afterwards this is done automatically,
-  -- but if we used our own timer we should redo it.
-  self.challengeState.completed = true
-
-  self:UpdateTimerDisplay()
-  self:UpdateObjectivesDisplay()
-  self:UpdateForcesDisplay()
+  self:CompleteChallengeMode()
 end
 
 function WarpDeplete:OnKeystoneOpen(ev)
