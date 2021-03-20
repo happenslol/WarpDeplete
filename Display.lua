@@ -225,7 +225,7 @@ function WarpDeplete:UpdateLayout()
   local keyDetailsText = self.frames.root.keyDetailsText
   keyDetailsText:SetFont(self.LSM:Fetch("font", keyDetailsFont), keyDetailsFontSize, keyDetailsFontFlags)
   keyDetailsText:SetJustifyH("RIGHT")
-  r, g, b = Util.hexToRGB("#B1B1B1")
+  r, g, b = Util.hexToRGB(self.db.profile.keyDetailsColor)
   keyDetailsText:SetTextColor(r, g, b, 1)
   keyDetailsText:SetPoint("TOPRIGHT", -framePadding - 3, currentOffset)
 
@@ -240,6 +240,7 @@ function WarpDeplete:UpdateLayout()
 
   -- Bars
   local barPixelAdjust = 0.5
+  local r, g, b = Util.hexToRGB(self.db.profile.timerRunningColor)
 
   -- +3 bar
   local bar3Width = barWidth / 100 * 60
@@ -247,7 +248,7 @@ function WarpDeplete:UpdateLayout()
     timerBarOffsetY - barPixelAdjust)
   self.bar3.text:SetFont(self.LSM:Fetch("font", bar3Font), bar3FontSize, bar3FontFlags)
   self.bar3.text:SetJustifyH("RIGHT")
-  self.bar3.text:SetTextColor(1, 1, 1, 1)
+  self.bar3.text:SetTextColor(r, g, b, 1)
   self.bar3.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
 
   -- +2 bar
@@ -256,7 +257,7 @@ function WarpDeplete:UpdateLayout()
     bar3Width + timerBarOffsetX, timerBarOffsetY - barPixelAdjust)
   self.bar2.text:SetFont(self.LSM:Fetch("font", bar2Font), bar2FontSize, bar2FontFlags)
   self.bar2.text:SetJustifyH("RIGHT")
-  self.bar2.text:SetTextColor(1, 1, 1, 1)
+  self.bar2.text:SetTextColor(r, g, b, 1)
   self.bar2.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
 
   -- +1 bar
@@ -265,14 +266,15 @@ function WarpDeplete:UpdateLayout()
     bar3Width + bar2Width + timerBarOffsetX * 2, timerBarOffsetY - barPixelAdjust)
   self.bar1.text:SetFont(self.LSM:Fetch("font", bar1Font), bar1FontSize, bar1FontFlags)
   self.bar1.text:SetJustifyH("RIGHT")
-  self.bar1.text:SetTextColor(1, 1, 1, 1)
+  self.bar1.text:SetTextColor(r, g, b, 1)
   self.bar1.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
 
   -- Forces bar
+  local r, g, b = Util.hexToRGB(self.db.profile.forcesColor)
   self.forces:SetLayout("#bb9e22", barWidth, barHeight, 0, -timerBarOffsetY)
   self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont), forcesFontSize, forcesFontFlags)
   self.forces.text:SetJustifyH("RIGHT")
-  self.forces.text:SetTextColor(1, 1, 1, 1)
+  self.forces.text:SetTextColor(r, g, b, 1)
   self.forces.text:SetPoint("TOPRIGHT", -barFontOffsetX, -barFontOffsetY)
 
   r, g, b = Util.hexToRGB("#ff5515")
@@ -291,7 +293,8 @@ function WarpDeplete:UpdateLayout()
     local objectiveText = self.frames.root.objectiveTexts[i]
     objectiveText:SetFont(self.LSM:Fetch("font", objectivesFont), objectivesFontSize, objectivesFontFlags)
     objectiveText:SetJustifyH("RIGHT")
-    objectiveText:SetTextColor(1, 1, 1, 1)
+    local r, g, b = Util.hexToRGB(self.db.profile.objectivesColor)
+    objectiveText:SetTextColor(r, g, b, 1)
     objectiveText:SetPoint("TOPRIGHT", -framePadding, currentOffset)
 
     currentOffset = currentOffset - (objectivesFontSize + objectivesOffset)
@@ -323,8 +326,8 @@ function WarpDeplete:SetTimerCurrent(time)
 end
 
 function WarpDeplete:UpdateTimerDisplay()
-  local expiredColor = self.db.profile.timerExpiredColor
-  local successColor = self.db.profile.timerSuccessColor
+  local expiredColor = Util.removeHexPrefix(self.db.profile.timerExpiredColor)
+  local successColor = Util.removeHexPrefix(self.db.profile.timerSuccessColor)
 
   local percent = self.timerState.limit > 0 and self.timerState.current / self.timerState.limit or 0
   local bars = {self.bar1, self.bar2, self.bar3}
@@ -334,9 +337,9 @@ function WarpDeplete:UpdateTimerDisplay()
     " / " .. Util.formatTime(self.timerState.limit)
 
   if self.challengeState.challengeCompleted and self.timerState.current <= self.timerState.limit then
-    timerText = "|cFF" .. successColor .. timerText .. "|r"
+    timerText = "|c" .. successColor .. timerText .. "|r"
   elseif self.challengeState.challengeCompleted and self.timerState.current > self.timerState.limit then
-    timerText = "|cFF" .. expiredColor .. timerText .. "|r"
+    timerText = "|c" .. expiredColor .. timerText .. "|r"
   end
 
   self.frames.root.timerText:SetText(timerText)
@@ -349,7 +352,7 @@ function WarpDeplete:UpdateTimerDisplay()
 
     if not self.challengeState.challengeCompleted then
       if i == 1 and timeRemaining < 0 then
-        timeText = "|c00FF2A2E-".. timeText .. "|r"
+        timeText = "|c" .. expiredColor .. "-".. timeText .. "|r"
       end
 
       if i ~= 1 and timeRemaining < 0 then
@@ -357,7 +360,7 @@ function WarpDeplete:UpdateTimerDisplay()
       end
     else
       local color = timeRemaining <= 0 and expiredColor or successColor
-      timeText = "|c00" .. color .. timeText .. "|r"
+      timeText = "|c" .. color .. timeText .. "|r"
     end
 
     bars[i].bar:SetValue(barValue)
@@ -420,6 +423,7 @@ function WarpDeplete:UpdateForcesDisplay()
 
   self.forces.text:SetText(
     Util.formatForcesText(
+      self.db.profile.completedForcesColor,
       self.db.profile.showForcesPercent,
       self.db.profile.showForcesCount,
       self.forcesState.pullCount,
@@ -490,7 +494,7 @@ function WarpDeplete:SetObjectives(objectives)
 end
 
 function WarpDeplete:UpdateObjectivesDisplay()
-  local completionColor = Util.removeHexPrefix("#00FF24")
+  local completionColor = Util.removeHexPrefix(self.db.profile.completedObjectivesColor)
 
   -- Clear existing objective list
   for i = 1, 5 do
@@ -506,7 +510,7 @@ function WarpDeplete:UpdateObjectivesDisplay()
         objectiveStr = "[" .. completionTimeStr .. "] " .. objectiveStr
       end
 
-      objectiveStr = "|cFF" .. completionColor .. objectiveStr .. "|r"
+      objectiveStr = "|c" .. completionColor .. objectiveStr .. "|r"
     end
 
     self.frames.root.objectiveTexts[i]:SetText(objectiveStr)

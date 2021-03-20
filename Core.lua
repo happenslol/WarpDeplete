@@ -107,7 +107,7 @@ function WarpDeplete:EnableDemoMode()
   self:SetKeyDetails(30, {"Tyrannical", "Bolstering", "Spiteful", "Prideful"})
 
   self:SetTimerLimit(35 * 60)
-  self:SetTimerRemaining(8 * 60)
+  self:SetTimerRemaining(20 * 60)
   self:SetForcesCurrent(34)
   self:SetForcesPull(7)
   self:SetDeaths(3)

@@ -1,6 +1,6 @@
 local Util = WarpDeplete.Util
 
-function Util.formatForcesText(showPercent, showCount, pullCount, currentCount, totalCount, completedTime)
+function Util.formatForcesText(completedColor, showPercent, showCount, pullCount, currentCount, totalCount, completedTime)
   local currentPercent = (currentCount / totalCount) * 100
   if currentPercent > 100.0 then currentPercent = 100.0 end
 
@@ -36,8 +36,9 @@ function Util.formatForcesText(showPercent, showCount, pullCount, currentCount, 
   end
 
   if completedTime and result then
+    local color = Util.removeHexPrefix(completedColor)
     local completedText = ("[%s] "):format(Util.formatTime(completedTime))
-    result = "|cFF00FF24" .. completedText .. result .. "|r"
+    result = "|c" .. color .. completedText .. result .. "|r"
   end
 
   return result or ""
@@ -90,10 +91,10 @@ function Util.hexToRGB(v)
   local hex = Util.removeHexPrefix(v)
 
 	if string.len(hex) == 8 then
-    return tonumber("0x" .. hex:sub(1, 2)) / 255,
-      tonumber("0x" .. hex:sub(3, 4)) / 255,
+    return tonumber("0x" .. hex:sub(3, 4)) / 255,
       tonumber("0x" .. hex:sub(5, 6)) / 255,
-      tonumber("0x" .. hex:sub(7, 8)) / 255
+      tonumber("0x" .. hex:sub(7, 8)) / 255,
+      tonumber("0x" .. hex:sub(1, 2)) / 255
   end
 
   return tonumber("0x" .. hex:sub(1, 2)) / 255,
@@ -106,11 +107,11 @@ function Util.rgbToHex(r, g, b, a)
 	g = math.ceil(255 * g)
 	b = math.ceil(255 * b)
 	if not a then
-    return string.format("FF%02x%02x%02x", r, g, b)
+    return string.format("#FF%02x%02x%02x", r, g, b)
   end
 
   a = math.ceil(255 * a)
-  return string.format("%02x%02x%02x%02x", a, r, g, b)
+  return string.format("#%02x%02x%02x%02x", a, r, g, b)
 end
 
 function Util.copy(obj, seen)

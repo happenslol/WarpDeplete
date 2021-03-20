@@ -1,3 +1,5 @@
+local Util = WarpDeplete.Util
+
 local defaults = {
   global = {
     DEBUG = false
@@ -36,9 +38,15 @@ local defaults = {
     forcesFontFlags = "OUTLINE",
     objectivesFontFlags = "OUTLINE",
 
-    timerRunningColor = "#FFFFFF",
-    timerExpiredColor = "#FF2A2E",
-    timerSuccessColor = "#FF2A2E",
+    -- Font colors
+    timerRunningColor = "#FFFFFFFF",
+    timerExpiredColor = "#FFFF2A2E",
+    timerSuccessColor = "#FF00FF24",
+    keyDetailsColor = "#FFB1B1B1",
+    forcesColor = "#FFFFFFFF",
+    completedForcesColor = "#FF00FF24",
+    objectivesColor = "#FFFFFFFF",
+    completedObjectivesColor = "#FF00FF24",
 
     -- Font sizes for text parts
     deathsFontSize = 16,
@@ -93,7 +101,7 @@ local function font(order, name, profileVar, updateFn)
   }
 end
 
-local function fontSize(order, name, profileVar, updateFn)
+local function range(order, name, profileVar, updateFn)
   return {
     order = order,
     type = "range",
@@ -101,7 +109,7 @@ local function fontSize(order, name, profileVar, updateFn)
     min = 8,
     max = 40,
     step = 1,
-    get = function(info) return WarpDeplete.db.profile.forcesFontSize end,
+    get = function(info) return WarpDeplete.db.profile[profileVar] end,
     set = function(info, value)
       WarpDeplete.db.profile[profileVar] = value
       WarpDeplete[updateFn](WarpDeplete)
@@ -137,6 +145,30 @@ local function fontFlags(order, name, profileVar, updateFn)
     get = function(info) return WarpDeplete.db.profile[profileVar] end,
     set = function(info, value)
       WarpDeplete.db.profile[profileVar] = value
+      WarpDeplete[updateFn](WarpDeplete)
+    end
+  }
+end
+
+local function lineBreak(order)
+  return {
+    order = order,
+    type = "description",
+    name = ""
+  }
+end
+
+local function color(order, name, profileVar, updateFn)
+  return {
+    order = order,
+    type = "color",
+    name = name,
+    get = function(info)
+      local r, g, b, a = Util.hexToRGB(WarpDeplete.db.profile[profileVar])
+      return r, g, b, a or 1
+    end,
+    set = function(info, r, g, b, a)
+      WarpDeplete.db.profile[profileVar] = Util.rgbToHex(r, g, b, a)
       WarpDeplete[updateFn](WarpDeplete)
     end
   }
@@ -192,24 +224,45 @@ function WarpDeplete:InitOptions()
             inline = true,
             args = {
               timerFont = font(1, "Timer font", "timerFont", "UpdateLayout"),
-              timerFontSize = fontSize(2, "Timer font size", "timerFontSize", "UpdateLayout"),
+              timerFontSize = range(2, "Timer font size", "timerFontSize", "UpdateLayout"),
               timerFontFlags = fontFlags(3, "Timer font flags", "timerFontFlags", "UpdateLayout"),
+              timerColor = color(4, "Timer color", "timerRunningColor", "UpdateLayout"),
+              timerSuccessColor = color(5, "Timer success color", "timerSuccessColor", "UpdateLayout"),
+              timerExpiredColor = color(6, "Timer expired color", "timerExpiredColor", "UpdateLayout"),
 
-              forcesFont = font(4, "Forces font", "forcesFont", "UpdateLayout"),
-              forcesFontSize = fontSize(5, "Forces font size", "forcesFontSize", "UpdateLayout"),
-              forcesFontFlags = fontFlags(6, "Forces font flags", "forcesFontFlags", "UpdateLayout"),
+              b1 = lineBreak(7),
 
-              bar1Font = font(7, "+1 Timer font", "bar1Font", "UpdateLayout"),
-              bar1FontSize = fontSize(8, "+1 Timer font size", "bar1FontSize", "UpdateLayout"),
-              bar1FontFlags = fontFlags(9, "+1 Timer font flags", "bar1FontFlags", "UpdateLayout"),
+              forcesFont = font(8, "Forces font", "forcesFont", "UpdateLayout"),
+              forcesFontSize = range(9, "Forces font size", "forcesFontSize", "UpdateLayout"),
+              forcesFontFlags = fontFlags(10, "Forces font flags", "forcesFontFlags", "UpdateLayout"),
+              forcesColor = color(11, "Forces color", "forcesColor", "UpdateLayout"),
+              completedForcesColor = color(12, "Completed forces color", "completedForcesColor", "UpdateLayout"),
 
-              bar2Font = font(10, "+2 Timer font", "bar2Font", "UpdateLayout"),
-              bar2FontSize = fontSize(11, "+2 Timer font size", "bar2FontSize", "UpdateLayout"),
-              bar2FontFlags = fontFlags(12, "+2 Timer font flags", "bar2FontFlags", "UpdateLayout"),
+              b2 = lineBreak(13),
 
-              bar3Font = font(13, "+2 Timer font", "bar3Font", "UpdateLayout"),
-              bar3FontSize = fontSize(14, "+2 Timer font size", "bar3FontSize", "UpdateLayout"),
-              bar3FontFlags = fontFlags(15, "+2 Timer font flags", "bar3FontFlags", "UpdateLayout"),
+              bar1Font = font(14, "+1 Timer font", "bar1Font", "UpdateLayout"),
+              bar1FontSize = range(15, "+1 Timer font size", "bar1FontSize", "UpdateLayout"),
+              bar1FontFlags = fontFlags(16, "+1 Timer font flags", "bar1FontFlags", "UpdateLayout"),
+
+              b3 = lineBreak(17),
+
+              bar2Font = font(18, "+2 Timer font", "bar2Font", "UpdateLayout"),
+              bar2FontSize = range(19, "+2 Timer font size", "bar2FontSize", "UpdateLayout"),
+              bar2FontFlags = fontFlags(20, "+2 Timer font flags", "bar2FontFlags", "UpdateLayout"),
+
+              b4 = lineBreak(18),
+
+              bar3Font = font(19, "+2 Timer font", "bar3Font", "UpdateLayout"),
+              bar3FontSize = range(20, "+2 Timer font size", "bar3FontSize", "UpdateLayout"),
+              bar3FontFlags = fontFlags(21, "+2 Timer font flags", "bar3FontFlags", "UpdateLayout"),
+
+              b5 = lineBreak(22),
+
+              objectivesFont = font(23, "Objectives font", "objectivesFont", "UpdateLayout"),
+              objectivesFontSize = range(24, "Objectives font size", "objectivesFontSize", "UpdateLayout"),
+              objectivesFontFlags = fontFlags(25, "Objectives font flags", "objectivesFontFlags", "UpdateLayout"),
+              objectivesColor = color(26, "Objectives color", "objectivesColor", "UpdateLayout"),
+              completedObjectivesColor = color(27, "Completed objective color", "completedObjectivesColor", "UpdateLayout"),
             },
           }
         }
@@ -330,11 +383,8 @@ function WarpDeplete:HandleChatCommand(input)
   end
 
   if cmd == "demo" then
-    if self.timerState.demoModeActive then
-      self:DisableDemoMode()
-    else
-      self:EnableDemoMode()
-    end
+    if self.timerState.demoModeActive then self:DisableDemoMode()
+    else self:EnableDemoMode() end
     return
   end
 
