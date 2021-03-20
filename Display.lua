@@ -333,9 +333,9 @@ function WarpDeplete:UpdateTimerDisplay()
   local timerText = Util.formatTime(self.timerState.current) ..
     " / " .. Util.formatTime(self.timerState.limit)
 
-  if self.challengeState.completed and self.timerState.current <= self.timerState.limit then
+  if self.challengeState.challengeCompleted and self.timerState.current <= self.timerState.limit then
     timerText = "|cFF" .. successColor .. timerText .. "|r"
-  elseif self.challengeState.completed and self.timerState.current > self.timerState.limit then
+  elseif self.challengeState.challengeCompleted and self.timerState.current > self.timerState.limit then
     timerText = "|cFF" .. expiredColor .. timerText .. "|r"
   end
 
@@ -347,7 +347,7 @@ function WarpDeplete:UpdateTimerDisplay()
     local barValue = Util.getBarPercent(i, percent)
     local timeText = Util.formatTime(math.abs(timeRemaining))
 
-    if not self.challengeState.completed then
+    if not self.challengeState.challengeCompleted then
       if i == 1 and timeRemaining < 0 then
         timeText = "|c00FF2A2E-".. timeText .. "|r"
       end
@@ -435,7 +435,7 @@ end
 function WarpDeplete:UpdatePrideGlow()
   if self.keyDetailsState.level < 10 then return end
 
-  if self.challengeDetails.challengeCompleted then
+  if self.challengeState.challengeCompleted then
     if self.forcesState.prideGlowActive then self:HidePrideGlow() end
     return
   end

@@ -69,7 +69,7 @@ function WarpDeplete:CompleteChallengeMode()
   --TODO(happens): Refresh information from blizzard timer so we have
   -- an accurate finish time. If we load in afterwards this is done automatically,
   -- but if we used our own timer we should redo it.
-  self.challengeState.completed = true
+  self.challengeState.challengeCompleted = true
 
   self:UpdateTimerDisplay()
   self:UpdateObjectivesDisplay()
@@ -254,7 +254,7 @@ function WarpDeplete:UnregisterChallengeEvents()
 end
 
 function WarpDeplete:OnTimerTick() 
-  if not self.challengeState.inChallenge or self.challengeState.completed then return end
+  if not self.challengeState.inChallenge or self.challengeState.challengeCompleted then return end
 
   --TODO(happens): We update this a lot, can we do this
   -- in a better way so it's not called 10 times a second?
