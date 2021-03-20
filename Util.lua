@@ -86,7 +86,9 @@ function Util.removeHexPrefix(hex)
   return hex:gsub("#", "")
 end
 
-function Util.hexToRGB(hex)
+function Util.hexToRGB(v)
+  local hex = Util.removeHexPrefix(v)
+
 	if string.len(hex) == 8 then
     return tonumber("0x" .. hex:sub(1, 2)) / 255,
       tonumber("0x" .. hex:sub(3, 4)) / 255,

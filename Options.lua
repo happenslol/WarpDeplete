@@ -340,6 +340,7 @@ function WarpDeplete:HandleChatCommand(input)
 
   if cmd == "debug" then
     self.db.global.DEBUG = not self.db.global.DEBUG
+    return
   end
 
   -- We have to call this twice in a row due to a stupid bug...
