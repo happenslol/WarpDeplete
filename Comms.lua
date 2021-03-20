@@ -34,7 +34,7 @@ function WarpDeplete:RequestObjectiveSync()
 end
 
 function WarpDeplete:OnTimerSyncRequest(prefix, message, dist, sender)
-  if message ~= requestMessage then return end
+  if message ~= requestMessage or sender == GetUnitName("player", false) then return end
 
   local text = ("%d"):format(self.timerState.current)
   if self.timerState.isBlizzardTimer then
@@ -67,7 +67,7 @@ function WarpDeplete:OnTimerSyncResponse(prefix, message, dist, sender)
 end
 
 function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
-  if message ~= requestMessage then return end
+  if message ~= requestMessage or sender == GetUnitName("player", false) then return end
 
   local completionTimes = ""
   local hasAny = false
