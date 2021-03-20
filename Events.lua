@@ -171,7 +171,7 @@ function WarpDeplete:UpdateForces()
   if not self.challengeState.inChallenge then return end
 
   local stepCount = select(3, C_Scenario.GetStepInfo())
-  local _, _, _, _, _, _, _, currentCount = C_Scenario.GetCriteriaInfo(stepCount)
+  local _, _, _, currentCount = C_Scenario.GetCriteriaInfo(stepCount)
 
   if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
     -- If we just went above the total count (or matched it), we completed it just now
