@@ -54,7 +54,8 @@ function WarpDeplete:OnTimerSyncResponse(prefix, message, dist, sender)
   self:PrintDebug("Received time from " .. sender .. ": "
     .. tonumber(current) .. ", type: " .. typeRaw)
   
-  if self.timerState.isBlizzard and not isBlizzard then
+  if self.timerState.isBlizzardTimer and not isBlizzard then
+    self:PrintDebug("Updating timer")
     local deaths = C_ChallengeMode.GetDeathCount()
     self.timerState.current = current
     self.timerState.deaths = deaths

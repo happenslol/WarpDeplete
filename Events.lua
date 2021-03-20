@@ -160,8 +160,8 @@ function WarpDeplete:GetObjectivesInfo()
     return false
   end
 
+  local currentCount, totalCount = self:GetEnemyForcesCount()
   -- The last step will forces, all previous steps are bosses
-  local _, _, _, currentCount, totalCount, _, _, _ = C_Scenario.GetCriteriaInfo(stepCount)
   self:PrintDebug("Got forces info: " .. currentCount .. "/" .. totalCount)
 
   if totalCount <= 0 then
@@ -191,11 +191,19 @@ function WarpDeplete:GetObjectivesInfo()
   return true
 end
 
+function WarpDeplete:GetEnemyForcesCount()
+  local stepCount = select(3, C_Scenario.GetStepInfo())
+  local _, _, _, _, totalCount, _, _, mobPointsStr = C_Scenario.GetCriteriaInfo(stepCount)
+  local currentCountStr = gsub(mobPointsStr, "%%", "")
+  local currentCount = tonumber(currentCountStr)
+  return currentCount, totalCount
+end
+
 function WarpDeplete:UpdateForces()
   if not self.challengeState.inChallenge then return end
 
   local stepCount = select(3, C_Scenario.GetStepInfo())
-  local currentCount = select(4, C_Scenario.GetCriteriaInfo(stepCount))
+  local currentCount = self:GetEnemyForcesCount()
   self:PrintDebug("currentCount: " .. currentCount)
 
   if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then

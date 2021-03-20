@@ -384,7 +384,7 @@ function WarpDeplete:HandleChatCommand(input)
     self:PrintDebug("Blizzard Current: " .. blizzardCurrent .. ", " .. WarpDeplete.Util.formatTime(blizzardCurrent))
     local blizzardCurrentWODeaths = blizzardCurrent - deathPenalty
     self:PrintDebug("Blizzard Current w/o deaths: " .. blizzardCurrentWODeaths .. ", " .. WarpDeplete.Util.formatTime(blizzardCurrentWODeaths))
-    self:PrintDebug("isBlizzardTimer" .. self.timerState.isBlizzardTimer)
+    self:PrintDebug("isBlizzardTimer: " .. tostring(self.timerState.isBlizzardTimer))
     return
   end
 
