@@ -334,12 +334,6 @@ function WarpDeplete:SetTimerCurrent(time)
   self:UpdateTimerDisplay()
 end
 
-local function getBarAndLimitFor(wdp, index)
-  if index == 1 then return wdp.bar1, wdp.timerState.limit
-  elseif index == 2 then return wdp.bar2, wdp.timerState.plusTwo
-  elseif index == 3 then return wdp.bar3, wdp.timerState.plusThree end
-end
-
 function WarpDeplete:UpdateTimerDisplay()
   local state = self.tickState
 

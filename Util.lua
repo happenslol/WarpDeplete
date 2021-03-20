@@ -84,7 +84,7 @@ local formatTime_OnUpdate_state = {}
 function Util.formatTime_OnUpdate(time)
   formatTime_OnUpdate_state.timeMin = math.floor(time / 60)
   formatTime_OnUpdate_state.timeSec = math.floor(time - (formatTime_OnUpdate_state.timeMin * 60))
-  return ("%d:%02d"):format(timeMin, timeSec)
+  return ("%d:%02d"):format(formatTime_OnUpdate_state.timeMin, formatTime_OnUpdate_state.timeSec)
 end
 
 function Util.formatDeathTimeMinutes(time)
