@@ -334,46 +334,49 @@ function WarpDeplete:SetTimerCurrent(time)
   self:UpdateTimerDisplay()
 end
 
+-- This is used as a buffer since this function is called from OnUpdate, to avoid allocating
+-- new local variables that need to be garbage collected during each call.
+local state = {}
 function WarpDeplete:UpdateTimerDisplay()
-  self.tickState.expiredColor = self.db.profile.timerExpiredColor
-  self.tickState.successColor = self.db.profile.timerSuccessColor
+  state.expiredColor = self.db.profile.timerExpiredColor
+  state.successColor = self.db.profile.timerSuccessColor
 
-  self.tickState.percent = self.timerState.limit > 0 and self.timerState.current / self.timerState.limit or 0
+  state.percent = self.timerState.limit > 0 and self.timerState.current / self.timerState.limit or 0
 
-  self.tickState.timerText = Util.formatTime_OnUpdate(self.timerState.current) ..
+  state.timerText = Util.formatTime_OnUpdate(self.timerState.current) ..
     " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
 
   if self.challengeState.challengeCompleted and self.timerState.current <= self.timerState.limit then
-    self.tickState.timerText = "|c" .. self.tickState.successColor .. self.tickState.timerText .. "|r"
+    state.timerText = "|c" .. state.successColor .. state.timerText .. "|r"
   elseif self.challengeState.challengeCompleted and self.timerState.current > self.timerState.limit then
-    self.tickState.timerText = "|c" .. self.tickState.expiredColor .. self.tickState.timerText .. "|r"
+    state.timerText = "|c" .. state.expiredColor .. state.timerText .. "|r"
   end
 
-  self.frames.root.timerText:SetText(self.tickState.timerText)
+  self.frames.root.timerText:SetText(state.timerText)
 
   for i = 1, 3 do
-    self.tickState.timeRemaining = self.timerState.limits[i] - self.timerState.current
+    state.timeRemaining = self.timerState.limits[i] - self.timerState.current
 
-    self.tickState.barValue = Util.getBarPercent_OnUpdate(i, self.tickState.percent)
-    self.tickState.timeText = Util.formatTime_OnUpdate(math.abs(self.tickState.timeRemaining))
+    state.barValue = Util.getBarPercent_OnUpdate(i, state.percent)
+    state.timeText = Util.formatTime_OnUpdate(math.abs(state.timeRemaining))
 
     if not self.challengeState.challengeCompleted then
-      if i == 1 and self.tickState.timeRemaining < 0 then
-        self.tickState.timeText = "|c" .. self.tickState.expiredColor .. "-".. self.tickState.timeText .. "|r"
+      if i == 1 and state.timeRemaining < 0 then
+        state.timeText = "|c" .. state.expiredColor .. "-".. state.timeText .. "|r"
       end
 
-      if i ~= 1 and self.tickState.timeRemaining < 0 then
-        self.tickState.timeText = ""
+      if i ~= 1 and state.timeRemaining < 0 then
+        state.timeText = ""
       end
     else
-      self.tickState.color = self.tickState.timeRemaining <= 0 and
-        self.tickState.expiredColor or self.tickState.successColor
+      state.color = state.timeRemaining <= 0 and
+        state.expiredColor or state.successColor
 
-      self.tickState.timeText = "|c" .. self.tickState.color .. self.tickState.timeText .. "|r"
+      state.timeText = "|c" .. state.color .. state.timeText .. "|r"
     end
 
-    self.bars[i].bar:SetValue(self.tickState.barValue)
-    self.bars[i].text:SetText(self.tickState.timeText)
+    self.bars[i].bar:SetValue(state.barValue)
+    self.bars[i].text:SetText(state.timeText)
   end
 end
 

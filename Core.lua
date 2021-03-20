@@ -55,10 +55,6 @@ WarpDeplete.defaultKeyDetailsState = {
   affixes = {}
 }
 
--- This is used as a buffer for the OnUpdate methods, to avoid allocating
--- new variables during an OnUpdate function.
-WarpDeplete.tickState = {}
-
 function WarpDeplete:OnInitialize()
   local frames = {}
 
