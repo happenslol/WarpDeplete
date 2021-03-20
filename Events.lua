@@ -98,9 +98,15 @@ function WarpDeplete:GetTimerInfo()
   -- blizzard timer and should request the current time from
   -- someone else.
   if current > 2 then --TODO(happens): The WA is using 2 here, is that fine?
-    local deaths = C_ChallengeMode.GetDeathCount()
-    self.timerState.startOffset = current * -1 + deaths * 5
     self.timerState.isBlizzardTimer = true
+    C_Timer.After(0.5, function() 
+      local current = select(2, GetWorldElapsedTime(1))
+      local deaths = C_ChallengeMode.GetDeathCount()
+      local trueTime = current - deaths * 5
+      self.timerState.startOffset = trueTime
+      self.timerState.startTime = GetTime()
+      self.timerState.isBlizzardTimer = true
+    end)
   end
 
   self:SetTimerCurrent(current)
@@ -171,7 +177,7 @@ function WarpDeplete:UpdateForces()
   if not self.challengeState.inChallenge then return end
 
   local stepCount = select(3, C_Scenario.GetStepInfo())
-  local _, _, _, _, _, _, _, currentCount = C_Scenario.GetCriteriaInfo(stepCount)
+  local _, _, _, currentCount = C_Scenario.GetCriteriaInfo(stepCount)
 
   if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
     -- If we just went above the total count (or matched it), we completed it just now
@@ -264,8 +270,7 @@ function WarpDeplete:OnTimerTick()
   end
 
   local deathPenalty = self.timerState.deaths * 5
-  local current = GetTime() - self.timerState.startOffset
-    - self.timerState.startTime + deathPenalty
+  local current = GetTime() + self.timerState.startOffset - self.timerState.startTime + deathPenalty
 
   if current < 0 then return end
 
