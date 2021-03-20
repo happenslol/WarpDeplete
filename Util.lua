@@ -87,17 +87,28 @@ function Util.removeHexPrefix(hex)
 end
 
 function Util.hexToRGB(hex)
-  local hex = Util.removeHexPrefix(hex)
-  if hex:len() == 3 then
-    return (tonumber("0x" .. hex:sub(1, 1)) * 17) / 255,
-      (tonumber("0x" .. hex:sub(2, 2)) * 17) / 255,
-      (tonumber("0x" .. hex:sub(3, 3)) * 17) / 255
-
-  else
+	if string.len(hex) == 8 then
     return tonumber("0x" .. hex:sub(1, 2)) / 255,
       tonumber("0x" .. hex:sub(3, 4)) / 255,
-      tonumber("0x" .. hex:sub(5, 6)) / 255
+      tonumber("0x" .. hex:sub(5, 6)) / 255,
+      tonumber("0x" .. hex:sub(7, 8)) / 255
   end
+
+  return tonumber("0x" .. hex:sub(1, 2)) / 255,
+    tonumber("0x" .. hex:sub(3, 4)) / 255,
+    tonumber("0x" .. hex:sub(5, 6)) / 255
+end
+
+function Util.rgbToHex(r, g, b, a)
+	r = math.ceil(255 * r)
+	g = math.ceil(255 * g)
+	b = math.ceil(255 * b)
+	if not a then
+    return string.format("FF%02x%02x%02x", r, g, b)
+  end
+
+  a = math.ceil(255 * a)
+  return string.format("%02x%02x%02x%02x", a, r, g, b)
 end
 
 function Util.copy(obj, seen)
@@ -163,6 +174,6 @@ Util.MapIDToInstanceID = {
 }
 
 function WarpDeplete:PrintDebug(str)
-  if not self.DEBUG then return end
+  if not self.db.global.DEBUG then return end
   self:Print("|cFF479AEDDEBUG|r " .. str)
 end

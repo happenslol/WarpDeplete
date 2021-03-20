@@ -6,8 +6,6 @@ local Util = WarpDeplete.Util
 -- and retrieve the elapsed value from the blizzard timer, we end up with the correct timer
 -- again, until we die for the first time after reloading.
 
---TODO(happens): Show completion time, color all timer values and stuff
-
 function WarpDeplete:CheckForChallengeMode()
   local _, _, difficulty, _, _, _, _, currentZoneID = GetInstanceInfo()
 
@@ -27,9 +25,6 @@ function WarpDeplete:CheckForChallengeMode()
 end
 
 function WarpDeplete:StartChallengeMode()
-  --TODO(happens): For some reason this is never called. We overwrite all
-  -- values on init so it's not a big deal, but it would be nice to show
-  -- the message to the user.
   if self.challengeState.demoModeActive then
     self:Print("Disabling demo mode because a challenge has started.")
     self:DisableDemoMode()
@@ -168,7 +163,7 @@ function WarpDeplete:UpdateForces()
   if not self.challengeState.inChallenge then return end
 
   local stepCount = select(3, C_Scenario.GetStepInfo())
-  local currentCount = select(4, C_Scenario.GetCriteriaInfo(stepCount))
+  local _, _, _, _, _, _, _, currentCount = C_Scenario.GetCriteriaInfo(stepCount)
 
   if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
     -- If we just went above the total count (or matched it), we completed it just now
@@ -251,7 +246,7 @@ function WarpDeplete:UnregisterChallengeEvents()
 end
 
 function WarpDeplete:OnTimerTick() 
-  if not self.challengeState.inChallenge then return end
+  if not self.challengeState.inChallenge or self.challengeState.completed then return end
 
   --TODO(happens): We update this a lot, can we do this
   -- in a better way so it's not called 10 times a second?
@@ -264,9 +259,7 @@ function WarpDeplete:OnTimerTick()
   local current = GetTime() - self.timerState.startOffset
     - self.timerState.startTime + deathPenalty
 
-  if current < 0 then
-    return
-  end
+  if current < 0 then return end
 
   self:SetTimerCurrent(current)
   C_Timer.After(0.1, function() self:OnTimerTick() end)
@@ -298,6 +291,15 @@ end
 
 function WarpDeplete:OnChallengeModeCompleted(ev)
   self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+
+  --TODO(happens): Refresh information from blizzard timer so we have
+  -- an accurate finish time. If we load in afterwards this is done automatically,
+  -- but if we used our own timer we should redo it.
+  self.challengeState.completed = true
+
+  self:UpdateTimerDisplay()
+  self:UpdateObjectivesDisplay()
+  self:UpdateForcesDisplay()
 end
 
 function WarpDeplete:OnKeystoneOpen(ev)
@@ -380,7 +382,7 @@ function WarpDeplete:OnThreatListUpdate(ev, unit)
   self:PrintDebug("Getting npc id for unit " .. tostring(unit))
   local npcID = select(6, strsplit("-", guid))
   local count = MDT:GetEnemyForces(tonumber(npcID))
-  self:PrintDebug("Got forces for unit: " .. count)
+  self:PrintDebug("Got forces for unit: " .. tonumber(count))
 
   if not count or count <= 0 then return end
 

@@ -138,6 +138,25 @@ function WarpDeplete:UpdateLayout()
   local bar3FontSize = self.db.profile.bar3FontSize
   local forcesFontSize = self.db.profile.forcesFontSize
 
+  local deathsFont = self.db.profile.deathsFont
+  local timerFont = self.db.profile.timerFont
+  local keyDetailsFont = self.db.profile.keyDetailsFont
+  local bar1Font = self.db.profile.bar1Font
+  local bar2Font = self.db.profile.bar2Font
+  local bar3Font = self.db.profile.bar3Font
+  local forcesFont = self.db.profile.forcesFont
+  local objectivesFont = self.db.profile.objectivesFont
+
+  -- Font flags
+  local deathsFontFlags = self.db.profile.deathsFontFlags
+  local timerFontFlags = self.db.profile.timerFontFlags
+  local keyDetailsFontFlags = self.db.profile.keyDetailsFontFlags
+  local bar1FontFlags = self.db.profile.bar1FontFlags
+  local bar2FontFlags = self.db.profile.bar2FontFlags
+  local bar3FontFlags = self.db.profile.bar3FontFlags
+  local forcesFontFlags = self.db.profile.forcesFontFlags
+  local objectivesFontFlags = self.db.profile.objectivesFontFlags
+
   local timerBarOffsetX = self.db.profile.timerBarOffsetX
   local timerBarOffsetY = self.db.profile.timerBarOffsetY
 
@@ -186,7 +205,7 @@ function WarpDeplete:UpdateLayout()
 
   -- Deaths text
   local deathsText = self.frames.root.deathsText
-  deathsText:SetFont(self.LSM:Fetch("font", "Expressway"), deathsFontSize, "OUTLINE")
+  deathsText:SetFont(self.LSM:Fetch("font", deathsFont), deathsFontSize, deathsFontFlags)
   deathsText:SetJustifyH("RIGHT")
   deathsText:SetTextColor(1, 1, 1, 1)
   deathsText:SetPoint("TOPRIGHT", -framePadding - 4, currentOffset)
@@ -195,7 +214,7 @@ function WarpDeplete:UpdateLayout()
 
   -- Timer text
   local timerText = self.frames.root.timerText
-  timerText:SetFont(self.LSM:Fetch("font", "Expressway"), timerFontSize, "OUTLINE")
+  timerText:SetFont(self.LSM:Fetch("font", timerFont), timerFontSize, timerFontFlags)
   timerText:SetJustifyH("RIGHT")
   timerText:SetTextColor(1, 1, 1, 1)
   timerText:SetPoint("TOPRIGHT", -framePadding, currentOffset)
@@ -204,7 +223,7 @@ function WarpDeplete:UpdateLayout()
 
   -- Key details text
   local keyDetailsText = self.frames.root.keyDetailsText
-  keyDetailsText:SetFont(self.LSM:Fetch("font", "Expressway"), keyDetailsFontSize, "OUTLINE")
+  keyDetailsText:SetFont(self.LSM:Fetch("font", keyDetailsFont), keyDetailsFontSize, keyDetailsFontFlags)
   keyDetailsText:SetJustifyH("RIGHT")
   r, g, b = Util.hexToRGB("#B1B1B1")
   keyDetailsText:SetTextColor(r, g, b, 1)
@@ -226,7 +245,7 @@ function WarpDeplete:UpdateLayout()
   local bar3Width = barWidth / 100 * 60
   self.bar3:SetLayout("#979797", bar3Width, barHeight, 0,
     timerBarOffsetY - barPixelAdjust)
-  self.bar3.text:SetFont(self.LSM:Fetch("font", "Expressway"), bar3FontSize, "OUTLINE")
+  self.bar3.text:SetFont(self.LSM:Fetch("font", bar3Font), bar3FontSize, bar3FontFlags)
   self.bar3.text:SetJustifyH("RIGHT")
   self.bar3.text:SetTextColor(1, 1, 1, 1)
   self.bar3.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
@@ -235,7 +254,7 @@ function WarpDeplete:UpdateLayout()
   local bar2Width = barWidth / 100 * 20 - timerBarOffsetX
   self.bar2:SetLayout("#979797", bar2Width, barHeight,
     bar3Width + timerBarOffsetX, timerBarOffsetY - barPixelAdjust)
-  self.bar2.text:SetFont(self.LSM:Fetch("font", "Expressway"), bar2FontSize, "OUTLINE")
+  self.bar2.text:SetFont(self.LSM:Fetch("font", bar2Font), bar2FontSize, bar2FontFlags)
   self.bar2.text:SetJustifyH("RIGHT")
   self.bar2.text:SetTextColor(1, 1, 1, 1)
   self.bar2.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
@@ -244,14 +263,14 @@ function WarpDeplete:UpdateLayout()
   local bar1Width = barWidth / 100 * 20 - timerBarOffsetX
   self.bar1:SetLayout("#979797", bar1Width, barHeight,
     bar3Width + bar2Width + timerBarOffsetX * 2, timerBarOffsetY - barPixelAdjust)
-  self.bar1.text:SetFont(self.LSM:Fetch("font", "Expressway"), bar1FontSize, "OUTLINE")
+  self.bar1.text:SetFont(self.LSM:Fetch("font", bar1Font), bar1FontSize, bar1FontFlags)
   self.bar1.text:SetJustifyH("RIGHT")
   self.bar1.text:SetTextColor(1, 1, 1, 1)
   self.bar1.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
 
   -- Forces bar
   self.forces:SetLayout("#bb9e22", barWidth, barHeight, 0, -timerBarOffsetY)
-  self.forces.text:SetFont(self.LSM:Fetch("font", "Expressway"), forcesFontSize, "OUTLINE")
+  self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont), forcesFontSize, forcesFontFlags)
   self.forces.text:SetJustifyH("RIGHT")
   self.forces.text:SetTextColor(1, 1, 1, 1)
   self.forces.text:SetPoint("TOPRIGHT", -barFontOffsetX, -barFontOffsetY)
@@ -270,7 +289,7 @@ function WarpDeplete:UpdateLayout()
   local objectivesOffset = 4
   for i = 1, 5 do
     local objectiveText = self.frames.root.objectiveTexts[i]
-    objectiveText:SetFont(self.LSM:Fetch("font", "Expressway"), objectivesFontSize, "OUTLINE")
+    objectiveText:SetFont(self.LSM:Fetch("font", objectivesFont), objectivesFontSize, objectivesFontFlags)
     objectiveText:SetJustifyH("RIGHT")
     objectiveText:SetTextColor(1, 1, 1, 1)
     objectiveText:SetPoint("TOPRIGHT", -framePadding, currentOffset)
@@ -304,12 +323,21 @@ function WarpDeplete:SetTimerCurrent(time)
 end
 
 function WarpDeplete:UpdateTimerDisplay()
+  local expiredColor = self.db.profile.timerExpiredColor
+  local successColor = self.db.profile.timerSuccessColor
+
   local percent = self.timerState.limit > 0 and self.timerState.current / self.timerState.limit or 0
   local bars = {self.bar1, self.bar2, self.bar3}
   local timeLimits = {self.timerState.limit, self.timerState.plusTwo, self.timerState.plusThree}
 
   local timerText = Util.formatTime(self.timerState.current) ..
     " / " .. Util.formatTime(self.timerState.limit)
+
+  if self.challengeState.completed and self.timerState.current <= self.timerState.limit then
+    timerText = "|cFF" .. successColor .. timerText .. "|r"
+  elseif self.challengeState.completed and self.timerState.current > self.timerState.limit then
+    timerText = "|cFF" .. expiredColor .. timerText .. "|r"
+  end
 
   self.frames.root.timerText:SetText(timerText)
 
@@ -319,12 +347,17 @@ function WarpDeplete:UpdateTimerDisplay()
     local barValue = Util.getBarPercent(i, percent)
     local timeText = Util.formatTime(math.abs(timeRemaining))
 
-    if i == 1 and timeRemaining < 0 then
-      timeText = "|c00FF2A2E-".. timeText .. "|r"
-    end
+    if not self.challengeState.completed then
+      if i == 1 and timeRemaining < 0 then
+        timeText = "|c00FF2A2E-".. timeText .. "|r"
+      end
 
-    if i ~= 1 and timeRemaining <= 0 then
-      timeText = ""
+      if i ~= 1 and timeRemaining < 0 then
+        timeText = ""
+      end
+    else
+      local color = timeRemaining <= 0 and expiredColor or successColor
+      timeText = "|c00" .. color .. timeText .. "|r"
     end
 
     bars[i].bar:SetValue(barValue)
@@ -401,6 +434,11 @@ end
 
 function WarpDeplete:UpdatePrideGlow()
   if self.keyDetailsState.level < 10 then return end
+
+  if self.challengeDetails.challengeCompleted then
+    if self.forcesState.prideGlowActive then self:HidePrideGlow() end
+    return
+  end
 
   local percentBeforePull = self.forcesState.currentPercent
   local currentPrideFraction = (percentBeforePull % 0.2)

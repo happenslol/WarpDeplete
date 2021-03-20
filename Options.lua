@@ -1,7 +1,9 @@
 local defaults = {
+  global = {
+    DEBUG = false
+  },
+
   --TODO(happens): Add vars for:
-  -- * show forces count instead of percent, or both
-  -- * font family for all texts
   -- * bar textures
   -- * bar colors
 
@@ -13,6 +15,30 @@ local defaults = {
     -- Element display options
     showForcesPercent = true,
     showForcesCount = true,
+
+    -- Font families
+    deathsFont = "Expressway",
+    timerFont = "Expressway",
+    keyDetailsFont = "Expressway",
+    bar1Font = "Expressway",
+    bar2Font = "Expressway",
+    bar3Font = "Expressway",
+    forcesFont = "Expressway",
+    objectivesFont = "Expressway",
+
+    -- Font flags
+    deathsFontFlags = "OUTLINE",
+    timerFontFlags = "OUTLINE",
+    keyDetailsFontFlags = "OUTLINE",
+    bar1FontFlags = "OUTLINE",
+    bar2FontFlags = "OUTLINE",
+    bar3FontFlags = "OUTLINE",
+    forcesFontFlags = "OUTLINE",
+    objectivesFontFlags = "OUTLINE",
+
+    timerRunningColor = "#FFFFFF",
+    timerExpiredColor = "#FF2A2E",
+    timerSuccessColor = "#FF2A2E",
 
     -- Font sizes for text parts
     deathsFontSize = 16,
@@ -52,6 +78,70 @@ local defaults = {
   }
 }
 
+local function font(order, name, profileVar, updateFn)
+  return {
+    order = order,
+    type = "select",
+    dialogControl = "LSM30_Font",
+    name = name,
+    values = WarpDeplete.LSM:HashTable("font"),
+    get = function(info) return WarpDeplete.db.profile[profileVar] end,
+    set = function(info, value)
+      WarpDeplete.db.profile[profileVar] = value
+      WarpDeplete[updateFn](WarpDeplete)
+    end
+  }
+end
+
+local function fontSize(order, name, profileVar, updateFn)
+  return {
+    order = order,
+    type = "range",
+    name = name,
+    min = 8,
+    max = 40,
+    step = 1,
+    get = function(info) return WarpDeplete.db.profile.forcesFontSize end,
+    set = function(info, value)
+      WarpDeplete.db.profile[profileVar] = value
+      WarpDeplete[updateFn](WarpDeplete)
+    end
+  }
+end
+
+local function toggle(order, name, profileVar, updateFn)
+  return {
+    order = order,
+    type = "toggle",
+    name = name,
+    get = function(info) return WarpDeplete.db.profile[profileVar] end,
+    set = function(info, value)
+      WarpDeplete.db.profile[profileVar] = value
+      WarpDeplete[updateFn](WarpDeplete)
+    end
+  }
+end
+
+local function fontFlags(order, name, profileVar, updateFn)
+  return {
+    order = order,
+    type = "select",
+    name = name,
+    desc = "Default: OUTLINE",
+    values = {
+      ["OUTLINE"] = "OUTLINE",
+      ["THICKOUTLINE"] = "THICKOUTLINE",
+      ["MONOCHROME"] = "MONOCHROME",
+      ["NONE"] = "NONE"
+    },
+    get = function(info) return WarpDeplete.db.profile[profileVar] end,
+    set = function(info, value)
+      WarpDeplete.db.profile[profileVar] = value
+      WarpDeplete[updateFn](WarpDeplete)
+    end
+  }
+end
+
 function WarpDeplete:InitOptions()
   self.isUnlocked = false
 
@@ -61,7 +151,7 @@ function WarpDeplete:InitOptions()
     type = "group",
     args = {
       general = {
-        name = "Display",
+        name = "General",
         type = "group",
         args = {
           unlocked = {
@@ -79,29 +169,48 @@ function WarpDeplete:InitOptions()
             desc = "Enables the demo mode, used for configuring the timer",
             get = function(info) return WarpDeplete.challengeState.demoModeActive end,
             set = function(info, value)
-              if value then
-                WarpDeplete:EnableDemoMode()
-              else
-                WarpDeplete:DisableDemoMode()
-              end
+              if value then WarpDeplete:EnableDemoMode()
+              else WarpDeplete:DisableDemoMode() end
             end
           },
 
-          --TODO(happens): Improve layout for options (sections for different texts and bars?)
-          --TODO(happens): Implement all options
-          forcesFontSize = {
+          display = {
             order = 3,
-            type = "range",
-            name = "Forces Font Size",
-            desc = "Changes the font size for the forces count text",
-            min = 8,
-            max = 40,
-            step = 1,
-            get = function(info) return WarpDeplete.db.profile.forcesFontSize end,
-            set = function(info, value)
-              WarpDeplete.db.profile.forcesFontSize = value
-              WarpDeplete:UpdateLayout()
-            end
+            type = "group",
+            inline = true,
+            name = "Display",
+            args = {
+              showForcesPercent = toggle(1, "Show forces percent", "showForcesPercent", "UpdateForcesDisplay"),
+              showForcesCount = toggle(2, "Show forces count", "showForcesCount", "UpdateForcesDisplay"),
+            }
+          },
+
+          fonts = {
+            order = 3,
+            type = "group",
+            name = "Fonts",
+            inline = true,
+            args = {
+              timerFont = font(1, "Timer font", "timerFont", "UpdateLayout"),
+              timerFontSize = fontSize(2, "Timer font size", "timerFontSize", "UpdateLayout"),
+              timerFontFlags = fontFlags(3, "Timer font flags", "timerFontFlags", "UpdateLayout"),
+
+              forcesFont = font(4, "Forces font", "forcesFont", "UpdateLayout"),
+              forcesFontSize = fontSize(5, "Forces font size", "forcesFontSize", "UpdateLayout"),
+              forcesFontFlags = fontFlags(6, "Forces font flags", "forcesFontFlags", "UpdateLayout"),
+
+              bar1Font = font(7, "+1 Timer font", "bar1Font", "UpdateLayout"),
+              bar1FontSize = fontSize(8, "+1 Timer font size", "bar1FontSize", "UpdateLayout"),
+              bar1FontFlags = fontFlags(9, "+1 Timer font flags", "bar1FontFlags", "UpdateLayout"),
+
+              bar2Font = font(10, "+2 Timer font", "bar2Font", "UpdateLayout"),
+              bar2FontSize = fontSize(11, "+2 Timer font size", "bar2FontSize", "UpdateLayout"),
+              bar2FontFlags = fontFlags(12, "+2 Timer font flags", "bar2FontFlags", "UpdateLayout"),
+
+              bar3Font = font(13, "+2 Timer font", "bar3Font", "UpdateLayout"),
+              bar3FontSize = fontSize(14, "+2 Timer font size", "bar3FontSize", "UpdateLayout"),
+              bar3FontFlags = fontFlags(15, "+2 Timer font flags", "bar3FontFlags", "UpdateLayout"),
+            },
           }
         }
       }
@@ -166,14 +275,14 @@ function WarpDeplete:InitOptions()
     }
   }
 
-  if self.DEBUG then options.args.debug = debugOptions end
-
   self.db = LibStub("AceDB-3.0"):New("WarpDepleteDB", defaults, true)
   options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
 
-  self.db.RegisterCallback(self, "OnProfileChanged", "UpdateLayout")
-  self.db.RegisterCallback(self, "OnProfileCopied", "UpdateLayout")
-  self.db.RegisterCallback(self, "OnProfileReset", "UpdateLayout")
+  if self.db.global.DEBUG then options.args.debug = debugOptions end
+
+  self.db.RegisterCallback(self, "OnProfileChanged", "OnProfileChanged")
+  self.db.RegisterCallback(self, "OnProfileCopied", "OnProfileChanged")
+  self.db.RegisterCallback(self, "OnProfileReset", "OnProfileChanged")
 
   local AceConfigDialog = LibStub("AceConfigDialog-3.0")
   LibStub("AceConfig-3.0"):RegisterOptionsTable("WarpDeplete", options)
@@ -182,7 +291,7 @@ function WarpDeplete:InitOptions()
     nil, "general"
   )
 
-  if self.DEBUG then
+  if self.db.global.DEBUG then
     self.optionsProfileFrame = AceConfigDialog:AddToBlizOptions(
       "WarpDeplete", "Debug",
       "WarpDeplete", "debug"
@@ -229,6 +338,10 @@ function WarpDeplete:HandleChatCommand(input)
     return
   end
 
+  if cmd == "debug" then
+    self.db.global.DEBUG = not self.db.global.DEBUG
+  end
+
   -- We have to call this twice in a row due to a stupid bug...
   -- See https://www.wowinterface.com/forums/showthread.php?t=54599
   InterfaceOptionsFrame_OpenToCategory("WarpDeplete")
@@ -243,4 +356,12 @@ function WarpDeplete.SetUnlocked(info, value)
   self.frames.root.texture:SetColorTexture(0, 0, 0, self.isUnlocked and 0.3 or 0)
   self.frames.root:SetMovable(self.isUnlocked)
   self.frames.root:EnableMouse(self.isUnlocked)
+end
+
+function WarpDeplete:OnProfileChanged()
+  self:UpdateLayout()
+
+  self:UpdateForcesDisplay()
+  self:UpdateTimerDisplay()
+  self:UpdateObjectivesDisplay()
 end

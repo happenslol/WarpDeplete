@@ -6,7 +6,6 @@ WarpDeplete = LibStub("AceAddon-3.0"):NewAddon(
   "AceTimer-3.0"
 )
 
-WarpDeplete.DEBUG = true
 WarpDeplete.Util = {}
 local Util = WarpDeplete.Util
 
@@ -76,8 +75,8 @@ function WarpDeplete:OnEnable()
   self:RegisterComms()
   self:Hide()
 
-  if self.DEBUG then
-    -- self:EnableDemoMode()
+  if self.db.global.DEBUG then
+    self:EnableDemoMode()
   end
 end
 
@@ -91,9 +90,9 @@ function WarpDeplete:EnableDemoMode()
   end
 
   if self.challengeState.demoModeActive then return end
-  self.challengeState.demoModeActive = true
 
   self:ResetState()
+  self.challengeState.demoModeActive = true
 
   local objectives = {}
   for i = 1, 5 do
