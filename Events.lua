@@ -315,12 +315,12 @@ function WarpDeplete:OnTimerTick(elapsed)
 end
 
 function WarpDeplete:OnCheckChallengeMode(ev)
-  self:PrintDebug("|cFF09ED3AG_EVENT|r " .. ev)
+  self:PrintDebugGlobalEvent(ev)
   self:CheckForChallengeMode()
 end
 
 function WarpDeplete:OnChallengeModeStart(ev)
-  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+  self:PrintDebugGlobalEvent(ev)
   if self.timerState.running then
     self:PrintDebug("Start event received while timer was already running")
     return
@@ -334,17 +334,17 @@ function WarpDeplete:OnChallengeModeStart(ev)
 end
 
 function WarpDeplete:OnChallengeModeReset(ev)
-  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+  self:PrintDebugEvent(ev)
   self:ResetState()
 end
 
 function WarpDeplete:OnChallengeModeCompleted(ev)
-  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+  self:PrintDebugEvent(ev)
   self:CompleteChallengeMode()
 end
 
 function WarpDeplete:OnKeystoneOpen(ev)
-  self:PrintDebug("|cFF09ED3AG_EVENT|r " .. ev)
+  self:PrintDebugEvent(ev)
 
   if not self.db.profile.insertKeystoneAutomatically then
     return
@@ -390,29 +390,31 @@ function WarpDeplete:OnKeystoneOpen(ev)
 end
 
 function WarpDeplete:OnScenarioPOIUpdate(ev)
-  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+  self:PrintDebugEvent(ev)
   self:UpdateForces()
   self:UpdateObjectives()
 end
 
 function WarpDeplete:OnScenarioCriteriaUpdate(ev)
-  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+  self:PrintDebugEvent(ev)
   self:UpdateForces()
   self:UpdateObjectives()
 end
 
 function WarpDeplete:OnPlayerDead(ev)
-  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+  self:PrintDebugEvent(ev)
   self:ResetCurrentPull()
 end
 
 function WarpDeplete:OnPlayerRegenEnabled(ev)
-  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+  self:PrintDebugEvent(ev)
   self:ResetCurrentPull()
 end
 
 function WarpDeplete:OnThreatListUpdate(ev, unit)
-  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+  self:PrintDebugEvent(ev)
+  if not MDT then return end
+
   if not InCombatLockdown() then return end
   if not unit or not UnitExists(unit) then return end
 
@@ -436,7 +438,7 @@ end
 function WarpDeplete:OnCombatLogEvent(ev)
   local _, subEv, _, _, _, _, _, guid = CombatLogGetCurrentEventInfo()
   if subEv ~= "UNIT_DIED" then return end
-  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+  self:PrintDebugEvent(ev)
 
   self.forcesState.currentPull[guid] = nil
   local pullCount = Util.calcPullCount(self.forcesState.currentPull, self.forcesState.totalCount)

@@ -70,7 +70,7 @@ function Util.formatDeathText(deaths)
     "(+" .. Util.formatDeathTimeMinutes(timeAdded) .. ")"
   )
 
-  return deathText..timeAddedText
+  return deathText .. timeAddedText
 end
 
 function Util.formatTime(time)
@@ -182,4 +182,12 @@ Util.MapIDToInstanceID = {
 function WarpDeplete:PrintDebug(str)
   if not self.db.global.DEBUG then return end
   self:Print("|cFF479AEDDEBUG|r " .. str)
+end
+
+function WarpDeplete:PrintDebugGlobalEvent(ev)
+  self:PrintDebug()
+end
+
+function WarpDeplete:PrintDebugEvent(ev)
+  self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
 end
