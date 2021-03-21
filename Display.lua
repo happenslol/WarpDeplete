@@ -448,8 +448,10 @@ function WarpDeplete:UpdateForcesDisplay()
   self.forces.text:SetText(
     Util.formatForcesText(
       self.db.profile.completedForcesColor,
-      self.db.profile.showForcesPercent,
-      self.db.profile.showForcesCount,
+      self.db.profile.forcesFormat,
+      self.db.profile.customForcesFormat,
+      self.db.profile.currentPullFormat,
+      self.db.profile.customCurrentPullFormat,
       self.forcesState.pullCount,
       self.forcesState.currentCount,
       self.forcesState.totalCount,

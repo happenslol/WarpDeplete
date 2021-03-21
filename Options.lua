@@ -12,9 +12,14 @@ local defaults = {
     frameY = 0,
 
     -- Element display options
-    showForcesPercent = true,
-    showForcesCount = true,
+    forcesFormat = ":percent:",
+    customForcesFormat = ":percent:",
+    currentPullFormat = "(+:percent:)",
+    customCurrentPullFormat = "(+:percent:)",
+
     showTooltipCount = true,
+    tooltipCountFormat = "(+:count: - :percent:)",
+    customTooltipCountFormat = "(+:count: - :percent:)",
 
     -- Font families
     deathsFont = "Expressway",
@@ -158,10 +163,11 @@ local function fontFlags(name, profileVar, updateFn)
   }
 end
 
-local function lineBreak()
+local function lineBreak(hidden)
   return {
     type = "description",
-    name = "\n"
+    name = "\n",
+    hidden = hidden or false
   }
 end
 
@@ -241,10 +247,130 @@ function WarpDeplete:InitOptions()
           end
         },
 
-        group("Display", true, {
-          toggle("Show forces percent", "showForcesPercent", "UpdateForcesDisplay"),
-          toggle("Show forces count", "showForcesCount", "UpdateForcesDisplay"),
+        group("Forces Display", true, {
+          {
+            type = "select",
+            name = "Forces text format",
+            desc = "Choose how your forces progress will be displayed",
+            sorting = {
+              ":percent:",
+              ":count:/:totalcount:",
+              ":count:/:totalcount: - :percent:",
+              ":custom:"
+            },
+            values = {
+              [":percent:"] = "82.52%",
+              [":count:/:totalcount:"] = "198/240",
+              [":count:/:totalcount: - :percent:"] = "198/240 - 82.52%",
+              [":custom:"] = "Custom",
+            },
+            get = function(info) return WarpDeplete.db.profile.forcesFormat end,
+            set = function(info, value)
+              WarpDeplete.db.profile.forcesFormat = value
+              WarpDeplete:UpdateLayout()
+            end
+          },
+
+          {
+            type = "input",
+            name = "Custom forces text format",
+            desc = "Use the following tags to set your custom format:\n"
+              .. "- :percent: Shows the current forces percentage (e.g. 82.52%)\n"
+              .. "- :count: Shows the current forces count (e.g. 198)\n"
+              .. "- :totalcount: Shows the total forces count (e.g. 240)",
+            multiline = false,
+            width = 2,
+            hidden = function() return WarpDeplete.db.profile.forcesFormat ~= ":custom:" end,
+            get = function(info) return WarpDeplete.db.profile.customForcesFormat end,
+            set = function(info, value)
+              WarpDeplete.db.profile.customForcesFormat = value
+              WarpDeplete:UpdateLayout()
+            end,
+          },
+
+          {
+            type = "select",
+            name = "Current pull text format",
+            desc = "Choose how your current pull count will be displayed",
+            sorting = {
+              "(+:percent:)",
+              "(+:count:)",
+              "(+:count:/:totalcount: - :percent:)",
+              ":custom:"
+            },
+            values = {
+              ["(+:percent:)"] = "(+5.32%)",
+              ["(+:count:)"] = "(+14)",
+              ["(+:count: / :totalcount: - :percent:)"] = "(+14 / 5.32%)",
+              [":custom:"] = "Custom",
+            },
+            get = function(info) return WarpDeplete.db.profile.currentPullFormat end,
+            set = function(info, value)
+              WarpDeplete.db.profile.currentPullFormat = value
+              WarpDeplete:UpdateLayout()
+            end
+          },
+
+          {
+            type = "input",
+            name = "Custom current pull text format",
+            desc = "Use the following tags to set your custom format:\n"
+              .. "- :percent: Shows the current forces percentage (e.g. 82.52%)\n"
+              .. "- :count: Shows the current forces count (e.g. 198)",
+            multiline = false,
+            width = 2,
+            hidden = function() return WarpDeplete.db.profile.currentPullFormat ~= ":custom:" end,
+            get = function(info) return WarpDeplete.db.profile.customCurrentPullFormat end,
+            set = function(info, value)
+              WarpDeplete.db.profile.customCurrentPullFormat = value
+              WarpDeplete:UpdateLayout()
+            end,
+          },
+        }),
+
+        group("Forces count in tooltip", true, {
           toggle("Show forces count in tooltip", "showTooltipCount", "UpdateLayout"),
+          lineBreak(function() return not WarpDeplete.db.profile.showTooltipCount end),
+
+          {
+            type = "select",
+            name = "Tooltip forces text format",
+            desc = "Choose how count will be displayed in the tooltip",
+            sorting = {
+              "(+:count: - :percent:)",
+              "(+:count:)",
+              "(+:percent:)",
+              ":custom:"
+            },
+            values = {
+              ["(+:percent:)"] = "(+5.32%)",
+              ["(+:count:)"] = "(+14)",
+              ["(+:count: - :percent:)"] = "(+14 - 5.32%)",
+              [":custom:"] = "Custom",
+            },
+            hidden = function() return not WarpDeplete.db.profile.showTooltipCount end,
+            get = function(info) return WarpDeplete.db.profile.tooltipCountFormat end,
+            set = function(info, value)
+              WarpDeplete.db.profile.tooltipCountFormat = value
+              WarpDeplete:UpdateLayout()
+            end
+          },
+
+          {
+            type = "input",
+            name = "Custom tooltip forces count format",
+            desc = "Use the following tags to set your custom format:\n"
+              .. "- :percent: Shows the current forces percentage (e.g. 82.52%)\n"
+              .. "- :count: Shows the current forces count (e.g. 198)",
+            multiline = false,
+            width = 2,
+            hidden = function() return WarpDeplete.db.profile.tooltipCountFormat ~= ":custom:" end,
+            get = function(info) return WarpDeplete.db.profile.customTooltipCountFormat end,
+            set = function(info, value)
+              WarpDeplete.db.profile.customTooltipCountFormat = value
+              WarpDeplete:UpdateLayout()
+            end,
+          },
         }),
 
         group("Fonts", true, {
@@ -416,6 +542,7 @@ end
 function WarpDeplete:InitChatCommands()
   self:RegisterChatCommand("wdp", "HandleChatCommand")
   self:RegisterChatCommand("warpdeplete", "HandleChatCommand")
+  self:RegisterChatCommand("WarpDeplete", "HandleChatCommand")
 end
 
 function WarpDeplete:HandleChatCommand(input)

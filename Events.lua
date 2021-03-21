@@ -260,11 +260,15 @@ function WarpDeplete.DisplayCountInTooltip()
       local count, max = MDT:GetEnemyForces(tonumber(npcID))
 
       if count and max and count ~= 0 and max ~= 0 then
-        local percentText = ("%.2f%%"):format(count / max * 100)
+        local percentText = ("%.2f"):format(count / max * 100)
+        local countText = ("%d"):format(count)
+        local result = WarpDeplete.db.profile.tooltipCountFormat ~= ":custom:" and
+          WarpDeplete.db.profile.tooltipCountFormat or
+          WarpDeplete.db.profile.customTooltipCountFormat
 
-        if string then
-            GameTooltip:AppendText(" (+" .. count .. " / " .. percentText .. ")")
-        end
+        result = gsub(result, ":percent:", percentText .. "%%")
+        result = gsub(result, ":count:", countText)
+        GameTooltip:AppendText(" " .. result)
       end
   end
 end
@@ -280,10 +284,12 @@ function WarpDeplete:RegisterChallengeEvents()
   self:RegisterEvent("SCENARIO_CRITERIA_UPDATE", "OnScenarioCriteriaUpdate")
 
   -- Combat triggers
-  self:RegisterEvent("PLAYER_DEAD", "OnPlayerDead")
-  self:RegisterEvent("PLAYER_REGEN_ENABLED", "OnPlayerRegenEnabled")
-  self:RegisterEvent("UNIT_THREAT_LIST_UPDATE", "OnThreatListUpdate")
+  self:RegisterEvent("PLAYER_DEAD", "OnResetCurrentPull")
+  self:RegisterEvent("ENCOUNTER_END", "OnResetCurrentPull")
+  self:RegisterEvent("PLAYER_REGEN_ENABLED", "OnResetCurrentPull")
+
   self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", "OnCombatLogEvent")
+  self:RegisterEvent("UNIT_THREAT_LIST_UPDATE", "OnThreatListUpdate")
 
   -- Register tooltip count display
   GameTooltip:HookScript("OnTooltipSetUnit", WarpDeplete.DisplayCountInTooltip)
@@ -417,12 +423,7 @@ function WarpDeplete:OnScenarioCriteriaUpdate(ev)
   self:UpdateObjectives()
 end
 
-function WarpDeplete:OnPlayerDead(ev)
-  self:PrintDebugEvent(ev)
-  self:ResetCurrentPull()
-end
-
-function WarpDeplete:OnPlayerRegenEnabled(ev)
+function WarpDeplete:OnResetCurrentPull(ev)
   self:PrintDebugEvent(ev)
   self:ResetCurrentPull()
 end

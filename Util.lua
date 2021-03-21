@@ -3,38 +3,35 @@ local Util = WarpDeplete.Util
 --NOTE(happens): functions with the _OnUpdate suffix are
 -- called in the frame update loop and should not use any local vars.
 
-function Util.formatForcesText(completedColor, showPercent, showCount, pullCount, currentCount, totalCount, completedTime)
+function Util.formatForcesText(
+  completedColor,
+  forcesFormat, customForcesFormat,
+  currentPullFormat, customCurrentPullFormat,
+  pullCount, currentCount, totalCount, completedTime
+)
   local currentPercent = (currentCount / totalCount) * 100
   if currentPercent > 100.0 then currentPercent = 100.0 end
 
-  local percentText = ("%.2f%%"):format(currentPercent)
-  local countText = ("%d/%d"):format(currentCount, totalCount)
-  local result = nil
+  local percentText = ("%.2f"):format(currentPercent)
+  local countText = ("%d"):format(currentCount)
+  local totalCountText = ("%d"):format(totalCount)
+  local result = forcesFormat ~= ":custom:" and forcesFormat or customForcesFormat
 
-  if showPercent and not showCount then
-    result = percentText
-  elseif showCount and not showPercent then
-    result = countText
-  elseif showPercent and showCount then
-    result = ("%s - %s"):format(countText, percentText)
-  end
+  result = gsub(result, ":percent:", percentText .. "%%")
+  result = gsub(result, ":count:", countText)
+  result = gsub(result, ":totalcount:", totalCountText)
 
   if pullCount > 0 then
     local pullPercent = (pullCount / totalCount) * 100
-    local pullPercentText = ("%.2f%%"):format(pullPercent)
+    local pullPercentText = ("%.2f"):format(pullPercent)
     local pullCountText = ("%d"):format(pullCount)
 
-    local pullText = nil
-    if showPercent and not showCount then
-      pullText = pullPercentText
-    elseif showCount and not showPercent then
-      pullText = pullCountText
-    elseif showPercent and showCount then
-      pullText = ("%s - %s"):format(pullCountText, pullPercentText)
-    end
+    local pullText = currentPullFormat ~= ":custom:" and currentPullFormat or customCurrentPullFormat
+    pullText = gsub(pullText, ":percent:", pullPercentText .. "%%")
+    pullText = gsub(pullText, ":count:", pullCountText)
 
-    if pullText then
-      result = ("(+%s)"):format(pullText) .. "  " .. result
+    if pullText and #pullText > 0 then
+      result = pullText .. "  " .. result
     end
   end
 
@@ -198,7 +195,7 @@ function WarpDeplete:PrintDebug(str)
 end
 
 function WarpDeplete:PrintDebugGlobalEvent(ev)
-  self:PrintDebug()
+  self:PrintDebug("|cFFA134EBG_EVENT|r " .. ev)
 end
 
 function WarpDeplete:PrintDebugEvent(ev)
