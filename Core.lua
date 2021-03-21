@@ -83,6 +83,15 @@ function WarpDeplete:OnEnable()
   if self.db.global.DEBUG then
     self:EnableDemoMode()
   end
+
+  if not self.db.global.mdtAlertShown and not MDT then
+    self.db.global.mdtAlertShown = true
+    Util.showAlert("MDT_NOT_FOUND", "Mythic Dungeon Tools (MDT) is not installed.\n\n" ..
+      "WarpDeplete will not show you Pride spawn alert or display the count for you current pull. " ..
+      "\n\nInstall MDT to enable this functionality.")
+  else
+    self.db.global.mdtAlertShown = false
+  end
 end
 
 function WarpDeplete:OnDisable()

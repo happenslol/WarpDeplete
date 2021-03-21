@@ -153,6 +153,19 @@ function Util.joinStrings(strings, delim)
   return result
 end
 
+function Util.showAlert(key, message, okMessage)
+  StaticPopupDialogs[key] = {
+    text = message,
+    button1 = okMessage or "OK",
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
+  }
+
+  StaticPopup_Show(key)
+end
+
 Util.MapIDToInstanceID = {
   [1677] = 1188, -- De Other Side
   [1678] = 1188, -- De Other Side

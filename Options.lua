@@ -2,7 +2,8 @@ local Util = WarpDeplete.Util
 
 local defaults = {
   global = {
-    DEBUG = false
+    DEBUG = false,
+    mdtAlertShown = false,
   },
 
   profile = {
