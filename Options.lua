@@ -541,6 +541,7 @@ end
 
 function WarpDeplete:InitChatCommands()
   self:RegisterChatCommand("wdp", "HandleChatCommand")
+  self:RegisterChatCommand("warp", "HandleChatCommand")
   self:RegisterChatCommand("warpdeplete", "HandleChatCommand")
   self:RegisterChatCommand("WarpDeplete", "HandleChatCommand")
 end

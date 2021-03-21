@@ -2,7 +2,8 @@
 
 WarpDeplete is an M+ Timer for Shadowlands Dungeons.
 
-The goal of this AddOn is to combine the best of all worlds from other timers, concerning features, accuracy, and customizability, as well as wrapping everything in a minimalist and modern design.
+The goal of this AddOn is to combine the best of all worlds from other timers, concerning features, accuracy, and customizability, as well as wrapping everything in a minimalist and modern design.  
+Note that this project is still in beta and bugs in the core functionality will be ironed out in the coming days.
 
 ## Features
 
@@ -10,7 +11,7 @@ The goal of this AddOn is to combine the best of all worlds from other timers, c
 * Current pull count prediction
 * Alerts for pride spawns after current pull
 * Enemy forces count display in tooltips
-* Extremely low memory usage (< 200KB on dungeon start)
+* Extremely low memory usage (&lt; 200KB on dungeon start)
 * Synchronization between group members for timer and objective completion times
 * State reconstruction after disconnecting or leaving the dungeon
 * Sick design
@@ -20,9 +21,9 @@ The goal of this AddOn is to combine the best of all worlds from other timers, c
 
 The timer offers sane default out of the box. To customize the display, use the following chat commands:
 
-* `/wdp` `/warpdeplete` `/WarpDeplete` - Open the options menu
-* `/wdp demo` - Toggle the demo mode
-* `/wdp unlock` `/wdp lock` `/wdp toggle` - Lock or unlock the frame to move it (Use demo mode for this)
+* `/warp` `/wdp` `/warpdeplete` `/WarpDeplete` - Open the options menu (The different prefixes also work with the other commands)
+* `/warp demo` - Toggle the demo mode
+* `/warp unlock` `/warp lock` `/warp toggle` - Lock or unlock the frame to move it (Use demo mode for this)
 
 ### Why use this timer?
 
@@ -38,7 +39,9 @@ Depleting keys at warp speed is basically what we did during the development of 
 * History and best times for dungeon timer and objectives
 * Death logs with times and player names
 * Even more customization
+* Localization
+* End of dungeon stats and times sharing after a disconnect
 
 ## Credits
 
-This AddOn has benefited a lot from other similar AddOns. A lot of the timer code was taken from the amazing AddOn [GottaGoFast](https://www.curseforge.com/wow/addons/gottagofast) and the awesome WeakAura [M+ Timer](https://wago.io/M+Timer). You should definitely check these out if there are things about this timer that you don't like, or if you're looking for an alternative.
+This AddOn has benefited a lot from other similar AddOns. Some of the timer features and things like the current pull display were possible to implement way quicker and more easily because there was previous work done the in amazing AddOn [GottaGoFast](https://www.curseforge.com/wow/addons/gottagofast) and the awesome WeakAura [M+ Timer](https://wago.io/M+Timer). You should definitely check these out if there are things about this timer that you don't like, or if you're looking for an alternative.

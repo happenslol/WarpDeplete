@@ -200,6 +200,8 @@ function WarpDeplete:UpdateForces()
 
   local stepCount = select(3, C_Scenario.GetStepInfo())
   local currentCount = self:GetEnemyForcesCount()
+  -- This mostly happens when we have already completed the dungeon
+  if not currentCount then return end
   self:PrintDebug("currentCount: " .. currentCount)
 
   if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then

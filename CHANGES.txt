@@ -1,0 +1,10 @@
+lightweight tag 0c45cfd8bf08be8eb8ec7632e348cb05ba33cd6a v1.0.0-beta.2
+Author:	Hilmar Wiegand <me@hwgnd.de>
+Date:	Sun Mar 21 16:15:33 2021 +0100
+
+commit 0c45cfd8bf08be8eb8ec7632e348cb05ba33cd6a
+Author: Hilmar Wiegand <me@hwgnd.de>
+Date:   Sun Mar 21 16:15:33 2021 +0100
+
+    Release v1.0.0-beta.2
+
