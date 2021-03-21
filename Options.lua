@@ -5,10 +5,6 @@ local defaults = {
     DEBUG = false
   },
 
-  --TODO(happens): Add vars for:
-  -- * bar textures
-  -- * bar colors
-
   profile = {
     frameAnchor = "RIGHT",
     frameX = -20,

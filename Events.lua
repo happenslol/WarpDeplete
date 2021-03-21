@@ -3,12 +3,6 @@ local Util = WarpDeplete.Util
 local UPDATE_INTERVAL = 0.1
 local sinceLastUpdate = 0
 
---TODO(happens): For some reason the timer is off by 10 seconds after the first death.
--- The blizzard timer seems to jump up by 5 seconds while ours goes down 5 seconds,
--- but the end of the timer seems to be correct for the blizzard timer. If we reload the
--- and retrieve the elapsed value from the blizzard timer, we end up with the correct timer
--- again, until we die for the first time after reloading.
-
 function WarpDeplete:CheckForChallengeMode()
   local _, _, difficulty, _, _, _, _, currentZoneID = GetInstanceInfo()
 
