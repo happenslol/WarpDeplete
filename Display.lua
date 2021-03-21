@@ -381,8 +381,12 @@ function WarpDeplete:UpdateTimerDisplay()
         state.timeText = ""
       end
     else
-      state.color = state.timeRemaining <= 0 and
-        state.expiredColor or state.successColor
+      if state.timeRemaining <= 0 then
+        state.color = state.expiredColor
+        state.timeText = "-" .. state.timeText
+      else
+        state.color = state.successColor
+      end
 
       state.timeText = "|c" .. state.color .. state.timeText .. "|r"
     end

@@ -129,7 +129,9 @@ end
 function Util.calcPullCount(pull, total)
   local totalPull = 0
   for _, c in pairs(pull) do
-    totalPull = totalPull + c
+    if c ~= "DEAD" then
+      totalPull = totalPull + c
+    end
   end
 
   local percent = total > 0 and totalPull / total or 0

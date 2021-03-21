@@ -188,6 +188,8 @@ end
 function WarpDeplete:GetEnemyForcesCount()
   local stepCount = select(3, C_Scenario.GetStepInfo())
   local _, _, _, _, totalCount, _, _, mobPointsStr = C_Scenario.GetCriteriaInfo(stepCount)
+  if not totalCount or not mobPointsStr then return nil, nil end
+
   local currentCountStr = gsub(mobPointsStr, "%%", "")
   local currentCount = tonumber(currentCountStr)
   return currentCount, totalCount
@@ -248,6 +250,7 @@ function WarpDeplete:RegisterGlobalEvents()
   -- Fired when the countdown hits 0 (and for some reason when we die?)
   self:RegisterEvent("WORLD_STATE_TIMER_START", "OnChallengeModeStart")
 
+  -- Fired when we open the keystone socket
   self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN", "OnKeystoneOpen")
 
   -- Register tooltip count display
@@ -306,7 +309,6 @@ function WarpDeplete:UnregisterChallengeEvents()
   self:UnregisterEvent("PLAYER_REGEN_ENABLED")
   self:UnregisterEvent("UNIT_THREAT_LIST_UPDATE")
   self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-  self:UnregisterEvent("ON_UPDATE")
 end
 
 function WarpDeplete:OnTimerTick(elapsed) 
@@ -431,23 +433,21 @@ end
 function WarpDeplete:OnThreatListUpdate(ev, unit)
   self:PrintDebugEvent(ev)
   if not MDT then return end
+  if not InCombatLockdown() or not unit or not UnitExists(unit) then return end
 
-  if not InCombatLockdown() then return end
-  if not unit or not UnitExists(unit) then return end
-
-  self:PrintDebug("Getting unit guid for unit " .. tostring(unit))
+  --NOTE(happens): There seem to be cases where a Unit will throw a threat list update
+  -- after it has died, which falsely re-adds it to the current pull. We set that units'
+  -- count value to "DEAD" when it dies, and due to the check if the guid already exists
+  -- in the table, it won't be overwritten after the unit has died.
   local guid = UnitGUID(unit)
   if not guid or self.forcesState.currentPull[guid] then return end
 
-  self:PrintDebug("Getting npc id for unit " .. tostring(unit))
   local npcID = select(6, strsplit("-", guid))
   local count = MDT:GetEnemyForces(tonumber(npcID))
-
   if not count or count <= 0 then return end
-  self:PrintDebug("Got forces for unit: " .. count)
 
+  self:PrintDebug("Adding unit " .. guid .. " to current pull: " .. count)
   self.forcesState.currentPull[guid] = count
-
   local pullCount = Util.calcPullCount(self.forcesState.currentPull, self.forcesState.totalCount)
   self:SetForcesPull(pullCount)
 end
@@ -457,7 +457,11 @@ function WarpDeplete:OnCombatLogEvent(ev)
   if subEv ~= "UNIT_DIED" then return end
   self:PrintDebugEvent(ev)
 
-  self.forcesState.currentPull[guid] = nil
+  if not guid or not self.forcesState.currentPull[guid] then return end
+
+  self:PrintDebug("removing unit " .. guid .. " from current pull")
+  -- See comment above (OnThreadListUpdate)
+  self.forcesState.currentPull[guid] = "DEAD"
   local pullCount = Util.calcPullCount(self.forcesState.currentPull, self.forcesState.totalCount)
   self:SetForcesPull(pullCount)
 end
