@@ -16,6 +16,14 @@ The goal of this AddOn is to combine the best of all worlds from other timers, c
 * Sick design
 * Lots of customization options
 
+## How to use
+
+The timer offers sane default out of the box. To customize the display, use the following chat commands:
+
+* `/wdp` `/warpdeplete` `/WarpDeplete` - Open the options menu
+* `/wdp demo` - Toggle the demo mode
+* `/wdp unlock` `/wdp lock` `/wdp toggle` - Lock or unlock the frame to move it (Use demo mode for this)
+
 ### Why use this timer?
 
 Compared to other timers like GottaGoFast, Angry Keystones or the popular M+ Timer WeakAura (which inspired this AddOn), this timer is more accurate, has lower memory usage and offers more customization. The styling is also more in line with modern minimalist WoW UIs.  
