@@ -249,10 +249,14 @@ function WarpDeplete:RegisterGlobalEvents()
   self:RegisterEvent("WORLD_STATE_TIMER_START", "OnChallengeModeStart")
 
   self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN", "OnKeystoneOpen")
+
+  -- Register tooltip count display
+  GameTooltip:HookScript("OnTooltipSetUnit", WarpDeplete.DisplayCountInTooltip)
 end
 
 function WarpDeplete.DisplayCountInTooltip()
   if not MDT or not WarpDeplete.db.profile.showTooltipCount then return end
+  if not WarpDeplete.timerState.running then return end
 
   local GUID = UnitGUID("mouseover")
   if GUID and MDT then
@@ -290,9 +294,6 @@ function WarpDeplete:RegisterChallengeEvents()
 
   self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", "OnCombatLogEvent")
   self:RegisterEvent("UNIT_THREAT_LIST_UPDATE", "OnThreatListUpdate")
-
-  -- Register tooltip count display
-  GameTooltip:HookScript("OnTooltipSetUnit", WarpDeplete.DisplayCountInTooltip)
 end
 
 function WarpDeplete:UnregisterChallengeEvents()
@@ -306,7 +307,6 @@ function WarpDeplete:UnregisterChallengeEvents()
   self:UnregisterEvent("UNIT_THREAT_LIST_UPDATE")
   self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
   self:UnregisterEvent("ON_UPDATE")
-  GameTooltip:HookScript("OnTooltipSetUnit", nil)
 end
 
 function WarpDeplete:OnTimerTick(elapsed) 
