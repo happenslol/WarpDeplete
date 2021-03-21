@@ -41,12 +41,26 @@ local defaults = {
     -- Font colors
     timerRunningColor = "FFFFFFFF",
     timerExpiredColor = "FFFF2A2E",
-    timerSuccessColor = "FF00FF24",
+    timerSuccessColor = "FFFFD338",
     keyDetailsColor = "FFB1B1B1",
     forcesColor = "FFFFFFFF",
     completedForcesColor = "FF00FF24",
     objectivesColor = "FFFFFFFF",
     completedObjectivesColor = "FF00FF24",
+
+    -- Bar textures
+    bar1Texture = "ElvUI Blank",
+    bar2Texture = "ElvUI Blank",
+    bar3Texture = "ElvUI Blank",
+    forcesTexture = "ElvUI Blank",
+    forcesOverlayTexture = "ElvUI Blank",
+
+    -- Bar colors
+    bar1TextureColor = "FF979797",
+    bar2TextureColor = "FF979797",
+    bar3TextureColor = "FF979797",
+    forcesTextureColor = "FFBB9E22",
+    forcesOverlayTextureColor = "FFFF5515",
 
     -- Font sizes for text parts
     deathsFontSize = 16,
@@ -168,6 +182,20 @@ local function color(name, profileVar, updateFn)
   }
 end
 
+local function barTexture(name, profileVar, updateFn)
+  return {
+    name = name,
+    type = "select",
+    dialogControl = 'LSM30_Statusbar',
+    values = WarpDeplete.LSM:HashTable("statusbar"),
+    get = function(info) return WarpDeplete.db.profile[profileVar] end,
+    set = function(info, value)
+      WarpDeplete.db.profile[profileVar] = value
+      WarpDeplete[updateFn](WarpDeplete)
+    end
+  }
+end
+
 local function group(name, inline, args)
   local order = 1
 
@@ -230,6 +258,13 @@ function WarpDeplete:InitOptions()
 
           lineBreak(),
 
+          font("Key details font", "keyDetailsFont", "UpdateLayout"),
+          range("Key details font size", "keyDetailsSize", "UpdateLayout"),
+          fontFlags("Key details font flags", "keyDetailsFontFlags", "UpdateLayout"),
+          color("Key details color", "keyDetailsColor", "UpdateLayout"),
+
+          lineBreak(),
+
           font("Forces font", "forcesFont", "UpdateLayout"),
           range("Forces font size", "forcesFontSize", "UpdateLayout"),
           fontFlags("Forces font flags", "forcesFontFlags", "UpdateLayout"),
@@ -261,6 +296,36 @@ function WarpDeplete:InitOptions()
           fontFlags("Objectives font flags", "objectivesFontFlags", "UpdateLayout"),
           color("Objectives color", "objectivesColor", "UpdateLayout"),
           color("Completed objective color", "completedObjectivesColor", "UpdateLayout"),
+        }),
+
+        group("Bars", true, {
+          barTexture("+1 Timer bar texture", "bar1Texture", "UpdateLayout"),
+          color("+1 Timer bar color", "bar1TextureColor", "UpdateLayout"),
+
+          lineBreak(),
+
+          barTexture("+2 Timer bar texture", "bar2Texture", "UpdateLayout"),
+          color("+2 Timer bar color", "bar2TextureColor", "UpdateLayout"),
+
+          lineBreak(),
+
+          barTexture("+3 Timer bar texture", "bar3Texture", "UpdateLayout"),
+          color("+3 Timer bar color", "bar3TextureColor", "UpdateLayout"),
+
+          lineBreak(),
+
+          barTexture("Forces bar texture", "forcesTexture", "UpdateLayout"),
+          color("Forces bar color", "forcesTextureColor", "UpdateLayout"),
+
+          lineBreak(),
+
+          barTexture("Forces bar texture", "forcesTexture", "UpdateLayout"),
+          color("Forces bar color", "forcesTextureColor", "UpdateLayout"),
+
+          lineBreak(),
+
+          barTexture("Current pull bar texture", "forcesOverlayTexture", "UpdateLayout"),
+          color("Current pull bar color", "forcesOverlayTextureColor", "UpdateLayout"),
         })
       })
     }

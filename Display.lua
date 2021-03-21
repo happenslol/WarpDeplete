@@ -105,7 +105,7 @@ function WarpDeplete:CreateProgressBar(frame)
   bar:SetMinMaxValues(0, 1)
   result.bar = bar
 
-  function result:SetLayout(color, width, height, xOffset, yOffset)
+  function result:SetLayout(barTexture, color, width, height, xOffset, yOffset)
     local r, g, b = Util.hexToRGB(color)
 
     barFrame:SetSize(width, height)
@@ -121,7 +121,7 @@ function WarpDeplete:CreateProgressBar(frame)
 
     bar:SetPoint("CENTER", 0, 0)
     bar:SetSize(width - 2, height - 2)
-    bar:SetStatusBarTexture(WarpDeplete.LSM:Fetch("statusbar", "ElvUI Blank"))
+    bar:SetStatusBarTexture(WarpDeplete.LSM:Fetch("statusbar", barTexture))
     bar:SetStatusBarColor(r, g, b)
   end
 
@@ -246,7 +246,7 @@ function WarpDeplete:UpdateLayout()
 
   -- +3 bar
   local bar3Width = barWidth / 100 * 60
-  self.bar3:SetLayout("979797", bar3Width, barHeight, 0,
+  self.bar3:SetLayout(self.db.profile.bar3Texture, self.db.profile.bar3TextureColor, bar3Width, barHeight, 0,
     timerBarOffsetY - barPixelAdjust)
   self.bar3.text:SetFont(self.LSM:Fetch("font", bar3Font), bar3FontSize, bar3FontFlags)
   self.bar3.text:SetJustifyH("RIGHT")
@@ -255,7 +255,7 @@ function WarpDeplete:UpdateLayout()
 
   -- +2 bar
   local bar2Width = barWidth / 100 * 20 - timerBarOffsetX
-  self.bar2:SetLayout("979797", bar2Width, barHeight,
+  self.bar2:SetLayout(self.db.profile.bar2Texture, self.db.profile.bar2TextureColor, bar2Width, barHeight,
     bar3Width + timerBarOffsetX, timerBarOffsetY - barPixelAdjust)
   self.bar2.text:SetFont(self.LSM:Fetch("font", bar2Font), bar2FontSize, bar2FontFlags)
   self.bar2.text:SetJustifyH("RIGHT")
@@ -264,7 +264,7 @@ function WarpDeplete:UpdateLayout()
 
   -- +1 bar
   local bar1Width = barWidth / 100 * 20 - timerBarOffsetX
-  self.bar1:SetLayout("979797", bar1Width, barHeight,
+  self.bar1:SetLayout(self.db.profile.bar1Texture, self.db.profile.bar1TextureColor, bar1Width, barHeight,
     bar3Width + bar2Width + timerBarOffsetX * 2, timerBarOffsetY - barPixelAdjust)
   self.bar1.text:SetFont(self.LSM:Fetch("font", bar1Font), bar1FontSize, bar1FontFlags)
   self.bar1.text:SetJustifyH("RIGHT")
@@ -273,18 +273,19 @@ function WarpDeplete:UpdateLayout()
 
   -- Forces bar
   local r, g, b = Util.hexToRGB(self.db.profile.forcesColor)
-  self.forces:SetLayout("bb9e22", barWidth, barHeight, 0, -timerBarOffsetY)
+  self.forces:SetLayout(self.db.profile.forcesTexture, self.db.profile.forcesTextureColor,
+    barWidth, barHeight, 0, -timerBarOffsetY)
   self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont), forcesFontSize, forcesFontFlags)
   self.forces.text:SetJustifyH("RIGHT")
   self.forces.text:SetTextColor(r, g, b, 1)
   self.forces.text:SetPoint("TOPRIGHT", -barFontOffsetX, -barFontOffsetY)
 
-  r, g, b = Util.hexToRGB("ff5515")
+  r, g, b = Util.hexToRGB(self.db.profile.forcesOverlayTextureColor)
   self.forces.overlayBar:SetMinMaxValues(0, 1)
   self.forces.overlayBar:SetValue(0)
   self.forces.overlayBar:SetPoint("LEFT", 0, 0)
   self.forces.overlayBar:SetSize(barWidth - 2, barHeight - 2)
-  self.forces.overlayBar:SetStatusBarTexture(self.LSM:Fetch("statusbar", "ElvUI Blank"))
+  self.forces.overlayBar:SetStatusBarTexture(self.LSM:Fetch("statusbar", self.db.profile.forcesOverlayTexture))
   self.forces.overlayBar:SetStatusBarColor(r, g, b, 0.7)
 
   currentOffset = currentOffset - (barFrameHeight + barFramePaddingBottom)
@@ -301,6 +302,11 @@ function WarpDeplete:UpdateLayout()
 
     currentOffset = currentOffset - (objectivesFontSize + objectivesOffset)
   end
+
+  -- Update things that set text color through font tags
+  self:UpdateTimerDisplay()
+  self:UpdateForcesDisplay()
+  self:UpdateObjectivesDisplay()
 end
 
 -- Expects value in seconds

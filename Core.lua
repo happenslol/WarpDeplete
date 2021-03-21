@@ -43,6 +43,7 @@ WarpDeplete.defaultTimerState = {
   remaining = 0,
   limit = 0,
   startOffset = 0,
+  limits = {0, 0, 0},
 
   plusTwo = 0,
   plusThree = 0
@@ -65,11 +66,15 @@ function WarpDeplete:OnInitialize()
 end
 
 function WarpDeplete:OnEnable()
+  self.forcesState = Util.copy(self.defaultForcesState)
+  self.timerState = Util.copy(self.defaultTimerState)
+  self.challengeState = Util.copy(self.defaultChallengeState)
+  self.objectivesState = Util.copy(self.defaultObjectivesState)
+  self.keyDetailsState = Util.copy(self.defaultKeyDetailsState)
+
   self:InitOptions()
   self:InitChatCommands()
   self:InitDisplay()
-
-  self:ResetState()
 
   self:RegisterGlobalEvents()
   self:RegisterComms()
