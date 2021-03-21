@@ -14,6 +14,7 @@ local defaults = {
     -- Element display options
     showForcesPercent = true,
     showForcesCount = true,
+    showTooltipCount = true,
 
     -- Font families
     deathsFont = "Expressway",
@@ -243,6 +244,7 @@ function WarpDeplete:InitOptions()
         group("Display", true, {
           toggle("Show forces percent", "showForcesPercent", "UpdateForcesDisplay"),
           toggle("Show forces count", "showForcesCount", "UpdateForcesDisplay"),
+          toggle("Show forces count in tooltip", "showTooltipCount", "UpdateLayout"),
         }),
 
         group("Fonts", true, {
