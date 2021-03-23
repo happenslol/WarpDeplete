@@ -85,7 +85,7 @@ function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
 end
 
 function WarpDeplete:OnObjectiveSyncResponse(prefix, message, dist, sender)
-  local parts = strsplit("|", message)
+  local parts = {strsplit("|", message)}
 
   for i, objTimeRaw in ipairs(parts) do
     local objTime = tonumber(objTimeRaw)
