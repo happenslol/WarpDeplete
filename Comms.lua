@@ -69,11 +69,11 @@ end
 function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
   if message ~= requestMessage or sender == GetUnitName("player", false) then return end
 
-  local completionTimes = ""
+  local completionTimes = {}
   local hasAny = false
   for i, obj in ipairs(self.objectivesState) do
     hasAny = obj.time ~= nil or hasAny
-    completionTimes = completionTimes .. ("%d"):format(obj.time or -1)
+    completionTimes[i] = ("%d"):format(obj.time or -1)
   end
 
   -- We only send if we have any times saved, since we might also be in
