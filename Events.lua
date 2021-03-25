@@ -260,8 +260,8 @@ function WarpDeplete:RegisterGlobalEvents()
 end
 
 function WarpDeplete.DisplayCountInTooltip()
-  if not MDT or not WarpDeplete.db.profile.showTooltipCount then return end
   if not WarpDeplete.timerState.running then return end
+  if not MDT or not WarpDeplete.db.profile.showTooltipCount then return end
 
   local GUID = UnitGUID("mouseover")
   if GUID and MDT then
@@ -277,7 +277,8 @@ function WarpDeplete.DisplayCountInTooltip()
 
         result = gsub(result, ":percent:", percentText .. "%%")
         result = gsub(result, ":count:", countText)
-        GameTooltip:AppendText(" " .. result)
+        GameTooltip:AddLine("Count: |cFFFFFFFF" .. result .. "|r")
+        GameTooltip:Show()
       end
   end
 end

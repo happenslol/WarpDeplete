@@ -18,8 +18,8 @@ local defaults = {
     customCurrentPullFormat = "(+:percent:)",
 
     showTooltipCount = true,
-    tooltipCountFormat = "(+:count: - :percent:)",
-    customTooltipCountFormat = "(+:count: - :percent:)",
+    tooltipCountFormat = "+:count: - :percent:",
+    customTooltipCountFormat = "+:count: - :percent:",
 
     -- Font families
     deathsFont = "Expressway",
@@ -337,15 +337,15 @@ function WarpDeplete:InitOptions()
             name = "Tooltip forces text format",
             desc = "Choose how count will be displayed in the tooltip",
             sorting = {
-              "(+:count: - :percent:)",
-              "(+:count:)",
-              "(+:percent:)",
+              "+:count: / :percent:",
+              "+:count:",
+              "+:percent:",
               ":custom:"
             },
             values = {
-              ["(+:percent:)"] = "(+5.32%)",
-              ["(+:count:)"] = "(+14)",
-              ["(+:count: - :percent:)"] = "(+14 - 5.32%)",
+              ["+:percent:"] = "+5.32%",
+              ["+:count:"] = "+14",
+              ["+:count: / :percent:"] = "+14 / 5.32%",
               [":custom:"] = "Custom",
             },
             hidden = function() return not WarpDeplete.db.profile.showTooltipCount end,
