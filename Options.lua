@@ -21,6 +21,8 @@ local defaults = {
     tooltipCountFormat = "+:count: - :percent:",
     customTooltipCountFormat = "+:count: - :percent:",
 
+    showDeathsTooltip = true,
+
     -- Font families
     deathsFont = "Expressway",
     timerFont = "Expressway",
@@ -371,6 +373,17 @@ function WarpDeplete:InitOptions()
               WarpDeplete:UpdateLayout()
             end,
           },
+        }),
+
+        group("Death recording tooltip", true, {
+          {
+            type = "toggle",
+            name = "Show death times and player names when hovering deaths display",
+            desc = "NOTE: This will only record deaths that happen while you're online. If you disconnect and/or reconnect, this will not show deaths that happened previously.",
+            get = function(info) return WarpDeplete.db.profile.showDeathsTooltip end,
+            set = function(info, value) WarpDeplete.db.profile.showDeathsTooltip = value end,
+            width = "full",
+          }
         }),
 
         group("Fonts", true, {

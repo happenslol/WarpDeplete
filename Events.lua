@@ -243,6 +243,15 @@ function WarpDeplete:ResetCurrentPull()
   self:SetForcesPull(0)
 end
 
+function WarpDeplete:AddDeathDetails(time, name, class)
+  local len = #self.timerState.deathDetails
+  self.timerState.deathDetails[len + 1] = {
+    time = time,
+    name = name,
+    class = class
+  }
+end
+
 -- These events are used to detect whether we are in challenge mode
 -- or whether we should put a key in the socket, and will always stay registered.
 function WarpDeplete:RegisterGlobalEvents()
@@ -257,6 +266,45 @@ function WarpDeplete:RegisterGlobalEvents()
 
   -- Register tooltip count display
   GameTooltip:HookScript("OnTooltipSetUnit", WarpDeplete.DisplayCountInTooltip)
+
+  -- Tooltip events
+  self.frames.deathsTooltip:SetScript("OnEnter", WarpDeplete.TooltipOnEnter)
+  self.frames.deathsTooltip:SetScript("OnLeave", WarpDeplete.TooltipOnLeave)
+end
+
+function WarpDeplete.TooltipOnEnter()
+  local self = WarpDeplete
+  if not self.db.profile.showDeathsTooltip then return end
+
+  GameTooltip:SetOwner(self.frames.deathsTooltip, "ANCHOR_BOTTOM")
+  GameTooltip:ClearLines()
+
+  local count = #self.timerState.deathDetails
+  if count == 0 then
+    GameTooltip:AddLine("No Recorded Player Deaths", 1, 1, 1)
+    GameTooltip:Show()
+    return
+  end
+
+  local showFrom = 0
+  if count > 20 then
+    showFrom = count - 20
+  end
+
+  GameTooltip:AddLine("Player Deaths", 1, 1, 1)
+  for i, d in ipairs(self.timerState.deathDetails) do
+    if i >= showFrom then
+      local color = select(4, GetClassColor(d.class))
+      local time = Util.formatTime(d.time)
+      GameTooltip:AddLine(time .. " - |c" .. color .. d.name .. "|r")
+    end
+  end
+
+  GameTooltip:Show()
+end
+
+function WarpDeplete.TooltipOnLeave()
+  GameTooltip_Hide()
 end
 
 function WarpDeplete.DisplayCountInTooltip()
@@ -294,7 +342,7 @@ function WarpDeplete:RegisterChallengeEvents()
   self:RegisterEvent("SCENARIO_CRITERIA_UPDATE", "OnScenarioCriteriaUpdate")
 
   -- Combat triggers
-  self:RegisterEvent("PLAYER_DEAD", "OnResetCurrentPull")
+  self:RegisterEvent("PLAYER_DEAD", "OnPlayerDead")
   self:RegisterEvent("ENCOUNTER_END", "OnResetCurrentPull")
   self:RegisterEvent("PLAYER_REGEN_ENABLED", "OnResetCurrentPull")
 
@@ -358,6 +406,12 @@ function WarpDeplete:OnChallengeModeStart(ev)
   if not self.challengeState.inChallenge then
     self:StartChallengeMode()
   end
+end
+
+function WarpDeplete:OnPlayerDead(ev)
+  self:PrintDebugEvent(ev)
+  self:BroadcastDeath()
+  self:ResetCurrentPull()
 end
 
 function WarpDeplete:OnChallengeModeReset(ev)

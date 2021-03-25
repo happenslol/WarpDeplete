@@ -212,6 +212,12 @@ function WarpDeplete:UpdateLayout()
   deathsText:SetTextColor(1, 1, 1, 1)
   deathsText:SetPoint("TOPRIGHT", -framePadding - 4, currentOffset)
 
+  local deathsTooltipFrameHeight = deathsFontSize + verticalOffset + framePadding
+  local deathsTooltipFrameWidth = deathsText:GetStringWidth() + framePadding
+  self.frames.deathsTooltip:SetHeight(deathsTooltipFrameHeight)
+  self.frames.deathsTooltip:SetWidth(deathsTooltipFrameWidth)
+  self.frames.deathsTooltip:SetPoint("TOPRIGHT", -framePadding * 0.5, -framePadding * 0.5)
+
   currentOffset = currentOffset - (deathsFontSize + verticalOffset)
 
   -- Timer text
@@ -514,6 +520,9 @@ function WarpDeplete:SetDeaths(count)
   self.timerState.deaths = count
   local deathText = Util.formatDeathText(count)
   self.frames.root.deathsText:SetText(deathText)
+
+  local deathsTooltipFrameWidth = self.frames.root.deathsText:GetStringWidth() + self.db.profile.framePadding
+  self.frames.deathsTooltip:SetWidth(deathsTooltipFrameWidth)
 end
 
 -- Expects objective list in format {{name: "Boss1", time: nil}, {name: "Boss2", time: 123}}

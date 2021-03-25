@@ -38,6 +38,7 @@ WarpDeplete.defaultTimerState = {
   isBlizzardTimer = false,
   running = false,
   deaths = 0,
+  deathDetails = {},
 
   current = 0,
   remaining = 0,
@@ -61,6 +62,7 @@ function WarpDeplete:OnInitialize()
 
   frames.root = CreateFrame("Frame", "WarpDepleteFrame", UIParent)
   frames.bars = CreateFrame("Frame", "WarpDepleteBars", frames.root)
+  frames.deathsTooltip = CreateFrame("Frame", "WarpDepleteDeathsTooltip", frames.root)
 
   self.frames = frames
 end
