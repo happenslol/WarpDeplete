@@ -11,6 +11,7 @@ Note that this project is still in beta and bugs in the core functionality will 
 * Current pull count prediction
 * Alerts for pride spawns after current pull
 * Enemy forces count display in tooltips
+* Death logs with time and player
 * Extremely low memory usage (&lt; 200KB on dungeon start)
 * Synchronization between group members for timer and objective completion times
 * State reconstruction after disconnecting or leaving the dungeon
@@ -37,7 +38,7 @@ Depleting keys at warp speed is basically what we did during the development of 
 ## Planned Features
 
 * History and best times for dungeon timer and objectives
-* Death logs with times and player names
+* Best possible time prediction based on previous clear times (similar to speedrunning timers)
 * Even more customization
 * Localization
 * End of dungeon stats and times sharing after a disconnect
