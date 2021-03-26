@@ -209,7 +209,8 @@ function WarpDeplete:UpdateLayout()
   local deathsText = self.frames.root.deathsText
   deathsText:SetFont(self.LSM:Fetch("font", deathsFont), deathsFontSize, deathsFontFlags)
   deathsText:SetJustifyH("RIGHT")
-  deathsText:SetTextColor(1, 1, 1, 1)
+  r, g, b = Util.hexToRGB(self.db.profile.deathsColor)
+  deathsText:SetTextColor(r, g, b, 1)
   deathsText:SetPoint("TOPRIGHT", -framePadding - 4, currentOffset)
 
   local deathsTooltipFrameHeight = deathsFontSize + verticalOffset + framePadding
@@ -224,7 +225,8 @@ function WarpDeplete:UpdateLayout()
   local timerText = self.frames.root.timerText
   timerText:SetFont(self.LSM:Fetch("font", timerFont), timerFontSize, timerFontFlags)
   timerText:SetJustifyH("RIGHT")
-  timerText:SetTextColor(1, 1, 1, 1)
+  r, g, b = Util.hexToRGB(self.db.profile.timerRunningColor)
+  timerText:SetTextColor(r, g, b, 1)
   timerText:SetPoint("TOPRIGHT", -framePadding, currentOffset)
 
   currentOffset = currentOffset - (timerFontSize + verticalOffset)

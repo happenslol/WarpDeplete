@@ -286,17 +286,35 @@ function WarpDeplete.TooltipOnEnter()
     return
   end
 
-  local showFrom = 0
-  if count > 20 then
-    showFrom = count - 20
-  end
+  if self.db.profile.deathLogStyle == "time" then
+    local showFrom = 0
+    if count > 20 then
+      showFrom = count - 20
+    end
 
-  GameTooltip:AddLine("Player Deaths", 1, 1, 1)
-  for i, d in ipairs(self.timerState.deathDetails) do
-    if i >= showFrom then
-      local color = select(4, GetClassColor(d.class))
-      local time = Util.formatTime(d.time)
-      GameTooltip:AddLine(time .. " - |c" .. color .. d.name .. "|r")
+    GameTooltip:AddLine("Player Deaths", 1, 1, 1)
+    for i, d in ipairs(self.timerState.deathDetails) do
+      if i >= showFrom then
+        local color = select(4, GetClassColor(d.class))
+        local time = Util.formatTime(d.time)
+        GameTooltip:AddLine(time .. " - |c" .. color .. d.name .. "|r")
+      end
+    end
+  elseif self.db.profile.deathLogStyle == "count" then
+    local countTable = {}
+    for i, d in ipairs(self.timerState.deathDetails) do
+      if not countTable[d.name] then
+        countTable[d.name] = {
+          color = select(4, GetClassColor(d.class)),
+          count = 0
+        }
+      end
+
+      countTable[d.name].count = countTable[d.name].count + 1
+    end
+
+    for name, deaths in pairs(countTable) do
+      GameTooltip:AddLine("|c" .. deaths.color .. name .. "|r|cFFFFFFFF: " .. tostring(deaths.count) .. "|r")
     end
   end
 

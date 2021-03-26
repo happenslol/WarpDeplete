@@ -22,6 +22,7 @@ local defaults = {
     customTooltipCountFormat = "+:count: - :percent:",
 
     showDeathsTooltip = true,
+    deathLogStyle = "time",
 
     -- Font families
     deathsFont = "Expressway",
@@ -44,6 +45,7 @@ local defaults = {
     objectivesFontFlags = "OUTLINE",
 
     -- Font colors
+    deathsColor = "FFFFFFFF",
     timerRunningColor = "FFFFFFFF",
     timerExpiredColor = "FFFF2A2E",
     timerSuccessColor = "FFFFD338",
@@ -105,8 +107,8 @@ local defaults = {
   }
 }
 
-local function font(name, profileVar, updateFn)
-  return {
+local function font(name, profileVar, updateFn, extraOptions)
+  local result = {
     type = "select",
     dialogControl = "LSM30_Font",
     name = name,
@@ -117,10 +119,18 @@ local function font(name, profileVar, updateFn)
       WarpDeplete[updateFn](WarpDeplete)
     end
   }
+
+  if extraOptions and type(extraOptions) == "table" then
+    for k, v in pairs(extraOptions) do
+      result[k] = v
+    end
+  end
+
+  return result
 end
 
-local function range(name, profileVar, updateFn)
-  return {
+local function range(name, profileVar, updateFn, extraOptions)
+  local result = {
     type = "range",
     name = name,
     min = 8,
@@ -132,10 +142,18 @@ local function range(name, profileVar, updateFn)
       WarpDeplete[updateFn](WarpDeplete)
     end
   }
+
+  if extraOptions and type(extraOptions) == "table" then
+    for k, v in pairs(extraOptions) do
+      result[k] = v
+    end
+  end
+
+  return result
 end
 
-local function toggle(name, profileVar, updateFn)
-  return {
+local function toggle(name, profileVar, updateFn, extraOptions)
+  local result = {
     type = "toggle",
     name = name,
     get = function(info) return WarpDeplete.db.profile[profileVar] end,
@@ -144,10 +162,18 @@ local function toggle(name, profileVar, updateFn)
       WarpDeplete[updateFn](WarpDeplete)
     end
   }
+
+  if extraOptions and type(extraOptions) == "table" then
+    for k, v in pairs(extraOptions) do
+      result[k] = v
+    end
+  end
+
+  return result
 end
 
-local function fontFlags(name, profileVar, updateFn)
-  return {
+local function fontFlags(name, profileVar, updateFn, extraOptions)
+  local result = {
     type = "select",
     name = name,
     desc = "Default: OUTLINE",
@@ -163,6 +189,14 @@ local function fontFlags(name, profileVar, updateFn)
       WarpDeplete[updateFn](WarpDeplete)
     end
   }
+
+  if extraOptions and type(extraOptions) == "table" then
+    for k, v in pairs(extraOptions) do
+      result[k] = v
+    end
+  end
+
+  return result
 end
 
 local function lineBreak(hidden)
@@ -173,8 +207,8 @@ local function lineBreak(hidden)
   }
 end
 
-local function color(name, profileVar, updateFn)
-  return {
+local function color(name, profileVar, updateFn, extraOptions)
+  local result = {
     type = "color",
     name = name,
     get = function(info)
@@ -186,10 +220,18 @@ local function color(name, profileVar, updateFn)
       WarpDeplete[updateFn](WarpDeplete)
     end
   }
+
+  if extraOptions and type(extraOptions) == "table" then
+    for k, v in pairs(extraOptions) do
+      result[k] = v
+    end
+  end
+
+  return result
 end
 
-local function barTexture(name, profileVar, updateFn)
-  return {
+local function barTexture(name, profileVar, updateFn, extraOptions)
+  local result = {
     name = name,
     type = "select",
     dialogControl = 'LSM30_Statusbar',
@@ -200,12 +242,20 @@ local function barTexture(name, profileVar, updateFn)
       WarpDeplete[updateFn](WarpDeplete)
     end
   }
+
+  if extraOptions and type(extraOptions) == "table" then
+    for k, v in pairs(extraOptions) do
+      result[k] = v
+    end
+  end
+
+  return result
 end
 
-local function group(name, inline, args)
+local function group(name, inline, args, extraOptions)
   local order = 1
 
-  local g = {
+  local result = {
     name = name,
     inline = inline,
     type = "group",
@@ -214,11 +264,17 @@ local function group(name, inline, args)
 
   for _, arg in pairs(args) do
     arg.order = order
-    g.args[arg.type .. order] = arg
+    result.args[arg.type .. order] = arg
     order = order + 1
   end
 
-  return g
+  if extraOptions and type(extraOptions) == "table" then
+    for k, v in pairs(extraOptions) do
+      result[k] = v
+    end
+  end
+
+  return result
 end
 
 function WarpDeplete:InitOptions()
@@ -228,9 +284,10 @@ function WarpDeplete:InitOptions()
     name = "WarpDeplete",
     handler = self,
     type = "group",
+    childGroups = "tab",
     args = {
-      general = group("General", false, {
-        {
+        unlocked = {
+          order = 1,
           type = "toggle",
           name = "Unlocked",
           desc = "Unlocks the timer window and allows it to be moved around",
@@ -238,7 +295,8 @@ function WarpDeplete:InitOptions()
           set = WarpDeplete.SetUnlocked
         },
 
-        {
+        demo = {
+          order = 2,
           type = "toggle",
           name = "Demo Mode",
           desc = "Enables the demo mode, used for configuring the timer",
@@ -248,6 +306,7 @@ function WarpDeplete:InitOptions()
             else WarpDeplete:DisableDemoMode() end
           end
         },
+      general = group("General", false, {
 
         group("Forces Display", true, {
           {
@@ -331,7 +390,9 @@ function WarpDeplete:InitOptions()
         }),
 
         group("Forces count in tooltip", true, {
-          toggle("Show forces count in tooltip", "showTooltipCount", "UpdateLayout"),
+          toggle("Show forces count in tooltip", "showTooltipCount", "UpdateLayout", {
+            desc = "Add a line to the tooltip, showing how much count a mob will award upon death"
+          }),
           lineBreak(function() return not WarpDeplete.db.profile.showTooltipCount end),
 
           {
@@ -375,18 +436,36 @@ function WarpDeplete:InitOptions()
           },
         }),
 
-        group("Death recording tooltip", true, {
+        group("Death log tooltip", true, {
           {
             type = "toggle",
-            name = "Show death times and player names when hovering deaths display",
+            name = "Show death log when hovering deaths text",
             desc = "NOTE: This will only record deaths that happen while you're online. If you disconnect and/or reconnect, this will not show deaths that happened previously.",
             get = function(info) return WarpDeplete.db.profile.showDeathsTooltip end,
             set = function(info, value) WarpDeplete.db.profile.showDeathsTooltip = value end,
-            width = "full",
+            width = 3 / 2,
+          },
+          {
+            type = "select",
+            name = "Death log style",
+            desc = "Choose how players deaths will be displayed in the tooltip. Hover the deaths text while in demo mode for a preview.",
+            sorting = {
+              "count",
+              "time"
+            },
+            values = {
+              ["count"] = "Overall amount of deaths by player",
+              ["time"] = "Recent deaths with timestamps"
+            },
+            get = function(info) return WarpDeplete.db.profile.deathLogStyle end,
+            set = function(info, value) WarpDeplete.db.profile.deathLogStyle = value end,
+            width = 3 / 2
           }
-        }),
+        })
+      }, { order = 3 }),
 
-        group("Fonts", true, {
+      texts = group("Texts", false, {
+        group("Timer Color", true, {
           font("Timer font", "timerFont", "UpdateLayout"),
           range("Timer font size", "timerFontSize", "UpdateLayout"),
           fontFlags("Timer font flags", "timerFontFlags", "UpdateLayout"),
@@ -397,7 +476,7 @@ function WarpDeplete:InitOptions()
           lineBreak(),
 
           font("Key details font", "keyDetailsFont", "UpdateLayout"),
-          range("Key details font size", "keyDetailsSize", "UpdateLayout"),
+          range("Key details font size", "keyDetailsFontSize", "UpdateLayout"),
           fontFlags("Key details font flags", "keyDetailsFontFlags", "UpdateLayout"),
           color("Key details color", "keyDetailsColor", "UpdateLayout"),
 
@@ -435,37 +514,44 @@ function WarpDeplete:InitOptions()
           color("Objectives color", "objectivesColor", "UpdateLayout"),
           color("Completed objective color", "completedObjectivesColor", "UpdateLayout"),
         }),
+      }, { order = 4 }),
 
-        group("Bars", true, {
-          barTexture("+1 Timer bar texture", "bar1Texture", "UpdateLayout"),
+      bars = group("Bars", false, {
+        group("Size", true, {
+          range("Bar width", "barWidth", "UpdateLayout", { width = "full", min = 10, max = 600 }),
+          range("Bar height", "barHeight", "UpdateLayout", { width = "full", min = 4, max = 20 })
+        }),
+
+        group("Textures and Colors", true, {
+          barTexture("+1 Timer bar texture", "bar1Texture", "UpdateLayout", { width = "double" }),
           color("+1 Timer bar color", "bar1TextureColor", "UpdateLayout"),
 
           lineBreak(),
 
-          barTexture("+2 Timer bar texture", "bar2Texture", "UpdateLayout"),
-          color("+2 Timer bar color", "bar2TextureColor", "UpdateLayout"),
+          barTexture("+2 Timer bar texture", "bar2Texture", "UpdateLayout", { width = "double" }),
+          color("+2 Timer bar color", "bar2TextureColor", "UpdateLayout") ,
 
           lineBreak(),
 
-          barTexture("+3 Timer bar texture", "bar3Texture", "UpdateLayout"),
+          barTexture("+3 Timer bar texture", "bar3Texture", "UpdateLayout", { width = "double" }),
           color("+3 Timer bar color", "bar3TextureColor", "UpdateLayout"),
 
           lineBreak(),
 
-          barTexture("Forces bar texture", "forcesTexture", "UpdateLayout"),
+          barTexture("Forces bar texture", "forcesTexture", "UpdateLayout", { width = "double" }),
           color("Forces bar color", "forcesTextureColor", "UpdateLayout"),
 
           lineBreak(),
 
-          barTexture("Forces bar texture", "forcesTexture", "UpdateLayout"),
+          barTexture("Forces bar texture", "forcesTexture", "UpdateLayout", { width = "double" }),
           color("Forces bar color", "forcesTextureColor", "UpdateLayout"),
 
           lineBreak(),
 
-          barTexture("Current pull bar texture", "forcesOverlayTexture", "UpdateLayout"),
+          barTexture("Current pull bar texture", "forcesOverlayTexture", "UpdateLayout", { width = "double" }),
           color("Current pull bar color", "forcesOverlayTextureColor", "UpdateLayout"),
         })
-      })
+      }, { order = 5 }),
     }
   }
 
@@ -532,22 +618,7 @@ function WarpDeplete:InitOptions()
 
   local AceConfigDialog = LibStub("AceConfigDialog-3.0")
   LibStub("AceConfig-3.0"):RegisterOptionsTable("WarpDeplete", options)
-  self.optionsGeneralFrame = AceConfigDialog:AddToBlizOptions(
-    "WarpDeplete", "WarpDeplete",
-    nil, "general"
-  )
-
-  if self.db.global.DEBUG then
-    self.optionsProfileFrame = AceConfigDialog:AddToBlizOptions(
-      "WarpDeplete", "Debug",
-      "WarpDeplete", "debug"
-    )
-  end
-
-  self.optionsProfileFrame = AceConfigDialog:AddToBlizOptions(
-    "WarpDeplete", "Profiles",
-    "WarpDeplete", "profile"
-  )
+  self.optionsGeneralFrame = AceConfigDialog:AddToBlizOptions("WarpDeplete", "WarpDeplete")
 
   self.configDialog = AceConfigDialog
 end

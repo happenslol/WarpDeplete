@@ -128,6 +128,30 @@ function WarpDeplete:EnableDemoMode()
   self:SetForcesPull(7)
   self:SetDeaths(3)
 
+  local classTable = {
+    "SHAMAN",
+    "DEMONHUNTER",
+    "MONK",
+    "DRUID",
+    "MAGE"
+  }
+
+  local nameTable = {
+    "GroupMember1",
+    "GroupMember2",
+    "GroupMember3",
+    "GroupMember4",
+    "GroupMember5",
+  }
+
+  for i = 1, 30 do
+    local class = classTable[(i % #classTable) + 1]
+    local name = nameTable[(i % #nameTable) + 1]
+    local time = i * 7
+
+    self:AddDeathDetails(time, name, class)
+  end
+
   self:Show()
 end
 
