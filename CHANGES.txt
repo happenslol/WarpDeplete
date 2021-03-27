@@ -1,3 +1,6 @@
+Release 1.1.1
+* Switched to combat log party member death detection
+
 Release 1.1.0
 * Implemented death logs and tooltip display
 * Updated count tooltip to appear on separate line
