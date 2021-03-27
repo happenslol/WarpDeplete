@@ -475,6 +475,7 @@ function WarpDeplete:UpdateForcesDisplay()
 end
 
 function WarpDeplete:UpdatePrideGlow()
+  if not self.db.profile.showPrideGlow then return end
   if self.keyDetailsState.level < 10 then return end
 
   if self.challengeState.challengeCompleted then
@@ -489,15 +490,19 @@ function WarpDeplete:UpdatePrideGlow()
 
   -- Already in the correct state
   if shouldGlow == self.forcesState.prideGlowActive then return end
-  self.forcesState.prideGlowActive = shouldGlow
 
   if shouldGlow then self:ShowPrideGlow()
   else self:HidePrideGlow() end
 end
 
+function WarpDeplete:UpdatePrideGlowFromOptions()
+  self:HidePrideGlow()
+  self:UpdatePrideGlow()
+end
+
 function WarpDeplete:ShowPrideGlow()
-  local glowColor = "CB091E"
-  local glowR, glowG, glowB = Util.hexToRGB(glowColor)
+  self.forcesState.prideGlowActive = true
+  local glowR, glowG, glowB = Util.hexToRGB(self.db.profile.prideGlowColor)
   self.Glow.PixelGlow_Start(
     self.forces.bar, -- frame
     {glowR, glowG, glowB, 1}, -- color
@@ -514,6 +519,7 @@ function WarpDeplete:ShowPrideGlow()
 end
 
 function WarpDeplete:HidePrideGlow()
+  self.forcesState.prideGlowActive = false
   self.Glow.PixelGlow_Stop(self.forces.bar, "pride")
 end
 

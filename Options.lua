@@ -18,8 +18,8 @@ local defaults = {
     customCurrentPullFormat = "(+:percent:)",
 
     showTooltipCount = true,
-    tooltipCountFormat = "+:count: - :percent:",
-    customTooltipCountFormat = "+:count: - :percent:",
+    tooltipCountFormat = "+:count: / :percent:",
+    customTooltipCountFormat = "+:count: / :percent:",
 
     showDeathsTooltip = true,
     deathLogStyle = "time",
@@ -68,6 +68,10 @@ local defaults = {
     bar3TextureColor = "FF979797",
     forcesTextureColor = "FFBB9E22",
     forcesOverlayTextureColor = "FFFF5515",
+
+    -- Pride glow
+    showPrideGlow = true,
+    prideGlowColor = "FFCB091E",
 
     -- Font sizes for text parts
     deathsFontSize = 16,
@@ -199,12 +203,16 @@ local function fontFlags(name, profileVar, updateFn, extraOptions)
   return result
 end
 
-local function lineBreak(hidden)
-  return {
+local function lineBreak(hidden, width)
+  local result = {
     type = "description",
     name = "\n",
-    hidden = hidden or false
+    hidden = hidden or false,
   }
+
+  if width then result.width = width end
+
+  return result
 end
 
 local function color(name, profileVar, updateFn, extraOptions)
@@ -307,6 +315,9 @@ function WarpDeplete:InitOptions()
           end
         },
       general = group("General", false, {
+        lineBreak(),
+        toggle("Insert keystone automatically", "insertKeystoneAutomatically", "UpdateLayout"),
+        lineBreak(),
 
         group("Forces Display", true, {
           {
@@ -331,6 +342,7 @@ function WarpDeplete:InitOptions()
               WarpDeplete:UpdateLayout()
             end
           },
+          lineBreak(function() return WarpDeplete.db.profile.forcesFormat == ":custom:" end, 2),
 
           {
             type = "input",
@@ -356,7 +368,7 @@ function WarpDeplete:InitOptions()
             sorting = {
               "(+:percent:)",
               "(+:count:)",
-              "(+:count:/:totalcount: - :percent:)",
+              "(+:count: / :totalcount: - :percent:)",
               ":custom:"
             },
             values = {
@@ -371,6 +383,7 @@ function WarpDeplete:InitOptions()
               WarpDeplete:UpdateLayout()
             end
           },
+          lineBreak(function() return WarpDeplete.db.profile.currentPullFormat == ":custom:" end, 2),
 
           {
             type = "input",
@@ -393,7 +406,7 @@ function WarpDeplete:InitOptions()
           toggle("Show forces count in tooltip", "showTooltipCount", "UpdateLayout", {
             desc = "Add a line to the tooltip, showing how much count a mob will award upon death"
           }),
-          lineBreak(function() return not WarpDeplete.db.profile.showTooltipCount end),
+          lineBreak(function() return not WarpDeplete.db.profile.showTooltipCount end, 3),
 
           {
             type = "select",
@@ -423,11 +436,14 @@ function WarpDeplete:InitOptions()
             type = "input",
             name = "Custom tooltip forces count format",
             desc = "Use the following tags to set your custom format:\n"
-              .. "- :percent: Shows the current forces percentage (e.g. 82.52%)\n"
-              .. "- :count: Shows the current forces count (e.g. 198)",
+              .. "- :percent: Shows the forces percentage the enemy will award (e.g. 1.4%)\n"
+              .. "- :count: Shows the count the enemy will award (e.g. 4)",
             multiline = false,
             width = 2,
-            hidden = function() return WarpDeplete.db.profile.tooltipCountFormat ~= ":custom:" end,
+            hidden = function()
+              return WarpDeplete.db.profile.tooltipCountFormat ~= ":custom:" or
+                not WarpDeplete.db.profile.showTooltipCount
+            end,
             get = function(info) return WarpDeplete.db.profile.customTooltipCountFormat end,
             set = function(info, value)
               WarpDeplete.db.profile.customTooltipCountFormat = value
@@ -457,6 +473,7 @@ function WarpDeplete:InitOptions()
               ["count"] = "Overall amount of deaths by player",
               ["time"] = "Recent deaths with timestamps"
             },
+            hidden = function() return not WarpDeplete.db.profile.showDeathsTooltip end,
             get = function(info) return WarpDeplete.db.profile.deathLogStyle end,
             set = function(info, value) WarpDeplete.db.profile.deathLogStyle = value end,
             width = 3 / 2
@@ -465,49 +482,59 @@ function WarpDeplete:InitOptions()
       }, { order = 3 }),
 
       texts = group("Texts", false, {
-        group("Timer Color", true, {
-          font("Timer font", "timerFont", "UpdateLayout"),
-          range("Timer font size", "timerFontSize", "UpdateLayout"),
-          fontFlags("Timer font flags", "timerFontFlags", "UpdateLayout"),
+        group("Timer Colors", true, {
           color("Timer color", "timerRunningColor", "UpdateLayout"),
           color("Timer success color", "timerSuccessColor", "UpdateLayout"),
           color("Timer expired color", "timerExpiredColor", "UpdateLayout"),
+        }, { desc = "These colors are used for both the main timer, as well as the bar texts." }),
 
-          lineBreak(),
+        group("Main Timer", true, {
+          font("Timer font", "timerFont", "UpdateLayout"),
+          range("Timer font size", "timerFontSize", "UpdateLayout", { max = 80 }),
+          fontFlags("Timer font flags", "timerFontFlags", "UpdateLayout"),
+        }),
 
+        group("Deaths", true, {
+          font("Deaths font", "deathsFont", "UpdateLayout"),
+          range("Deaths font size", "deathsFontSize", "UpdateLayout"),
+          fontFlags("Deaths font flags", "deathsFontFlags", "UpdateLayout"),
+          color("Deaths color", "deathsColor", "UpdateLayout"),
+        }),
+
+        group("Key Details", true, {
           font("Key details font", "keyDetailsFont", "UpdateLayout"),
           range("Key details font size", "keyDetailsFontSize", "UpdateLayout"),
           fontFlags("Key details font flags", "keyDetailsFontFlags", "UpdateLayout"),
           color("Key details color", "keyDetailsColor", "UpdateLayout"),
+        }),
 
-          lineBreak(),
-
+        group("Forces", true, {
           font("Forces font", "forcesFont", "UpdateLayout"),
           range("Forces font size", "forcesFontSize", "UpdateLayout"),
           fontFlags("Forces font flags", "forcesFontFlags", "UpdateLayout"),
           color("Forces color", "forcesColor", "UpdateLayout"),
           color("Completed forces color", "completedForcesColor", "UpdateLayout"),
+        }),
 
-          lineBreak(),
-
+        group("+1 Timer", true, {
           font("+1 Timer font", "bar1Font", "UpdateLayout"),
           range("+1 Timer font size", "bar1FontSize", "UpdateLayout"),
           fontFlags("+1 Timer font flags", "bar1FontFlags", "UpdateLayout"),
+        }),
 
-          lineBreak(),
-
+        group("+2 Timer", true, {
           font("+2 Timer font", "bar2Font", "UpdateLayout"),
           range("+2 Timer font size", "bar2FontSize", "UpdateLayout"),
           fontFlags("+2 Timer font flags", "bar2FontFlags", "UpdateLayout"),
+        }),
 
-          lineBreak(),
+        group("+3 Timer", true, {
+          font("+3 Timer font", "bar3Font", "UpdateLayout"),
+          range("+3 Timer font size", "bar3FontSize", "UpdateLayout"),
+          fontFlags("+3 Timer font flags", "bar3FontFlags", "UpdateLayout"),
+        }),
 
-          font("+2 Timer font", "bar3Font", "UpdateLayout"),
-          range("+2 Timer font size", "bar3FontSize", "UpdateLayout"),
-          fontFlags("+2 Timer font flags", "bar3FontFlags", "UpdateLayout"),
-
-          lineBreak(),
-
+        group("Objectives", true, {
           font("Objectives font", "objectivesFont", "UpdateLayout"),
           range("Objectives font size", "objectivesFontSize", "UpdateLayout"),
           fontFlags("Objectives font flags", "objectivesFontFlags", "UpdateLayout"),
@@ -520,6 +547,15 @@ function WarpDeplete:InitOptions()
         group("Size", true, {
           range("Bar width", "barWidth", "UpdateLayout", { width = "full", min = 10, max = 600 }),
           range("Bar height", "barHeight", "UpdateLayout", { width = "full", min = 4, max = 20 })
+        }),
+
+        group("Pride glow", true, {
+          toggle("Show glow if current pull will spawn a Manifestation of Pride", "showPrideGlow",
+            "UpdatePrideGlowFromOptions", { width = 2 }),
+
+          color("Glow color", "prideGlowColor", "UpdatePrideGlowFromOptions", {
+            hidden = function() return not WarpDeplete.db.profile.showPrideGlow end,
+          })
         }),
 
         group("Textures and Colors", true, {
