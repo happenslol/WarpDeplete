@@ -428,7 +428,11 @@ end
 
 function WarpDeplete:OnPlayerDead(ev)
   self:PrintDebugEvent(ev)
-  self:BroadcastDeath()
+  --TODO(happens): It would be better to also broadcast the death
+  -- and then deduplicate deaths, since we can also catch deaths
+  -- that weren't logged for us that way. We need to figure out a
+  -- good method for deduping though.
+  -- self:BroadcastDeath()
   self:ResetCurrentPull()
 end
 
@@ -528,12 +532,23 @@ function WarpDeplete:OnThreatListUpdate(ev, unit)
 end
 
 function WarpDeplete:OnCombatLogEvent(ev)
-  local _, subEv, _, _, _, _, _, guid = CombatLogGetCurrentEventInfo()
+  local _, subEv, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo()
   if subEv ~= "UNIT_DIED" then return end
   self:PrintDebugEvent(ev)
+  if not guid then return end
 
-  if not guid or not self.forcesState.currentPull[guid] then return end
+  --NOTE(happens): We have to check health since we'd count feign death otherwise
+  if UnitInParty(name) and UnitHealth(name) <= 1 then
+    local name = UnitName(name)
+    local class = select(2, UnitClass(name))
+    local time = self.timerState.current
 
+    self:PrintDebug("Player died: " .. name .. " class: " .. class .. " time: " .. time)
+    self:AddDeathDetails(time, name, class)
+    return
+  end
+
+  if not self.forcesState.currentPull[guid] then return end
   self:PrintDebug("removing unit " .. guid .. " from current pull")
   -- See comment above (OnThreadListUpdate)
   self.forcesState.currentPull[guid] = "DEAD"
