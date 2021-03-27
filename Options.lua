@@ -23,6 +23,7 @@ local defaults = {
 
     showDeathsTooltip = true,
     deathLogStyle = "time",
+    showObjectives = true,
 
     -- Font families
     deathsFont = "Expressway",
@@ -517,6 +518,17 @@ function WarpDeplete:InitOptions()
       }, { order = 4 }),
 
       bars = group("Bars", false, {
+        {
+          type = "toggle",
+          name = "Show objective bars",
+          desc = "Show bars responsible for tracking boss kill times.",
+          get = function(info) return WarpDeplete.db.profile.showObjectives end,
+          set = function(info, value)
+                WarpDeplete.db.profile.showObjectives = value 
+                WarpDeplete["UpdateObjectivesDisplay"](WarpDeplete)
+          end,
+          width = "full",
+        },
         group("Size", true, {
           range("Bar width", "barWidth", "UpdateLayout", { width = "full", min = 10, max = 600 }),
           range("Bar height", "barHeight", "UpdateLayout", { width = "full", min = 4, max = 20 })
