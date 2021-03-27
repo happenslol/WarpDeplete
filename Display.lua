@@ -535,6 +535,12 @@ function WarpDeplete:SetObjectives(objectives)
 end
 
 function WarpDeplete:UpdateObjectivesDisplay()
+  if not self.db.profile.showObjectives then 
+    for i, boss in ipairs(self.objectivesState) do
+      self.frames.root.objectiveTexts[i]:SetText("")
+    end
+    return
+  end
   local completionColor = self.db.profile.completedObjectivesColor
 
   -- Clear existing objective list
