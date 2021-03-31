@@ -368,13 +368,13 @@ function WarpDeplete:InitOptions()
             sorting = {
               "(+:percent:)",
               "(+:count:)",
-              "(+:count: / :totalcount: - :percent:)",
+              "(+:count: - :percent:)",
               ":custom:"
             },
             values = {
               ["(+:percent:)"] = "(+5.32%)",
               ["(+:count:)"] = "(+14)",
-              ["(+:count: / :totalcount: - :percent:)"] = "(+14 / 5.32%)",
+              ["(+:count: - :percent:)"] = "(+14 / 5.32%)",
               [":custom:"] = "Custom",
             },
             get = function(info) return WarpDeplete.db.profile.currentPullFormat end,
