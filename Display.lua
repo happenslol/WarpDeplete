@@ -16,6 +16,10 @@ function WarpDeplete:InitDisplay()
   local keyDetailsText = self.frames.root:CreateFontString(nil, "ARTWORK")
   self.frames.root.keyDetailsText = keyDetailsText
 
+  -- Key text
+  local keyText = self.frames.root:CreateFontString(nil, "ARTWORK")
+  self.frames.root.keyText = keyText
+
   local barFrameTexture = self.frames.bars:CreateTexture(nil, "BACKGROUND")
   barFrameTexture:SetColorTexture(0, 0, 0, frameBackgroundAlpha)
   self.frames.bars.texture = barFrameTexture
@@ -132,6 +136,7 @@ function WarpDeplete:UpdateLayout()
   -- Retrieve values from profile config
   local deathsFontSize = self.db.profile.deathsFontSize
   local timerFontSize = self.db.profile.timerFontSize
+  local keyFontSize = self.db.profile.keyFontSize
   local keyDetailsFontSize = self.db.profile.keyDetailsFontSize
   local objectivesFontSize = self.db.profile.objectivesFontSize
 
@@ -142,6 +147,7 @@ function WarpDeplete:UpdateLayout()
 
   local deathsFont = self.db.profile.deathsFont
   local timerFont = self.db.profile.timerFont
+  local keyFont = self.db.profile.keyFont
   local keyDetailsFont = self.db.profile.keyDetailsFont
   local bar1Font = self.db.profile.bar1Font
   local bar2Font = self.db.profile.bar2Font
@@ -152,6 +158,7 @@ function WarpDeplete:UpdateLayout()
   -- Font flags
   local deathsFontFlags = self.db.profile.deathsFontFlags
   local timerFontFlags = self.db.profile.timerFontFlags
+  local keyFontFlags = self.db.profile.keyFontFlags
   local keyDetailsFontFlags = self.db.profile.keyDetailsFontFlags
   local bar1FontFlags = self.db.profile.bar1FontFlags
   local bar2FontFlags = self.db.profile.bar2FontFlags
@@ -185,7 +192,7 @@ function WarpDeplete:UpdateLayout()
     forcesFontSize * 1.25 -- Add forces font size
 
   local frameHeight = deathsFontSize + verticalOffset +
-    timerFontSize + verticalOffset +
+    timerFontSize + verticalOffset + keyFontSize +
     keyDetailsFontSize + barFramePaddingTop +
     barFrameHeight + barFramePaddingBottom +
     objectivesFontSize * 5 + verticalOffset * 4 +
@@ -230,6 +237,8 @@ function WarpDeplete:UpdateLayout()
   timerText:SetPoint("TOPRIGHT", -framePadding, currentOffset)
 
   currentOffset = currentOffset - (timerFontSize + verticalOffset)
+  -- local KeyDetailsPadding = (keyFontSize > keyDetailsFontSize and keyFontSize or keyDetailsFontSize)
+  -- currentOffset = currentOffset - (KeyDetailsPadding + barFramePaddingTop)
 
   -- Key details text
   local keyDetailsText = self.frames.root.keyDetailsText
@@ -238,6 +247,14 @@ function WarpDeplete:UpdateLayout()
   r, g, b = Util.hexToRGB(self.db.profile.keyDetailsColor)
   keyDetailsText:SetTextColor(r, g, b, 1)
   keyDetailsText:SetPoint("TOPRIGHT", -framePadding - 3, currentOffset)
+  
+  -- Key Text
+  local keyText = self.frames.root.keyText
+  keyText:SetFont(self.LSM:Fetch("font", keyFont), keyFontSize, keyFontFlags)
+  keyText:SetJustifyH("RIGHT")
+  r, g, b = Util.hexToRGB(self.db.profile.keyColor)
+  keyText:SetTextColor(r, g, b, 1)
+  keyText:SetPoint("TOPRIGHT", keyDetailsText, "LEFT", -2, (keyFontSize - keyDetailsFontSize) + 6)
 
   currentOffset = currentOffset - (keyDetailsFontSize + barFramePaddingTop)
 
@@ -573,7 +590,10 @@ function WarpDeplete:SetKeyDetails(level, affixes)
 end
 
 function WarpDeplete:UpdateKeyDetailsDisplay()
+  local key = ("[%d]"):format(self.keyDetailsState.level)
+  self.frames.root.keyText:SetText(key)
+
   local affixesStr = Util.joinStrings(self.keyDetailsState.affixes or {}, " - ")
-  local keyDetails = ("[%d] %s"):format(self.keyDetailsState.level, affixesStr)
+  local keyDetails = ("%s"):format(affixesStr)
   self.frames.root.keyDetailsText:SetText(keyDetails)
 end
