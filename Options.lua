@@ -27,6 +27,7 @@ local defaults = {
     -- Font families
     deathsFont = "Expressway",
     timerFont = "Expressway",
+    keyFont = "Expressway",
     keyDetailsFont = "Expressway",
     bar1Font = "Expressway",
     bar2Font = "Expressway",
@@ -37,6 +38,7 @@ local defaults = {
     -- Font flags
     deathsFontFlags = "OUTLINE",
     timerFontFlags = "OUTLINE",
+    keyFontFlags = "OUTLINE",
     keyDetailsFontFlags = "OUTLINE",
     bar1FontFlags = "OUTLINE",
     bar2FontFlags = "OUTLINE",
@@ -49,6 +51,7 @@ local defaults = {
     timerRunningColor = "FFFFFFFF",
     timerExpiredColor = "FFFF2A2E",
     timerSuccessColor = "FFFFD338",
+    keyColor = "FFB1B1B1",
     keyDetailsColor = "FFB1B1B1",
     forcesColor = "FFFFFFFF",
     completedForcesColor = "FF00FF24",
@@ -76,6 +79,7 @@ local defaults = {
     -- Font sizes for text parts
     deathsFontSize = 16,
     timerFontSize = 34,
+    keyFontSize = 20,
     keyDetailsFontSize = 16,
     objectivesFontSize = 18,
 
@@ -502,6 +506,13 @@ function WarpDeplete:InitOptions()
         }),
 
         group("Key Details", true, {
+          font("Key font", "keyFont", "UpdateLayout"),
+          range("Key font size", "keyFontSize", "UpdateLayout"),
+          fontFlags("Key font flags", "keyFontFlags", "UpdateLayout"),
+          color("Key color", "keyColor", "UpdateLayout"),
+
+          lineBreak(),
+          
           font("Key details font", "keyDetailsFont", "UpdateLayout"),
           range("Key details font size", "keyDetailsFontSize", "UpdateLayout"),
           fontFlags("Key details font flags", "keyDetailsFontFlags", "UpdateLayout"),
