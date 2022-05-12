@@ -1,4 +1,5 @@
 local Util = WarpDeplete.Util
+local L = WarpDeplete.L
 
 local defaults = {
   global = {
@@ -184,12 +185,12 @@ local function fontFlags(name, profileVar, updateFn, extraOptions)
   local result = {
     type = "select",
     name = name,
-    desc = "Default: OUTLINE",
+    desc = L["Default:"] .. " " .. L["OUTLINE"],
     values = {
-      ["OUTLINE"] = "OUTLINE",
-      ["THICKOUTLINE"] = "THICKOUTLINE",
-      ["MONOCHROME"] = "MONOCHROME",
-      ["NONE"] = "NONE"
+      ["OUTLINE"] = L["OUTLINE"],
+      ["THICKOUTLINE"] = L["THICKOUTLINE"],
+      ["MONOCHROME"] = L["MONOCHROME"],
+      ["NONE"] = L["NONE"]
     },
     get = function(info) return WarpDeplete.db.profile[profileVar] end,
     set = function(info, value)
@@ -301,8 +302,8 @@ function WarpDeplete:InitOptions()
         unlocked = {
           order = 1,
           type = "toggle",
-          name = "Unlocked",
-          desc = "Unlocks the timer window and allows it to be moved around",
+          name = L["Unlocked"],
+          desc = L["Unlocks the timer window and allows it to be moved around"],
           get = function(info) return WarpDeplete.isUnlocked end,
           set = WarpDeplete.SetUnlocked
         },
@@ -310,24 +311,24 @@ function WarpDeplete:InitOptions()
         demo = {
           order = 2,
           type = "toggle",
-          name = "Demo Mode",
-          desc = "Enables the demo mode, used for configuring the timer",
+          name = L["Demo Mode"],
+          desc = L["Enables the demo mode, used for configuring the timer"],
           get = function(info) return WarpDeplete.challengeState.demoModeActive end,
           set = function(info, value)
             if value then WarpDeplete:EnableDemoMode()
             else WarpDeplete:DisableDemoMode() end
           end
         },
-      general = group("General", false, {
+      general = group(L["General"], false, {
         lineBreak(),
-        toggle("Insert keystone automatically", "insertKeystoneAutomatically", "UpdateLayout"),
+        toggle(L["Insert keystone automatically"], "insertKeystoneAutomatically", "UpdateLayout"),
         lineBreak(),
 
-        group("Forces Display", true, {
+        group(L["Forces Display"], true, {
           {
             type = "select",
-            name = "Forces text format",
-            desc = "Choose how your forces progress will be displayed",
+            name = L["Forces text format"],
+            desc = L["Choose how your forces progress will be displayed"],
             sorting = {
               ":percent:",
               ":count:/:totalcount:",
@@ -338,7 +339,7 @@ function WarpDeplete:InitOptions()
               [":percent:"] = "82.52%",
               [":count:/:totalcount:"] = "198/240",
               [":count:/:totalcount: - :percent:"] = "198/240 - 82.52%",
-              [":custom:"] = "Custom",
+              [":custom:"] = L["Custom"],
             },
             get = function(info) return WarpDeplete.db.profile.forcesFormat end,
             set = function(info, value)
@@ -350,11 +351,11 @@ function WarpDeplete:InitOptions()
 
           {
             type = "input",
-            name = "Custom forces text format",
-            desc = "Use the following tags to set your custom format:\n"
-              .. "- :percent: Shows the current forces percentage (e.g. 82.52%)\n"
-              .. "- :count: Shows the current forces count (e.g. 198)\n"
-              .. "- :totalcount: Shows the total forces count (e.g. 240)",
+            name = L["Custom forces text format"],
+            desc = L["Use the following tags to set your custom format"] .. ":"
+              .. "\n- :percent: " .. L["Shows the current forces percentage (e.g. 82.52%)"]
+              .. "\n- :count: " .. L["Shows the current forces count (e.g. 198)"]
+              .. "\n- :totalcount: " .. L["Shows the total forces count (e.g. 240)"],
             multiline = false,
             width = 2,
             hidden = function() return WarpDeplete.db.profile.forcesFormat ~= ":custom:" end,
@@ -367,8 +368,8 @@ function WarpDeplete:InitOptions()
 
           {
             type = "select",
-            name = "Current pull text format",
-            desc = "Choose how your current pull count will be displayed",
+            name = L["Current pull text format"],
+            desc = L["Choose how your current pull count will be displayed"],
             sorting = {
               "(+:percent:)",
               "(+:count:)",
@@ -379,7 +380,7 @@ function WarpDeplete:InitOptions()
               ["(+:percent:)"] = "(+5.32%)",
               ["(+:count:)"] = "(+14)",
               ["(+:count: - :percent:)"] = "(+14 / 5.32%)",
-              [":custom:"] = "Custom",
+              [":custom:"] = L["Custom"],
             },
             get = function(info) return WarpDeplete.db.profile.currentPullFormat end,
             set = function(info, value)
@@ -391,10 +392,10 @@ function WarpDeplete:InitOptions()
 
           {
             type = "input",
-            name = "Custom current pull text format",
-            desc = "Use the following tags to set your custom format:\n"
-              .. "- :percent: Shows the current forces percentage (e.g. 82.52%)\n"
-              .. "- :count: Shows the current forces count (e.g. 198)",
+            name = L["Custom current pull text format"],
+            desc = L["Use the following tags to set your custom format"] .. ":"
+              .. "\n- :percent: " .. L["Shows the current forces percentage (e.g. 82.52%)"]
+              .. "\n- :count: " .. L["Shows the current forces count (e.g. 198)"],
             multiline = false,
             width = 2,
             hidden = function() return WarpDeplete.db.profile.currentPullFormat ~= ":custom:" end,
@@ -406,16 +407,16 @@ function WarpDeplete:InitOptions()
           },
         }),
 
-        group("Forces count in tooltip", true, {
-          toggle("Show forces count in tooltip", "showTooltipCount", "UpdateLayout", {
-            desc = "Add a line to the tooltip, showing how much count a mob will award upon death"
+        group(L["Forces count in tooltip"], true, {
+          toggle(L["Show forces count in tooltip"], "showTooltipCount", "UpdateLayout", {
+            desc = L["Add a line to the tooltip, showing how much count a mob will award upon death"]
           }),
           lineBreak(function() return not WarpDeplete.db.profile.showTooltipCount end, 3),
 
           {
             type = "select",
-            name = "Tooltip forces text format",
-            desc = "Choose how count will be displayed in the tooltip",
+            name = L["Tooltip forces text format"],
+            desc = L["Choose how count will be displayed in the tooltip"],
             sorting = {
               "+:count: / :percent:",
               "+:count:",
@@ -426,7 +427,7 @@ function WarpDeplete:InitOptions()
               ["+:percent:"] = "+5.32%",
               ["+:count:"] = "+14",
               ["+:count: / :percent:"] = "+14 / 5.32%",
-              [":custom:"] = "Custom",
+              [":custom:"] = L["Custom"],
             },
             hidden = function() return not WarpDeplete.db.profile.showTooltipCount end,
             get = function(info) return WarpDeplete.db.profile.tooltipCountFormat end,
@@ -438,10 +439,10 @@ function WarpDeplete:InitOptions()
 
           {
             type = "input",
-            name = "Custom tooltip forces count format",
-            desc = "Use the following tags to set your custom format:\n"
-              .. "- :percent: Shows the forces percentage the enemy will award (e.g. 1.4%)\n"
-              .. "- :count: Shows the count the enemy will award (e.g. 4)",
+            name = L["Custom tooltip forces count format"],
+            desc = L["Use the following tags to set your custom format"] .. ":"
+              .. "\n- :percent: ".. L["Shows the forces percentage the enemy will award (e.g. 1.4%)"]
+              .. "\n- :count: ".. L["Shows the count the enemy will award (e.g. 4)"],
             multiline = false,
             width = 2,
             hidden = function()
@@ -456,26 +457,26 @@ function WarpDeplete:InitOptions()
           },
         }),
 
-        group("Death log tooltip", true, {
+        group(L["Death log tooltip"], true, {
           {
             type = "toggle",
-            name = "Show death log when hovering deaths text",
-            desc = "NOTE: This will only record deaths that happen while you're online. If you disconnect and/or reconnect, this will not show deaths that happened previously.",
+            name = L["Show death log when hovering deaths text"],
+            desc = L["NOTE: This will only record deaths that happen while you're online. If you disconnect and/or reconnect, this will not show deaths that happened previously."],
             get = function(info) return WarpDeplete.db.profile.showDeathsTooltip end,
             set = function(info, value) WarpDeplete.db.profile.showDeathsTooltip = value end,
             width = 3 / 2,
           },
           {
             type = "select",
-            name = "Death log style",
-            desc = "Choose how players deaths will be displayed in the tooltip. Hover the deaths text while in demo mode for a preview.",
+            name = L["Death log style"],
+            desc = L["Choose how players deaths will be displayed in the tooltip. Hover the deaths text while in demo mode for a preview."],
             sorting = {
               "count",
               "time"
             },
             values = {
-              ["count"] = "Overall amount of deaths by player",
-              ["time"] = "Recent deaths with timestamps"
+              ["count"] = L["Overall amount of deaths by player"],
+              ["time"] = L["Recent deaths with timestamps"]
             },
             hidden = function() return not WarpDeplete.db.profile.showDeathsTooltip end,
             get = function(info) return WarpDeplete.db.profile.deathLogStyle end,
@@ -485,118 +486,118 @@ function WarpDeplete:InitOptions()
         })
       }, { order = 3 }),
 
-      texts = group("Texts", false, {
-        group("Timer Colors", true, {
-          color("Timer color", "timerRunningColor", "UpdateLayout"),
-          color("Timer success color", "timerSuccessColor", "UpdateLayout"),
-          color("Timer expired color", "timerExpiredColor", "UpdateLayout"),
-        }, { desc = "These colors are used for both the main timer, as well as the bar texts." }),
+      texts = group(L["Texts"], false, {
+        group(L["Timer Colors"], true, {
+          color(L["Timer color"], "timerRunningColor", "UpdateLayout"),
+          color(L["Timer success color"], "timerSuccessColor", "UpdateLayout"),
+          color(L["Timer expired color"], "timerExpiredColor", "UpdateLayout"),
+        }, { desc = L["These colors are used for both the main timer, as well as the bar texts."] }),
 
-        group("Main Timer", true, {
-          font("Timer font", "timerFont", "UpdateLayout"),
-          range("Timer font size", "timerFontSize", "UpdateLayout", { max = 80 }),
-          fontFlags("Timer font flags", "timerFontFlags", "UpdateLayout"),
+        group(L["Main Timer"], true, {
+          font(L["Timer font"], "timerFont", "UpdateLayout"),
+          range(L["Timer font size"], "timerFontSize", "UpdateLayout", { max = 80 }),
+          fontFlags(L["Timer font flags"], "timerFontFlags", "UpdateLayout"),
         }),
 
-        group("Deaths", true, {
-          font("Deaths font", "deathsFont", "UpdateLayout"),
-          range("Deaths font size", "deathsFontSize", "UpdateLayout"),
-          fontFlags("Deaths font flags", "deathsFontFlags", "UpdateLayout"),
-          color("Deaths color", "deathsColor", "UpdateLayout"),
+        group(L["Deaths"], true, {
+          font(L["Deaths font"], "deathsFont", "UpdateLayout"),
+          range(L["Deaths font size"], "deathsFontSize", "UpdateLayout"),
+          fontFlags(L["Deaths font flags"], "deathsFontFlags", "UpdateLayout"),
+          color(L["Deaths color"], "deathsColor", "UpdateLayout"),
         }),
 
-        group("Key Details", true, {
-          font("Key font", "keyFont", "UpdateLayout"),
-          range("Key font size", "keyFontSize", "UpdateLayout"),
-          fontFlags("Key font flags", "keyFontFlags", "UpdateLayout"),
-          color("Key color", "keyColor", "UpdateLayout"),
+        group(L["Key Details"], true, {
+          font(L["Key font"], "keyFont", "UpdateLayout"),
+          range(L["Key font size"], "keyFontSize", "UpdateLayout"),
+          fontFlags(L["Key font flags"], "keyFontFlags", "UpdateLayout"),
+          color(L["Key color"], "keyColor", "UpdateLayout"),
 
           lineBreak(),
           
-          font("Key details font", "keyDetailsFont", "UpdateLayout"),
-          range("Key details font size", "keyDetailsFontSize", "UpdateLayout"),
-          fontFlags("Key details font flags", "keyDetailsFontFlags", "UpdateLayout"),
-          color("Key details color", "keyDetailsColor", "UpdateLayout"),
+          font(L["Key details font"], "keyDetailsFont", "UpdateLayout"),
+          range(L["Key details font size"], "keyDetailsFontSize", "UpdateLayout"),
+          fontFlags(L["Key details font flags"], "keyDetailsFontFlags", "UpdateLayout"),
+          color(L["Key details color"], "keyDetailsColor", "UpdateLayout"),
         }),
 
-        group("Forces", true, {
-          font("Forces font", "forcesFont", "UpdateLayout"),
-          range("Forces font size", "forcesFontSize", "UpdateLayout"),
-          fontFlags("Forces font flags", "forcesFontFlags", "UpdateLayout"),
-          color("Forces color", "forcesColor", "UpdateLayout"),
-          color("Completed forces color", "completedForcesColor", "UpdateLayout"),
+        group(L["Forces"], true, {
+          font(L["Forces font"], "forcesFont", "UpdateLayout"),
+          range(L["Forces font size"], "forcesFontSize", "UpdateLayout"),
+          fontFlags(L["Forces font flags"], "forcesFontFlags", "UpdateLayout"),
+          color(L["Forces color"], "forcesColor", "UpdateLayout"),
+          color(L["Completed forces color"], "completedForcesColor", "UpdateLayout"),
         }),
 
-        group("+1 Timer", true, {
-          font("+1 Timer font", "bar1Font", "UpdateLayout"),
-          range("+1 Timer font size", "bar1FontSize", "UpdateLayout"),
-          fontFlags("+1 Timer font flags", "bar1FontFlags", "UpdateLayout"),
+        group(L["+1 Timer"], true, {
+          font(L["+1 Timer font"], "bar1Font", "UpdateLayout"),
+          range(L["+1 Timer font size"], "bar1FontSize", "UpdateLayout"),
+          fontFlags(L["+1 Timer font flags"], "bar1FontFlags", "UpdateLayout"),
         }),
 
-        group("+2 Timer", true, {
-          font("+2 Timer font", "bar2Font", "UpdateLayout"),
-          range("+2 Timer font size", "bar2FontSize", "UpdateLayout"),
-          fontFlags("+2 Timer font flags", "bar2FontFlags", "UpdateLayout"),
+        group(L["+2 Timer"], true, {
+          font(L["+2 Timer font"], "bar2Font", "UpdateLayout"),
+          range(L["+2 Timer font size"], "bar2FontSize", "UpdateLayout"),
+          fontFlags(L["+2 Timer font flags"], "bar2FontFlags", "UpdateLayout"),
         }),
 
-        group("+3 Timer", true, {
-          font("+3 Timer font", "bar3Font", "UpdateLayout"),
-          range("+3 Timer font size", "bar3FontSize", "UpdateLayout"),
-          fontFlags("+3 Timer font flags", "bar3FontFlags", "UpdateLayout"),
+        group(L["+3 Timer"], true, {
+          font(L["+3 Timer font"], "bar3Font", "UpdateLayout"),
+          range(L["+3 Timer font size"], "bar3FontSize", "UpdateLayout"),
+          fontFlags(L["+3 Timer font flags"], "bar3FontFlags", "UpdateLayout"),
         }),
 
-        group("Objectives", true, {
-          font("Objectives font", "objectivesFont", "UpdateLayout"),
-          range("Objectives font size", "objectivesFontSize", "UpdateLayout"),
-          fontFlags("Objectives font flags", "objectivesFontFlags", "UpdateLayout"),
-          color("Objectives color", "objectivesColor", "UpdateLayout"),
-          color("Completed objective color", "completedObjectivesColor", "UpdateLayout"),
+        group(L["Objectives"], true, {
+          font(L["Objectives font"], "objectivesFont", "UpdateLayout"),
+          range(L["Objectives font size"], "objectivesFontSize", "UpdateLayout"),
+          fontFlags(L["Objectives font flags"], "objectivesFontFlags", "UpdateLayout"),
+          color(L["Objectives color"], "objectivesColor", "UpdateLayout"),
+          color(L["Completed objective color"], "completedObjectivesColor", "UpdateLayout"),
         }),
       }, { order = 4 }),
 
-      bars = group("Bars", false, {
-        group("Size", true, {
-          range("Bar width", "barWidth", "UpdateLayout", { width = "full", min = 10, max = 600 }),
-          range("Bar height", "barHeight", "UpdateLayout", { width = "full", min = 4, max = 20 })
+      bars = group(L["Bars"], false, {
+        group(L["Size"], true, {
+          range(L["Bar width"], "barWidth", "UpdateLayout", { width = "full", min = 10, max = 600 }),
+          range(L["Bar height"], "barHeight", "UpdateLayout", { width = "full", min = 4, max = 20 })
         }),
 
-        group("Pride glow", true, {
-          toggle("Show glow if current pull will spawn a Manifestation of Pride", "showPrideGlow",
+        group(L["Pride glow"], true, {
+          toggle(L["Show glow if current pull will spawn a Manifestation of Pride"], "showPrideGlow",
             "UpdatePrideGlowFromOptions", { width = 2 }),
 
-          color("Glow color", "prideGlowColor", "UpdatePrideGlowFromOptions", {
+          color(L["Glow color"], "prideGlowColor", "UpdatePrideGlowFromOptions", {
             hidden = function() return not WarpDeplete.db.profile.showPrideGlow end,
           })
         }),
 
-        group("Textures and Colors", true, {
-          barTexture("+1 Timer bar texture", "bar1Texture", "UpdateLayout", { width = "double" }),
-          color("+1 Timer bar color", "bar1TextureColor", "UpdateLayout"),
+        group(L["Textures and Colors"], true, {
+          barTexture(L["+1 Timer bar texture"], "bar1Texture", "UpdateLayout", { width = "double" }),
+          color(L["+1 Timer bar color"], "bar1TextureColor", "UpdateLayout"),
 
           lineBreak(),
 
-          barTexture("+2 Timer bar texture", "bar2Texture", "UpdateLayout", { width = "double" }),
-          color("+2 Timer bar color", "bar2TextureColor", "UpdateLayout") ,
+          barTexture(L["+2 Timer bar texture"], "bar2Texture", "UpdateLayout", { width = "double" }),
+          color(L["+2 Timer bar color"], "bar2TextureColor", "UpdateLayout") ,
 
           lineBreak(),
 
-          barTexture("+3 Timer bar texture", "bar3Texture", "UpdateLayout", { width = "double" }),
-          color("+3 Timer bar color", "bar3TextureColor", "UpdateLayout"),
+          barTexture(L["+3 Timer bar texture"], "bar3Texture", "UpdateLayout", { width = "double" }),
+          color(L["+3 Timer bar color"], "bar3TextureColor", "UpdateLayout"),
 
           lineBreak(),
 
-          barTexture("Forces bar texture", "forcesTexture", "UpdateLayout", { width = "double" }),
-          color("Forces bar color", "forcesTextureColor", "UpdateLayout"),
+          barTexture(L["Forces bar texture"], "forcesTexture", "UpdateLayout", { width = "double" }),
+          color(L["Forces bar color"], "forcesTextureColor", "UpdateLayout"),
 
           lineBreak(),
 
-          barTexture("Forces bar texture", "forcesTexture", "UpdateLayout", { width = "double" }),
-          color("Forces bar color", "forcesTextureColor", "UpdateLayout"),
+          barTexture(L["Forces bar texture"], "forcesTexture", "UpdateLayout", { width = "double" }),
+          color(L["Forces bar color"], "forcesTextureColor", "UpdateLayout"),
 
           lineBreak(),
 
-          barTexture("Current pull bar texture", "forcesOverlayTexture", "UpdateLayout", { width = "double" }),
-          color("Current pull bar color", "forcesOverlayTextureColor", "UpdateLayout"),
+          barTexture(L["Current pull bar texture"], "forcesOverlayTexture", "UpdateLayout", { width = "double" }),
+          color(L["Current pull bar color"], "forcesOverlayTextureColor", "UpdateLayout"),
         })
       }, { order = 5 }),
     }
@@ -605,7 +606,7 @@ function WarpDeplete:InitOptions()
   local debugOptions = group("Debug", false, {
     {
       type = "range",
-      name = "Timer limit (Minutes)",
+      name = L["Timer limit (Minutes)"],
       min = 1,
       max = 100,
       step = 1,
@@ -615,7 +616,7 @@ function WarpDeplete:InitOptions()
 
     {
       type = "range",
-      name = "Timer current (Minutes)",
+      name = L["Timer current (Minutes)"],
       min = -50,
       max = 100,
       step = 1,
@@ -625,7 +626,7 @@ function WarpDeplete:InitOptions()
 
     {
       type = "range",
-      name = "Forces total",
+      name = L["Forces total"],
       min = 1,
       max = 500,
       step = 1,
@@ -635,7 +636,7 @@ function WarpDeplete:InitOptions()
 
     {
       type = "range",
-      name = "Forces pull",
+      name = L["Forces pull"],
       min = 1,
       max = 500,
       step = 1,
@@ -645,7 +646,7 @@ function WarpDeplete:InitOptions()
 
     {
       type = "range",
-      name = "Forces current",
+      name = L["Forces current"],
       min = 1,
       max = 500,
       step = 1,

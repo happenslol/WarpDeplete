@@ -5,6 +5,7 @@
 ## SavedVariables: WarpDepleteDB
 
 embeds.xml
+Locales\Load_Locales.xml
 
 Core.lua
 Util.lua
