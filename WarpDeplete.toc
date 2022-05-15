@@ -3,6 +3,8 @@
 ## Author: Happens
 ## Version: 1.1.4
 ## SavedVariables: WarpDepleteDB
+## X-Curse-Project-ID: 460155
+## X-Wago-ID: 5bGoOqG0
 
 embeds.xml
 
