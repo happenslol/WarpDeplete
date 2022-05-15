@@ -1,4 +1,5 @@
 local Util = WarpDeplete.Util
+local L = WarpDeplete.L
 
 --NOTE(happens): functions with the _OnUpdate suffix are
 -- called in the frame update loop and should not use any local vars.
@@ -58,8 +59,8 @@ function Util.formatDeathText(deaths)
 
   local timeAdded = deaths * 5
   local deathText = "" .. deaths
-  if deaths == 1 then deathText = deathText .. " Death "
-  else deathText = deathText .. " Deaths " end
+  if deaths == 1 then deathText = deathText .. " " .. L["Deaths"] .. " "
+  else deathText = deathText .. " " .. L["Deaths"] .. " " end
   
   local timeAddedText = (
     (timeAdded == 0 and "") or

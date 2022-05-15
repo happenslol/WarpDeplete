@@ -1,4 +1,5 @@
 local Util = WarpDeplete.Util
+local L = WarpDeplete.L
 
 local UPDATE_INTERVAL = 0.1
 local sinceLastUpdate = 0
@@ -23,7 +24,7 @@ end
 
 function WarpDeplete:StartChallengeMode()
   if self.challengeState.demoModeActive then
-    self:Print("Disabling demo mode because a challenge has started.")
+    self:Print(L["Disabling demo mode because a challenge has started."])
     self:DisableDemoMode()
   end
 
@@ -281,7 +282,7 @@ function WarpDeplete.TooltipOnEnter()
 
   local count = #self.timerState.deathDetails
   if count == 0 then
-    GameTooltip:AddLine("No Recorded Player Deaths", 1, 1, 1)
+    GameTooltip:AddLine(L["No Recorded Player Deaths"], 1, 1, 1)
     GameTooltip:Show()
     return
   end
@@ -292,7 +293,7 @@ function WarpDeplete.TooltipOnEnter()
       showFrom = count - 20
     end
 
-    GameTooltip:AddLine("Player Deaths", 1, 1, 1)
+    GameTooltip:AddLine(L["Player Deaths"], 1, 1, 1)
     for i, d in ipairs(self.timerState.deathDetails) do
       if i >= showFrom then
         local color = select(4, GetClassColor(d.class))

@@ -6,6 +6,9 @@ WarpDeplete = LibStub("AceAddon-3.0"):NewAddon(
   "AceTimer-3.0"
 )
 
+WarpDeplete.L = LibStub("AceLocale-3.0"):GetLocale("WarpDeplete", true)
+local L = WarpDeplete.L
+
 WarpDeplete.Util = {}
 local Util = WarpDeplete.Util
 
@@ -91,9 +94,11 @@ function WarpDeplete:OnEnable()
 end
 
 function WarpDeplete:ShowMDTAlert()
-  Util.showAlert("MDT_NOT_FOUND", "Mythic Dungeon Tools (MDT) is not installed.\n\n" ..
-    "WarpDeplete will not show you Pride spawn alert or display the count for you current pull. " ..
-    "\n\nInstall MDT to enable this functionality.")
+  Util.showAlert(
+    "MDT_NOT_FOUND",
+    L["Mythic Dungeon Tools (MDT) is not installed."].."\n\n" ..
+    L["WarpDeplete will not show you Pride spawn alert or display the count for you current pull."]
+    .. " \n\n" .. L["Install MDT to enable this functionality."])
 end
 
 function WarpDeplete:OnDisable()
@@ -101,7 +106,7 @@ end
 
 function WarpDeplete:EnableDemoMode()
   if self.challengeState.inChallenge then
-    self:Print("Can't enable demo mode while in an active challenge!")
+    self:Print(L["Can't enable demo mode while in an active challenge!"])
     return
   end
 
@@ -112,7 +117,7 @@ function WarpDeplete:EnableDemoMode()
 
   local objectives = {}
   for i = 1, 5 do
-    objectives[i] = { name = "Test Boss Name " .. i }
+    objectives[i] = { name = L["Test Boss Name"] .. " " .. i }
 
     if i < 3 then
       objectives[i].time = 520 * i
@@ -120,7 +125,7 @@ function WarpDeplete:EnableDemoMode()
   end
 
   self:SetObjectives(objectives)
-  self:SetKeyDetails(30, {"Tyrannical", "Bolstering", "Spiteful", "Prideful"})
+  self:SetKeyDetails(30, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Prideful"]})
 
   self:SetTimerLimit(35 * 60)
   self:SetTimerRemaining(20 * 60)
