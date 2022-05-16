@@ -14,6 +14,7 @@ The goal of this AddOn is to combine the best of all worlds from other timers, c
 * Extremely low memory usage (&lt; 200KB on dungeon start)
 * Synchronization between group members for timer and objective completion times
 * State reconstruction after disconnecting or leaving the dungeon
+* Localizations for multiple languages
 * Sick design
 * Lots of customization options
 
@@ -38,8 +39,6 @@ Depleting keys at warp speed is basically what we did during the development of 
 
 * History and best times for dungeon timer and objectives
 * Best possible time prediction based on previous clear times (similar to speedrunning timers)
-* Even more customization
-* Localization
 * End of dungeon stats and times sharing after a disconnect
 
 ## Credits
