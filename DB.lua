@@ -17,12 +17,13 @@ local defaults = {
     -- Element display options
     forcesFormat = ":percent:",
     customForcesFormat = ":percent:",
+    unclampForcesPercent = false,
     currentPullFormat = "(+:percent:)",
     customCurrentPullFormat = "(+:percent:)",
 
     showForcesGlow = true,
     demoForcesGlow = false,
-	  forcesGlowColor = "FFD12F14",
+    forcesGlowColor = "FFD12F14",
     forcesGlowLineCount = 18,
     forcesGlowFrequency = 0.13,
     forcesGlowLength = 10,

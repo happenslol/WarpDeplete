@@ -121,6 +121,9 @@ function WarpDeplete:UpdateDemoModeForces()
   if self.db.profile.showForcesGlow and self.db.profile.demoForcesGlow then
     self:SetForcesCurrent(92)
     self:SetForcesPull(8)
+  elseif self.db.profile.unclampForcesPercent then
+    self:SetForcesCurrent(101)
+    self:SetForcesPull(3.4)
   else
     self:SetForcesCurrent(34)
     self:SetForcesPull(7)
