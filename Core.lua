@@ -60,6 +60,8 @@ WarpDeplete.defaultKeyDetailsState = {
   affixes = {}
 }
 
+local KT = LibStub("AceAddon-3.0"):GetAddon("!KalielsTracker", true)
+
 function WarpDeplete:OnInitialize()
   local frames = {}
 
@@ -172,10 +174,16 @@ function WarpDeplete:Show()
   self.frames.root:Show()
   self:UpdateLayout()
   ObjectiveTrackerFrame:Hide()
+  if KT ~= nil then
+    KT.frame:Hide()
+  end
 end
 
 function WarpDeplete:Hide()
   self.frames.root:Hide()
+  if KT ~= nil then
+    KT.frame:Show()
+  end
   ObjectiveTrackerFrame:Show()
 end
 
