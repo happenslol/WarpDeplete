@@ -93,8 +93,6 @@ function WarpDeplete:OnEnable()
   if not self.db.global.mdtAlertShown and not MDT then
     self.db.global.mdtAlertShown = true
     self:ShowMDTAlert()
-  else
-    self.db.global.mdtAlertShown = false
   end
 end
 
