@@ -60,6 +60,11 @@ WarpDeplete.defaultKeyDetailsState = {
   affixes = {}
 }
 
+-- Check if Kaliel's Tracker is loaded, since it creates a
+-- background frame for the objective window that will not be
+-- hidden if only the objective window itself is hidden.
+local KT = LibStub("AceAddon-3.0"):GetAddon("!KalielsTracker", true)
+
 function WarpDeplete:OnInitialize()
   local frames = {}
 
@@ -88,8 +93,6 @@ function WarpDeplete:OnEnable()
   if not self.db.global.mdtAlertShown and not MDT then
     self.db.global.mdtAlertShown = true
     self:ShowMDTAlert()
-  else
-    self.db.global.mdtAlertShown = false
   end
 end
 
@@ -172,10 +175,16 @@ function WarpDeplete:Show()
   self.frames.root:Show()
   self:UpdateLayout()
   ObjectiveTrackerFrame:Hide()
+  if KT ~= nil then
+    KT.frame:Hide()
+  end
 end
 
 function WarpDeplete:Hide()
   self.frames.root:Hide()
+  if KT ~= nil then
+    KT.frame:Show()
+  end
   ObjectiveTrackerFrame:Show()
 end
 
