@@ -266,7 +266,7 @@ function WarpDeplete:RegisterGlobalEvents()
   self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN", "OnKeystoneOpen")
 
   -- Register tooltip count display
-  GameTooltip:HookScript("OnTooltipSetUnit", WarpDeplete.DisplayCountInTooltip)
+  TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, WarpDeplete.DisplayCountInTooltip)
 
   -- Tooltip events
   self.frames.deathsTooltip:SetScript("OnEnter", WarpDeplete.TooltipOnEnter)
@@ -326,27 +326,25 @@ function WarpDeplete.TooltipOnLeave()
   GameTooltip_Hide()
 end
 
-function WarpDeplete.DisplayCountInTooltip()
+function WarpDeplete.DisplayCountInTooltip(tt, data)
+  if not tt or tt ~= GameTooltipor or not data or not data.guid then return end
   if not WarpDeplete.timerState.running then return end
   if not MDT or not WarpDeplete.db.profile.showTooltipCount then return end
 
-  local GUID = UnitGUID("mouseover")
-  if GUID and MDT then
-      local npcID = select(6, strsplit("-", GUID))
-      local count, max = MDT:GetEnemyForces(tonumber(npcID))
+  local npcID = select(6, strsplit("-", data.guid))
+  local count, max = MDT:GetEnemyForces(tonumber(npcID))
 
-      if count and max and count ~= 0 and max ~= 0 then
-        local percentText = ("%.2f"):format(count / max * 100)
-        local countText = ("%d"):format(count)
-        local result = WarpDeplete.db.profile.tooltipCountFormat ~= ":custom:" and
-          WarpDeplete.db.profile.tooltipCountFormat or
-          WarpDeplete.db.profile.customTooltipCountFormat
+  if count and max and count ~= 0 and max ~= 0 then
+    local percentText = ("%.2f"):format(count / max * 100)
+    local countText = ("%d"):format(count)
+    local result = WarpDeplete.db.profile.tooltipCountFormat ~= ":custom:" and
+      WarpDeplete.db.profile.tooltipCountFormat or
+      WarpDeplete.db.profile.customTooltipCountFormat
 
-        result = gsub(result, ":percent:", percentText .. "%%")
-        result = gsub(result, ":count:", countText)
-        GameTooltip:AddLine("Count: |cFFFFFFFF" .. result .. "|r")
-        GameTooltip:Show()
-      end
+    result = gsub(result, ":percent:", percentText .. "%%")
+    result = gsub(result, ":count:", countText)
+    GameTooltip:AddLine("Count: |cFFFFFFFF" .. result .. "|r")
+    GameTooltip:Show()
   end
 end
 
