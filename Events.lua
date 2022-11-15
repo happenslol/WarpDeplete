@@ -327,7 +327,7 @@ function WarpDeplete.TooltipOnLeave()
 end
 
 function WarpDeplete.DisplayCountInTooltip(tt, data)
-  if not tt or tt ~= GameTooltipor or not data or not data.guid then return end
+  if not tt or tt ~= GameTooltip or not data or not data.guid then return end
   if not WarpDeplete.timerState.running then return end
   if not MDT or not WarpDeplete.db.profile.showTooltipCount then return end
 
