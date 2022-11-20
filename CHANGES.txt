@@ -1,3 +1,10 @@
+Release 2.0.0
+* Update API usage for WoW 10.0.2
+* Add missing SharedMediaWidget Lib to allow functioning without ElvUI
+* Fix demo mode toggle through chat command
+* Update translations
+* Remove pride glow
+
 Release 1.1.1
 * Switched to combat log party member death detection
 
