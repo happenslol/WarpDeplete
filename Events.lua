@@ -459,10 +459,10 @@ function WarpDeplete:OnKeystoneOpen(ev)
 
   local found = nil
   for bagIndex = 0, NUM_BAG_SLOTS do
-    for invIndex = 1, GetContainerNumSlots(bagIndex) do
-      local itemID = GetContainerItemID(bagIndex, invIndex)
+    for invIndex = 1, C_Container.GetContainerNumSlots(bagIndex) do
+      local itemID = C_Container.GetContainerItemID(bagIndex, invIndex)
 
-      if itemID and (itemID == 180653) then
+      if itemID and C_Item.IsItemKeystoneByID(itemID) then
         self:PrintDebug("Key found at ("
           .. bagIndex .. "," .. invIndex .. ")")
 
@@ -482,12 +482,7 @@ function WarpDeplete:OnKeystoneOpen(ev)
     self:PrintDebug("Slotting keystone from ("
       .. found.bagIndex .. "," .. found.invIndex .. ")")
 
-    PickupContainerItem(found.bagIndex, found.invIndex)
-    C_Timer.After(0.1, function()
-      if CursorHasItem() then
-        C_ChallengeMode.SlotKeystone()
-      end
-    end)
+    C_Container.UseContainerItem(found.bagIndex, found.invIndex)
   end
 end
 
