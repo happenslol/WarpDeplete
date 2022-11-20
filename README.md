@@ -8,7 +8,6 @@ The goal of this AddOn is to combine the best of all worlds from other timers, c
 
 * Accurate dungeons timers, objective completion times and other stats
 * Current pull count prediction
-* Alerts for pride spawns after current pull
 * Enemy forces count display in tooltips
 * Death logs with time and player
 * Extremely low memory usage (&lt; 200KB on dungeon start)

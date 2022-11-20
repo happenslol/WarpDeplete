@@ -31,7 +31,6 @@ WarpDeplete.defaultForcesState = {
 
   currentPull = {},
 
-  prideGlowActive = false,
   completed = false,
   completedTime = 0
 }
@@ -100,7 +99,7 @@ function WarpDeplete:ShowMDTAlert()
   Util.showAlert(
     "MDT_NOT_FOUND",
     L["Mythic Dungeon Tools (MDT) is not installed."].."\n\n" ..
-    L["WarpDeplete will not show you Pride spawn alert or display the count for you current pull."]
+    L["WarpDeplete will not display the count for you current pull."]
     .. " \n\n" .. L["Install MDT to enable this functionality."])
 end
 
@@ -196,6 +195,4 @@ function WarpDeplete:ResetState()
   self.challengeState = Util.copy(self.defaultChallengeState)
   self.objectivesState = Util.copy(self.defaultObjectivesState)
   self.keyDetailsState = Util.copy(self.defaultKeyDetailsState)
-
-  self:HidePrideGlow()
 end

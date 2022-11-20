@@ -487,57 +487,6 @@ function WarpDeplete:UpdateForcesDisplay()
       self.forcesState.completed and self.forcesState.completedTime or nil
     )
   )
-
-  self:UpdatePrideGlow()
-end
-
-function WarpDeplete:UpdatePrideGlow()
-  if not self.db.profile.showPrideGlow then return end
-  if self.keyDetailsState.level < 10 then return end
-
-  if self.challengeState.challengeCompleted then
-    if self.forcesState.prideGlowActive then self:HidePrideGlow() end
-    return
-  end
-
-  local percentBeforePull = self.forcesState.currentPercent
-  local currentPrideFraction = (percentBeforePull % 0.2)
-  local prideFractionAfterPull = currentPrideFraction + self.forcesState.pullPercent
-  local shouldGlow = percentBeforePull < 1.0 and prideFractionAfterPull >= 0.2
-
-  -- Already in the correct state
-  if shouldGlow == self.forcesState.prideGlowActive then return end
-
-  if shouldGlow then self:ShowPrideGlow()
-  else self:HidePrideGlow() end
-end
-
-function WarpDeplete:UpdatePrideGlowFromOptions()
-  self:HidePrideGlow()
-  self:UpdatePrideGlow()
-end
-
-function WarpDeplete:ShowPrideGlow()
-  self.forcesState.prideGlowActive = true
-  local glowR, glowG, glowB = Util.hexToRGB(self.db.profile.prideGlowColor)
-  self.Glow.PixelGlow_Start(
-    self.forces.bar, -- frame
-    {glowR, glowG, glowB, 1}, -- color
-    16, -- line count
-    0.13, -- frequency
-    18, -- length
-    2, -- thiccness
-    1.5, -- x offset
-    1.5, -- y offset
-    false, -- draw border
-    "pride", -- tag
-    0 -- draw layer
-  )
-end
-
-function WarpDeplete:HidePrideGlow()
-  self.forcesState.prideGlowActive = false
-  self.Glow.PixelGlow_Stop(self.forces.bar, "pride")
 end
 
 -- Expect death count as number

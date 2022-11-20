@@ -73,10 +73,6 @@ local defaults = {
     forcesTextureColor = "FFBB9E22",
     forcesOverlayTextureColor = "FFFF5515",
 
-    -- Pride glow
-    showPrideGlow = true,
-    prideGlowColor = "FFCB091E",
-
     -- Font sizes for text parts
     deathsFontSize = 16,
     timerFontSize = 34,
@@ -561,15 +557,6 @@ function WarpDeplete:InitOptions()
           range(L["Bar height"], "barHeight", "UpdateLayout", { width = "full", min = 4, max = 20 })
         }),
 
-        group(L["Pride glow"], true, {
-          toggle(L["Show glow if current pull will spawn a Manifestation of Pride"], "showPrideGlow",
-            "UpdatePrideGlowFromOptions", { width = 2 }),
-
-          color(L["Glow color"], "prideGlowColor", "UpdatePrideGlowFromOptions", {
-            hidden = function() return not WarpDeplete.db.profile.showPrideGlow end,
-          })
-        }),
-
         group(L["Textures and Colors"], true, {
           barTexture(L["+1 Timer bar texture"], "bar1Texture", "UpdateLayout", { width = "double" }),
           color(L["+1 Timer bar color"], "bar1TextureColor", "UpdateLayout"),
@@ -714,7 +701,7 @@ function WarpDeplete:HandleChatCommand(input)
   end
 
   if cmd == "demo" then
-    if self.timerState.demoModeActive then self:DisableDemoMode()
+    if self.challengeState.demoModeActive then self:DisableDemoMode()
     else self:EnableDemoMode() end
     return
   end
