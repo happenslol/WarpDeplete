@@ -6,6 +6,8 @@ WarpDeplete = LibStub("AceAddon-3.0"):NewAddon(
   "AceTimer-3.0"
 )
 
+WarpDeplete.isShown = false
+
 WarpDeplete.L = LibStub("AceLocale-3.0"):GetLocale("WarpDeplete", true)
 local L = WarpDeplete.L
 
@@ -171,16 +173,36 @@ function WarpDeplete:DisableDemoMode()
 end
 
 function WarpDeplete:Show()
+  self.isShown = true
   self.frames.root:Show()
   self:UpdateLayout()
+
   ObjectiveTrackerFrame:Hide()
   if KT ~= nil then
     KT.frame:Hide()
   end
+
+  -- Sometimes, the objective tracker isn't hidden
+  -- correctly. This can happen when WarpDeplete is
+  -- loaded before the blizzard dungeon timer.
+  -- In this case, we can to check again after a bit
+  -- to make sure we're actually hiding it.
+  C_Timer.After(1, function()
+    -- Check if we're still showing WDP
+    if not self.isShown then
+      self:PrintDebug("Skipping re-hiding objective frame, wdp closed")
+      return
+    end
+
+    self:PrintDebug("Re-hiding objective frame")
+    ObjectiveTrackerFrame:Hide()
+  end)
 end
 
 function WarpDeplete:Hide()
+  self.isShown = false
   self.frames.root:Hide()
+
   if KT ~= nil then
     KT.frame:Show()
   end
