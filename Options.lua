@@ -12,6 +12,11 @@ local defaults = {
     frameX = -20,
     frameY = 0,
 
+    -- Alignment
+    alignTexts = "right",
+    alignBarTexts = "right",
+    alignBossClear = "start",
+
     -- Element display options
     forcesFormat = ":percent:",
     customForcesFormat = ":percent:",
@@ -318,6 +323,56 @@ function WarpDeplete:InitOptions()
       general = group(L["General"], false, {
         lineBreak(),
         toggle(L["Insert keystone automatically"], "insertKeystoneAutomatically", "UpdateLayout"),
+        lineBreak(),
+
+        group(L["Alignment"], true, {
+          {
+            type = "select",
+            name = L["Text Alignment"],
+            desc = L["Choose the alignment for all texts in the timer window"],
+            sorting = { "right", "left" },
+            values = {
+              ["left"] = "Left",
+              ["right"] = "Right",
+            },
+            get = function(info) return WarpDeplete.db.profile.alignTexts end,
+            set = function(info, value)
+              WarpDeplete.db.profile.alignTexts = value
+              WarpDeplete:UpdateLayout()
+            end
+          },
+          {
+            type = "select",
+            name = L["Bar Text Alignment"],
+            desc = L["Choose the alignment for the captions on the timer and forces bars"],
+            sorting = { "right", "left" },
+            values = {
+              ["left"] = "Left",
+              ["right"] = "Right",
+            },
+            get = function(info) return WarpDeplete.db.profile.alignBarTexts end,
+            set = function(info, value)
+              WarpDeplete.db.profile.alignBarTexts = value
+              WarpDeplete:UpdateLayout()
+            end
+          },
+          {
+            type = "select",
+            name = L["Boss Clear Time Position"],
+            desc = L["Choose where the clear times for bosses will be displayed"],
+            sorting = { "start", "end" },
+            values = {
+              ["start"] = "Start",
+              ["end"] = "End",
+            },
+            get = function(info) return WarpDeplete.db.profile.alignBossClear end,
+            set = function(info, value)
+              WarpDeplete.db.profile.alignBossClear = value
+              WarpDeplete:UpdateObjectivesDisplay()
+            end
+          },
+        }),
+
         lineBreak(),
 
         group(L["Forces Display"], true, {

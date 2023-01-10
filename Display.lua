@@ -134,6 +134,9 @@ end
 
 function WarpDeplete:UpdateLayout()
   -- Retrieve values from profile config
+  local alignRight = self.db.profile.alignTexts == "right"
+  local alignBarTextRight = self.db.profile.alignBarTexts == "right"
+
   local deathsFontSize = self.db.profile.deathsFontSize
   local timerFontSize = self.db.profile.timerFontSize
   local keyFontSize = self.db.profile.keyFontSize
@@ -215,26 +218,38 @@ function WarpDeplete:UpdateLayout()
   -- Deaths text
   local deathsText = self.frames.root.deathsText
   deathsText:SetFont(self.LSM:Fetch("font", deathsFont), deathsFontSize, deathsFontFlags)
-  deathsText:SetJustifyH("RIGHT")
+  deathsText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
   r, g, b = Util.hexToRGB(self.db.profile.deathsColor)
   deathsText:SetTextColor(r, g, b, 1)
-  deathsText:SetPoint("TOPRIGHT", -framePadding - 4, currentOffset)
+  deathsText:SetPoint(
+    alignRight and "TOPRIGHT" or "TOPLEFT",
+    alignRight and -framePadding - 4 or framePadding + 4,
+    currentOffset
+  )
 
   local deathsTooltipFrameHeight = deathsFontSize + verticalOffset + framePadding
   local deathsTooltipFrameWidth = deathsText:GetStringWidth() + framePadding
   self.frames.deathsTooltip:SetHeight(deathsTooltipFrameHeight)
   self.frames.deathsTooltip:SetWidth(deathsTooltipFrameWidth)
-  self.frames.deathsTooltip:SetPoint("TOPRIGHT", -framePadding * 0.5, -framePadding * 0.5)
+  self.frames.deathsTooltip:SetPoint(
+    alignRight and "TOPRIGHT" or "TOPLEFT",
+    alignRight and -framePadding * 0.5 or framePadding * 0.5,
+    -framePadding * 0.5
+  )
 
   currentOffset = currentOffset - (deathsFontSize + verticalOffset)
 
   -- Timer text
   local timerText = self.frames.root.timerText
   timerText:SetFont(self.LSM:Fetch("font", timerFont), timerFontSize, timerFontFlags)
-  timerText:SetJustifyH("RIGHT")
+  timerText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
   r, g, b = Util.hexToRGB(self.db.profile.timerRunningColor)
   timerText:SetTextColor(r, g, b, 1)
-  timerText:SetPoint("TOPRIGHT", -framePadding, currentOffset)
+  timerText:SetPoint(
+    alignRight and "TOPRIGHT" or "TOPLEFT",
+    alignRight and -framePadding or framePadding,
+    currentOffset
+  )
 
   currentOffset = currentOffset - (timerFontSize + verticalOffset)
   -- local KeyDetailsPadding = (keyFontSize > keyDetailsFontSize and keyFontSize or keyDetailsFontSize)
@@ -243,25 +258,39 @@ function WarpDeplete:UpdateLayout()
   -- Key details text
   local keyDetailsText = self.frames.root.keyDetailsText
   keyDetailsText:SetFont(self.LSM:Fetch("font", keyDetailsFont), keyDetailsFontSize, keyDetailsFontFlags)
-  keyDetailsText:SetJustifyH("RIGHT")
+  keyDetailsText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
   r, g, b = Util.hexToRGB(self.db.profile.keyDetailsColor)
   keyDetailsText:SetTextColor(r, g, b, 1)
-  keyDetailsText:SetPoint("TOPRIGHT", -framePadding - 3, currentOffset)
   
   -- Key Text
   local keyText = self.frames.root.keyText
   keyText:SetFont(self.LSM:Fetch("font", keyFont), keyFontSize, keyFontFlags)
-  keyText:SetJustifyH("RIGHT")
+  keyText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
   r, g, b = Util.hexToRGB(self.db.profile.keyColor)
   keyText:SetTextColor(r, g, b, 1)
-  keyText:SetPoint("TOPRIGHT", keyDetailsText, "LEFT", -2, (keyFontSize - keyDetailsFontSize) + 6)
+
+  -- Reset these because they depend on each other
+  keyText:ClearAllPoints()
+  keyDetailsText:ClearAllPoints()
+
+  if alignRight then
+    keyDetailsText:SetPoint("TOPRIGHT", -framePadding - 3, currentOffset - 1)
+    keyText:SetPoint("TOPRIGHT", keyDetailsText, "LEFT", -2, (keyFontSize - keyDetailsFontSize) + 6)
+  else
+    keyText:SetPoint("TOPLEFT", framePadding + 3, currentOffset + 1)
+    keyDetailsText:SetPoint("TOPLEFT", keyText, "RIGHT", 2, (keyFontSize - keyDetailsFontSize) + 4)
+  end
 
   currentOffset = currentOffset - (keyDetailsFontSize + barFramePaddingTop)
 
   -- Bars frame
   self.frames.bars:SetWidth(barWidth)
   self.frames.bars:SetHeight(barFrameHeight)
-  self.frames.bars:SetPoint("TOPRIGHT", -framePadding, currentOffset)
+  self.frames.bars:SetPoint(
+    alignRight and "TOPRIGHT" or "TOPLEFT",
+    alignRight and -framePadding or framePadding,
+    currentOffset
+  )
 
   self.frames.bars.texture:SetAllPoints()
 
@@ -274,36 +303,52 @@ function WarpDeplete:UpdateLayout()
   self.bar3:SetLayout(self.db.profile.bar3Texture, self.db.profile.bar3TextureColor, bar3Width, barHeight, 0,
     timerBarOffsetY - barPixelAdjust)
   self.bar3.text:SetFont(self.LSM:Fetch("font", bar3Font), bar3FontSize, bar3FontFlags)
-  self.bar3.text:SetJustifyH("RIGHT")
+  self.bar3.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
   self.bar3.text:SetTextColor(r, g, b, 1)
-  self.bar3.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
+  self.bar3.text:SetPoint(
+    alignBarTextRight and "BOTTOMRIGHT" or "BOTTOMLEFT",
+    alignBarTextRight and -barFontOffsetX or barFontOffsetX,
+    barFontOffsetY
+  )
 
   -- +2 bar
   local bar2Width = barWidth / 100 * 20 - timerBarOffsetX
   self.bar2:SetLayout(self.db.profile.bar2Texture, self.db.profile.bar2TextureColor, bar2Width, barHeight,
     bar3Width + timerBarOffsetX, timerBarOffsetY - barPixelAdjust)
   self.bar2.text:SetFont(self.LSM:Fetch("font", bar2Font), bar2FontSize, bar2FontFlags)
-  self.bar2.text:SetJustifyH("RIGHT")
+  self.bar2.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
   self.bar2.text:SetTextColor(r, g, b, 1)
-  self.bar2.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
+  self.bar2.text:SetPoint(
+    alignBarTextRight and "BOTTOMRIGHT" or "BOTTOMLEFT",
+    alignBarTextRight and -barFontOffsetX or barFontOffsetX,
+    barFontOffsetY
+  )
 
   -- +1 bar
   local bar1Width = barWidth / 100 * 20 - timerBarOffsetX
   self.bar1:SetLayout(self.db.profile.bar1Texture, self.db.profile.bar1TextureColor, bar1Width, barHeight,
     bar3Width + bar2Width + timerBarOffsetX * 2, timerBarOffsetY - barPixelAdjust)
   self.bar1.text:SetFont(self.LSM:Fetch("font", bar1Font), bar1FontSize, bar1FontFlags)
-  self.bar1.text:SetJustifyH("RIGHT")
+  self.bar1.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
   self.bar1.text:SetTextColor(r, g, b, 1)
-  self.bar1.text:SetPoint("BOTTOMRIGHT", -barFontOffsetX, barFontOffsetY)
+  self.bar1.text:SetPoint(
+    alignBarTextRight and "BOTTOMRIGHT" or "BOTTOMLEFT",
+    alignBarTextRight and -barFontOffsetX or barFontOffsetX,
+    barFontOffsetY
+  )
 
   -- Forces bar
   local r, g, b = Util.hexToRGB(self.db.profile.forcesColor)
   self.forces:SetLayout(self.db.profile.forcesTexture, self.db.profile.forcesTextureColor,
     barWidth, barHeight, 0, -timerBarOffsetY)
   self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont), forcesFontSize, forcesFontFlags)
-  self.forces.text:SetJustifyH("RIGHT")
+  self.forces.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
   self.forces.text:SetTextColor(r, g, b, 1)
-  self.forces.text:SetPoint("TOPRIGHT", -barFontOffsetX, -barFontOffsetY)
+  self.forces.text:SetPoint(
+    alignBarTextRight and "TOPRIGHT" or "TOPLEFT",
+    alignBarTextRight and -barFontOffsetX or barFontOffsetX,
+    -barFontOffsetY
+  )
 
   r, g, b = Util.hexToRGB(self.db.profile.forcesOverlayTextureColor)
   self.forces.overlayBar:SetMinMaxValues(0, 1)
@@ -320,10 +365,14 @@ function WarpDeplete:UpdateLayout()
   for i = 1, 5 do
     local objectiveText = self.frames.root.objectiveTexts[i]
     objectiveText:SetFont(self.LSM:Fetch("font", objectivesFont), objectivesFontSize, objectivesFontFlags)
-    objectiveText:SetJustifyH("RIGHT")
+    objectiveText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
     local r, g, b = Util.hexToRGB(self.db.profile.objectivesColor)
     objectiveText:SetTextColor(r, g, b, 1)
-    objectiveText:SetPoint("TOPRIGHT", -framePadding, currentOffset)
+    objectiveText:SetPoint(
+      alignRight and "TOPRIGHT" or "TOPLEFT",
+      alignRight and -framePadding or framePadding,
+      currentOffset
+    )
 
     currentOffset = currentOffset - (objectivesFontSize + objectivesOffset)
   end
@@ -508,6 +557,7 @@ end
 
 function WarpDeplete:UpdateObjectivesDisplay()
   local completionColor = self.db.profile.completedObjectivesColor
+  local alignStart = self.db.profile.alignBossClear == "start"
 
   -- Clear existing objective list
   for i = 1, 5 do
@@ -520,7 +570,12 @@ function WarpDeplete:UpdateObjectivesDisplay()
     if boss.time ~= nil then
       if boss.time > 0 then
         local completionTimeStr = Util.formatTime(boss.time)
-        objectiveStr = "[" .. completionTimeStr .. "] " .. objectiveStr
+
+        if alignStart then
+          objectiveStr = "[" .. completionTimeStr .. "] " .. objectiveStr
+        else
+          objectiveStr =  objectiveStr .. " [" .. completionTimeStr .. "]"
+        end
       end
 
       objectiveStr = "|c" .. completionColor .. objectiveStr .. "|r"

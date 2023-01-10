@@ -127,7 +127,7 @@ function WarpDeplete:EnableDemoMode()
   end
 
   self:SetObjectives(objectives)
-  self:SetKeyDetails(30, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Prideful"]})
+  self:SetKeyDetails(30, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Thundering"]})
 
   self:SetTimerLimit(35 * 60)
   self:SetTimerRemaining(20 * 60)
