@@ -1,3 +1,7 @@
+Release 2.1.2
+* Remove duplicate forces bar option
+* Fix font wrapping/ellipsis for large font sizes
+
 Release 2.1.1
 * Update russian localization
 

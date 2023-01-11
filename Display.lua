@@ -218,6 +218,7 @@ function WarpDeplete:UpdateLayout()
   -- Deaths text
   local deathsText = self.frames.root.deathsText
   deathsText:SetFont(self.LSM:Fetch("font", deathsFont), deathsFontSize, deathsFontFlags)
+  deathsText:SetNonSpaceWrap(false)
   deathsText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
   r, g, b = Util.hexToRGB(self.db.profile.deathsColor)
   deathsText:SetTextColor(r, g, b, 1)
@@ -242,6 +243,7 @@ function WarpDeplete:UpdateLayout()
   -- Timer text
   local timerText = self.frames.root.timerText
   timerText:SetFont(self.LSM:Fetch("font", timerFont), timerFontSize, timerFontFlags)
+  timerText:SetNonSpaceWrap(false)
   timerText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
   r, g, b = Util.hexToRGB(self.db.profile.timerRunningColor)
   timerText:SetTextColor(r, g, b, 1)
@@ -258,6 +260,7 @@ function WarpDeplete:UpdateLayout()
   -- Key details text
   local keyDetailsText = self.frames.root.keyDetailsText
   keyDetailsText:SetFont(self.LSM:Fetch("font", keyDetailsFont), keyDetailsFontSize, keyDetailsFontFlags)
+  keyDetailsText:SetNonSpaceWrap(false)
   keyDetailsText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
   r, g, b = Util.hexToRGB(self.db.profile.keyDetailsColor)
   keyDetailsText:SetTextColor(r, g, b, 1)
@@ -265,6 +268,7 @@ function WarpDeplete:UpdateLayout()
   -- Key Text
   local keyText = self.frames.root.keyText
   keyText:SetFont(self.LSM:Fetch("font", keyFont), keyFontSize, keyFontFlags)
+  keyText:SetNonSpaceWrap(false)
   keyText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
   r, g, b = Util.hexToRGB(self.db.profile.keyColor)
   keyText:SetTextColor(r, g, b, 1)
@@ -303,6 +307,7 @@ function WarpDeplete:UpdateLayout()
   self.bar3:SetLayout(self.db.profile.bar3Texture, self.db.profile.bar3TextureColor, bar3Width, barHeight, 0,
     timerBarOffsetY - barPixelAdjust)
   self.bar3.text:SetFont(self.LSM:Fetch("font", bar3Font), bar3FontSize, bar3FontFlags)
+  self.bar3.text:SetNonSpaceWrap(false)
   self.bar3.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
   self.bar3.text:SetTextColor(r, g, b, 1)
   self.bar3.text:SetPoint(
@@ -316,6 +321,7 @@ function WarpDeplete:UpdateLayout()
   self.bar2:SetLayout(self.db.profile.bar2Texture, self.db.profile.bar2TextureColor, bar2Width, barHeight,
     bar3Width + timerBarOffsetX, timerBarOffsetY - barPixelAdjust)
   self.bar2.text:SetFont(self.LSM:Fetch("font", bar2Font), bar2FontSize, bar2FontFlags)
+  self.bar2.text:SetNonSpaceWrap(false)
   self.bar2.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
   self.bar2.text:SetTextColor(r, g, b, 1)
   self.bar2.text:SetPoint(
@@ -329,6 +335,7 @@ function WarpDeplete:UpdateLayout()
   self.bar1:SetLayout(self.db.profile.bar1Texture, self.db.profile.bar1TextureColor, bar1Width, barHeight,
     bar3Width + bar2Width + timerBarOffsetX * 2, timerBarOffsetY - barPixelAdjust)
   self.bar1.text:SetFont(self.LSM:Fetch("font", bar1Font), bar1FontSize, bar1FontFlags)
+  self.bar1.text:SetNonSpaceWrap(false)
   self.bar1.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
   self.bar1.text:SetTextColor(r, g, b, 1)
   self.bar1.text:SetPoint(
@@ -342,6 +349,7 @@ function WarpDeplete:UpdateLayout()
   self.forces:SetLayout(self.db.profile.forcesTexture, self.db.profile.forcesTextureColor,
     barWidth, barHeight, 0, -timerBarOffsetY)
   self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont), forcesFontSize, forcesFontFlags)
+  self.forces.text:SetNonSpaceWrap(false)
   self.forces.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
   self.forces.text:SetTextColor(r, g, b, 1)
   self.forces.text:SetPoint(
@@ -365,6 +373,7 @@ function WarpDeplete:UpdateLayout()
   for i = 1, 5 do
     local objectiveText = self.frames.root.objectiveTexts[i]
     objectiveText:SetFont(self.LSM:Fetch("font", objectivesFont), objectivesFontSize, objectivesFontFlags)
+    objectiveText:SetNonSpaceWrap(false)
     objectiveText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
     local r, g, b = Util.hexToRGB(self.db.profile.objectivesColor)
     objectiveText:SetTextColor(r, g, b, 1)

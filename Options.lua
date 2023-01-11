@@ -633,11 +633,6 @@ function WarpDeplete:InitOptions()
 
           lineBreak(),
 
-          barTexture(L["Forces bar texture"], "forcesTexture", "UpdateLayout", { width = "double" }),
-          color(L["Forces bar color"], "forcesTextureColor", "UpdateLayout"),
-
-          lineBreak(),
-
           barTexture(L["Current pull bar texture"], "forcesOverlayTexture", "UpdateLayout", { width = "double" }),
           color(L["Current pull bar color"], "forcesOverlayTextureColor", "UpdateLayout"),
         })
