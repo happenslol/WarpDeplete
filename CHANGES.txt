@@ -1,3 +1,6 @@
+Release 2.1.1
+* Update russian localization
+
 Release 2.1.0
 * Add alignment options
 * Fix Blizzard UI sometimes not being hidden when reconnecting
