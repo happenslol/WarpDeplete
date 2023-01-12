@@ -332,8 +332,8 @@ function WarpDeplete:InitOptions()
             desc = L["Choose the alignment for all texts in the timer window"],
             sorting = { "right", "left" },
             values = {
-              ["left"] = "Left",
-              ["right"] = "Right",
+              ["left"] = L["Left"],
+              ["right"] = L["Right"],
             },
             get = function(info) return WarpDeplete.db.profile.alignTexts end,
             set = function(info, value)
@@ -347,8 +347,8 @@ function WarpDeplete:InitOptions()
             desc = L["Choose the alignment for the captions on the timer and forces bars"],
             sorting = { "right", "left" },
             values = {
-              ["left"] = "Left",
-              ["right"] = "Right",
+              ["left"] = L["Left"],
+              ["right"] = L["Right"],
             },
             get = function(info) return WarpDeplete.db.profile.alignBarTexts end,
             set = function(info, value)
@@ -362,8 +362,8 @@ function WarpDeplete:InitOptions()
             desc = L["Choose where the clear times for bosses will be displayed"],
             sorting = { "start", "end" },
             values = {
-              ["start"] = "Start",
-              ["end"] = "End",
+              ["start"] = L["Start"],
+              ["end"] = L["End"],
             },
             get = function(info) return WarpDeplete.db.profile.alignBossClear end,
             set = function(info, value)
