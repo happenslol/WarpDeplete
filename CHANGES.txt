@@ -1,3 +1,9 @@
+Release 2.2.4
+* Improve debug mode
+* Improve layouting code
+* Merge "bars" and "timers" options
+* Extend bar height options, add padding options
+
 Release 2.1.4
 * Bump interface version
 
