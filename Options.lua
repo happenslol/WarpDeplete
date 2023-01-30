@@ -93,7 +93,7 @@ local defaults = {
 
     -- Offset between bars
     timerBarOffsetX = 5,
-    timerBarOffsetY = 8.55,
+    timerBarOffsetY = 8,
 
     -- Bar text offset
     barFontOffsetX = 3,
@@ -102,15 +102,16 @@ local defaults = {
     -- Bar dimensions
     barWidth = 360,
     barHeight = 10,
-    barPadding = 0,
+    barPadding = 4.1,
 
-    -- Frame and bar frame padding
+    -- Frame padding
     framePadding = 20,
-    barFramePaddingTop = 12,
-    barFramePaddingBottom = 16,
+    barFramePaddingTop = 6,
+    barFramePaddingBottom = 10,
 
     -- The vertical offset between elements
     verticalOffset = 2,
+    objectivesOffset = 4,
 
     -- Utility options
     insertKeystoneAutomatically = true
@@ -325,56 +326,6 @@ function WarpDeplete:InitOptions()
         toggle(L["Insert keystone automatically"], "insertKeystoneAutomatically", "UpdateLayout"),
         lineBreak(),
 
-        group(L["Alignment"], true, {
-          {
-            type = "select",
-            name = L["Text Alignment"],
-            desc = L["Choose the alignment for all texts in the timer window"],
-            sorting = { "right", "left" },
-            values = {
-              ["left"] = L["Left"],
-              ["right"] = L["Right"],
-            },
-            get = function(info) return WarpDeplete.db.profile.alignTexts end,
-            set = function(info, value)
-              WarpDeplete.db.profile.alignTexts = value
-              WarpDeplete:UpdateLayout()
-            end
-          },
-          {
-            type = "select",
-            name = L["Bar Text Alignment"],
-            desc = L["Choose the alignment for the captions on the timer and forces bars"],
-            sorting = { "right", "left" },
-            values = {
-              ["left"] = L["Left"],
-              ["right"] = L["Right"],
-            },
-            get = function(info) return WarpDeplete.db.profile.alignBarTexts end,
-            set = function(info, value)
-              WarpDeplete.db.profile.alignBarTexts = value
-              WarpDeplete:UpdateLayout()
-            end
-          },
-          {
-            type = "select",
-            name = L["Boss Clear Time Position"],
-            desc = L["Choose where the clear times for bosses will be displayed"],
-            sorting = { "start", "end" },
-            values = {
-              ["start"] = L["Start"],
-              ["end"] = L["End"],
-            },
-            get = function(info) return WarpDeplete.db.profile.alignBossClear end,
-            set = function(info, value)
-              WarpDeplete.db.profile.alignBossClear = value
-              WarpDeplete:UpdateObjectivesDisplay()
-            end
-          },
-        }),
-
-        lineBreak(),
-
         group(L["Forces Display"], true, {
           {
             type = "select",
@@ -538,6 +489,63 @@ function WarpDeplete:InitOptions()
       }, { order = 3 }),
 
       texts = group(L["Display"], false, {
+        group(L["General"], true, {
+          {
+            type = "select",
+            name = L["Text Alignment"],
+            desc = L["Choose the alignment for all texts in the timer window"],
+            sorting = { "right", "left" },
+            values = {
+              ["left"] = L["Left"],
+              ["right"] = L["Right"],
+            },
+            get = function(info) return WarpDeplete.db.profile.alignTexts end,
+            set = function(info, value)
+              WarpDeplete.db.profile.alignTexts = value
+              WarpDeplete:UpdateLayout()
+            end
+          },
+          {
+            type = "select",
+            name = L["Bar Text Alignment"],
+            desc = L["Choose the alignment for the captions on the timer and forces bars"],
+            sorting = { "right", "left" },
+            values = {
+              ["left"] = L["Left"],
+              ["right"] = L["Right"],
+            },
+            get = function(info) return WarpDeplete.db.profile.alignBarTexts end,
+            set = function(info, value)
+              WarpDeplete.db.profile.alignBarTexts = value
+              WarpDeplete:UpdateLayout()
+            end
+          },
+          {
+            type = "select",
+            name = L["Boss Clear Time Position"],
+            desc = L["Choose where the clear times for bosses will be displayed"],
+            sorting = { "start", "end" },
+            values = {
+              ["start"] = L["Start"],
+              ["end"] = L["End"],
+            },
+            get = function(info) return WarpDeplete.db.profile.alignBossClear end,
+            set = function(info, value)
+              WarpDeplete.db.profile.alignBossClear = value
+              WarpDeplete:UpdateObjectivesDisplay()
+            end
+          },
+
+          lineBreak(),
+
+          range(L["Element Padding"], "verticalOffset", "UpdateLayout",
+            { min = 0, max = 100, step = 0.01 }),
+          range(L["Boss Name Padding"], "objectivesOffset", "UpdateLayout",
+            { min = 0, max = 100, step = 0.01 }),
+          range(L["Bar Padding"], "timerBarOffsetY", "UpdateLayout",
+            { min = 0, max = 100, step = 0.01 }),
+        }),
+
         group(L["Timer Colors"], true, {
           color(L["Timer color"], "timerRunningColor", "UpdateLayout"),
           color(L["Timer success color"], "timerSuccessColor", "UpdateLayout"),
@@ -572,8 +580,10 @@ function WarpDeplete:InitOptions()
         }),
 
         group(L["Bars"], true, {
-          range(L["Bar width"], "barWidth", "UpdateLayout", { width = "full", min = 10, max = 600 }),
-          range(L["Bar height"], "barHeight", "UpdateLayout", { width = "full", min = 4, max = 20 })
+          range(L["Bar width"], "barWidth", "UpdateLayout",
+            { width = "full", min = 10, max = 600 }),
+          range(L["Bar height"], "barHeight", "UpdateLayout",
+            { width = "full", min = 4, max = 50 })
         }),
 
         group(L["+1 Timer"], true, {
