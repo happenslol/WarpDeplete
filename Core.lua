@@ -95,6 +95,10 @@ function WarpDeplete:OnEnable()
     self.db.global.mdtAlertShown = true
     self:ShowMDTAlert()
   end
+
+  if self.db.global.DEBUG then
+    self:EnableDemoMode()
+  end
 end
 
 function WarpDeplete:ShowMDTAlert()
