@@ -16,11 +16,13 @@ function Util.formatForcesText(
   local percentText = ("%.2f"):format(currentPercent)
   local countText = ("%d"):format(currentCount)
   local totalCountText = ("%d"):format(totalCount)
+  local leftCountText = ("%d"):format(totalCount-currentCount)
   local result = forcesFormat ~= ":custom:" and forcesFormat or customForcesFormat
 
   result = gsub(result, ":percent:", percentText .. "%%")
   result = gsub(result, ":count:", countText)
   result = gsub(result, ":totalcount:", totalCountText)
+  result = gsub(result, ":leftcount:", leftCountText)
 
   if pullCount > 0 then
     local pullPercent = (pullCount / totalCount) * 100
@@ -91,7 +93,7 @@ function Util.formatDeathTimeMinutes(time)
 end
 
 function Util.hexToRGB(hex)
-	if string.len(hex) == 8 then
+  if string.len(hex) == 8 then
     return tonumber("0x" .. hex:sub(3, 4)) / 255,
       tonumber("0x" .. hex:sub(5, 6)) / 255,
       tonumber("0x" .. hex:sub(7, 8)) / 255,
@@ -104,10 +106,10 @@ function Util.hexToRGB(hex)
 end
 
 function Util.rgbToHex(r, g, b, a)
-	r = math.ceil(255 * r)
-	g = math.ceil(255 * g)
-	b = math.ceil(255 * b)
-	if not a then
+  r = math.ceil(255 * r)
+  g = math.ceil(255 * g)
+  b = math.ceil(255 * b)
+  if not a then
     return string.format("FF%02x%02x%02x", r, g, b)
   end
 
