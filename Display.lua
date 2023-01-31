@@ -170,7 +170,6 @@ function WarpDeplete:UpdateLayout()
   local objectivesFontFlags = self.db.profile.objectivesFontFlags
 
   local timerBarOffsetX = self.db.profile.timerBarOffsetX
-  local timerBarOffsetY = self.db.profile.timerBarOffsetY
 
   local barFontOffsetX = self.db.profile.barFontOffsetX
   local barFontOffsetY = self.db.profile.barFontOffsetY
@@ -291,7 +290,7 @@ function WarpDeplete:UpdateLayout()
   local bar3Width = barWidth / 100 * 60
   self.bar3:SetLayout(self.db.profile.bar3Texture, self.db.profile.bar3TextureColor,
     bar3Width, barHeight + timerBarPixelAdjust,
-    0, timerBarOffsetY + barHeight / 2)
+    0, barPadding + barHeight / 2)
   self.bar3.text:SetFont(self.LSM:Fetch("font", bar3Font), bar3FontSize, bar3FontFlags)
   self.bar3.text:SetNonSpaceWrap(false)
   self.bar3.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
@@ -309,7 +308,7 @@ function WarpDeplete:UpdateLayout()
   self.bar2:SetLayout(self.db.profile.bar2Texture, self.db.profile.bar2TextureColor,
     bar2Width, barHeight + timerBarPixelAdjust,
     bar3Width + timerBarOffsetX,
-    timerBarOffsetY + barHeight / 2)
+    barPadding + barHeight / 2)
   self.bar2.text:SetFont(self.LSM:Fetch("font", bar2Font), bar2FontSize, bar2FontFlags)
   self.bar2.text:SetNonSpaceWrap(false)
   self.bar2.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
@@ -327,7 +326,7 @@ function WarpDeplete:UpdateLayout()
   self.bar1:SetLayout(self.db.profile.bar1Texture, self.db.profile.bar1TextureColor,
     bar1Width, barHeight + timerBarPixelAdjust,
     bar3Width + bar2Width + timerBarOffsetX * 2,
-    timerBarOffsetY + barHeight / 2)
+    barPadding + barHeight / 2)
   self.bar1.text:SetFont(self.LSM:Fetch("font", bar1Font), bar1FontSize, bar1FontFlags)
   self.bar1.text:SetNonSpaceWrap(false)
   self.bar1.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
@@ -346,7 +345,7 @@ function WarpDeplete:UpdateLayout()
   local forcesBarPixelAdjust = 0.5
   local r, g, b = Util.hexToRGB(self.db.profile.forcesColor)
   self.forces:SetLayout(self.db.profile.forcesTexture, self.db.profile.forcesTextureColor,
-    barWidth, barHeight + forcesBarPixelAdjust, 0, -timerBarOffsetY - barHeight / 2)
+    barWidth, barHeight + forcesBarPixelAdjust, 0, -barPadding - barHeight / 2)
   self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont), forcesFontSize, forcesFontFlags)
   self.forces.text:SetNonSpaceWrap(false)
   self.forces.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")

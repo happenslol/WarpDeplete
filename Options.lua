@@ -93,7 +93,6 @@ local defaults = {
 
     -- Offset between bars
     timerBarOffsetX = 5,
-    timerBarOffsetY = 8,
 
     -- Bar text offset
     barFontOffsetX = 3,
@@ -102,12 +101,12 @@ local defaults = {
     -- Bar dimensions
     barWidth = 360,
     barHeight = 10,
-    barPadding = 4.1,
+    barPadding = 3.5,
 
     -- Frame padding
     framePadding = 20,
     barFramePaddingTop = 6,
-    barFramePaddingBottom = 10,
+    barFramePaddingBottom = 12,
 
     -- The vertical offset between elements
     verticalOffset = 2,
@@ -542,7 +541,7 @@ function WarpDeplete:InitOptions()
             { min = 0, max = 100, step = 0.01 }),
           range(L["Boss Name Padding"], "objectivesOffset", "UpdateLayout",
             { min = 0, max = 100, step = 0.01 }),
-          range(L["Bar Padding"], "timerBarOffsetY", "UpdateLayout",
+          range(L["Bar Padding"], "barPadding", "UpdateLayout",
             { min = 0, max = 100, step = 0.01 }),
         }),
 
