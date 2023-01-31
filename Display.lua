@@ -366,7 +366,7 @@ function WarpDeplete:UpdateLayout()
   self.forces.overlayBar:SetStatusBarTexture(self.LSM:Fetch("statusbar", self.db.profile.forcesOverlayTexture))
   self.forces.overlayBar:SetStatusBarColor(r, g, b, 0.7)
 
-  local barFrameHeight = timerBarsHeight + forcesBarHeight + barPadding
+  local barFrameHeight = timerBarsHeight + forcesBarHeight + barPadding * 2
   self.frames.bars:SetHeight(barFrameHeight)
   currentOffset = currentOffset + barFrameHeight + barFramePaddingBottom + verticalOffset
 

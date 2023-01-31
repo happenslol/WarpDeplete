@@ -101,12 +101,12 @@ local defaults = {
     -- Bar dimensions
     barWidth = 360,
     barHeight = 10,
-    barPadding = 3.5,
+    barPadding = 3.8,
 
     -- Frame padding
     framePadding = 20,
-    barFramePaddingTop = 6,
-    barFramePaddingBottom = 12,
+    barFramePaddingTop = 4,
+    barFramePaddingBottom = 10,
 
     -- The vertical offset between elements
     verticalOffset = 2,
