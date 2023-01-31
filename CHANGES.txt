@@ -1,4 +1,7 @@
 Release 2.2.5
+* Fix bar frame height scaling
+
+Release 2.2.5
 * Fix bar padding
 
 Release 2.2.4
