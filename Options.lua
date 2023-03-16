@@ -406,7 +406,7 @@ function WarpDeplete:InitOptions()
             desc = L["Use the following tags to set your custom format"] .. ":"
               .. "\n- :percent: " .. L["Shows the current forces percentage (e.g. 82.52%)"]
               .. "\n- :count: " .. L["Shows the current forces count (e.g. 198)"]
-              .. "\n- :totalcount: " .. L["Shows the total forces count (e.g. 240)"],
+              .. "\n- :totalcount: " .. L["Shows the total forces count (e.g. 240)"]
               .. "\n- :leftcount: " .. L["Shows the needed amount of forces count left to complete"],
             multiline = false,
             width = 2,
