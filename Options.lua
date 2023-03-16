@@ -93,7 +93,6 @@ local defaults = {
 
     -- Offset between bars
     timerBarOffsetX = 5,
-    timerBarOffsetY = 8.55,
 
     -- Bar text offset
     barFontOffsetX = 3,
@@ -102,15 +101,16 @@ local defaults = {
     -- Bar dimensions
     barWidth = 360,
     barHeight = 10,
-    barPadding = 0,
+    barPadding = 3.8,
 
-    -- Frame and bar frame padding
+    -- Frame padding
     framePadding = 20,
-    barFramePaddingTop = 12,
-    barFramePaddingBottom = 16,
+    barFramePaddingTop = 4,
+    barFramePaddingBottom = 10,
 
     -- The vertical offset between elements
     verticalOffset = 2,
+    objectivesOffset = 4,
 
     -- Utility options
     insertKeystoneAutomatically = true
@@ -325,56 +325,6 @@ function WarpDeplete:InitOptions()
         toggle(L["Insert keystone automatically"], "insertKeystoneAutomatically", "UpdateLayout"),
         lineBreak(),
 
-        group(L["Alignment"], true, {
-          {
-            type = "select",
-            name = L["Text Alignment"],
-            desc = L["Choose the alignment for all texts in the timer window"],
-            sorting = { "right", "left" },
-            values = {
-              ["left"] = L["Left"],
-              ["right"] = L["Right"],
-            },
-            get = function(info) return WarpDeplete.db.profile.alignTexts end,
-            set = function(info, value)
-              WarpDeplete.db.profile.alignTexts = value
-              WarpDeplete:UpdateLayout()
-            end
-          },
-          {
-            type = "select",
-            name = L["Bar Text Alignment"],
-            desc = L["Choose the alignment for the captions on the timer and forces bars"],
-            sorting = { "right", "left" },
-            values = {
-              ["left"] = L["Left"],
-              ["right"] = L["Right"],
-            },
-            get = function(info) return WarpDeplete.db.profile.alignBarTexts end,
-            set = function(info, value)
-              WarpDeplete.db.profile.alignBarTexts = value
-              WarpDeplete:UpdateLayout()
-            end
-          },
-          {
-            type = "select",
-            name = L["Boss Clear Time Position"],
-            desc = L["Choose where the clear times for bosses will be displayed"],
-            sorting = { "start", "end" },
-            values = {
-              ["start"] = L["Start"],
-              ["end"] = L["End"],
-            },
-            get = function(info) return WarpDeplete.db.profile.alignBossClear end,
-            set = function(info, value)
-              WarpDeplete.db.profile.alignBossClear = value
-              WarpDeplete:UpdateObjectivesDisplay()
-            end
-          },
-        }),
-
-        lineBreak(),
-
         group(L["Forces Display"], true, {
           {
             type = "select",
@@ -538,7 +488,64 @@ function WarpDeplete:InitOptions()
         })
       }, { order = 3 }),
 
-      texts = group(L["Texts"], false, {
+      texts = group(L["Display"], false, {
+        group(L["General"], true, {
+          {
+            type = "select",
+            name = L["Text Alignment"],
+            desc = L["Choose the alignment for all texts in the timer window"],
+            sorting = { "right", "left" },
+            values = {
+              ["left"] = L["Left"],
+              ["right"] = L["Right"],
+            },
+            get = function(info) return WarpDeplete.db.profile.alignTexts end,
+            set = function(info, value)
+              WarpDeplete.db.profile.alignTexts = value
+              WarpDeplete:UpdateLayout()
+            end
+          },
+          {
+            type = "select",
+            name = L["Bar Text Alignment"],
+            desc = L["Choose the alignment for the captions on the timer and forces bars"],
+            sorting = { "right", "left" },
+            values = {
+              ["left"] = L["Left"],
+              ["right"] = L["Right"],
+            },
+            get = function(info) return WarpDeplete.db.profile.alignBarTexts end,
+            set = function(info, value)
+              WarpDeplete.db.profile.alignBarTexts = value
+              WarpDeplete:UpdateLayout()
+            end
+          },
+          {
+            type = "select",
+            name = L["Boss Clear Time Position"],
+            desc = L["Choose where the clear times for bosses will be displayed"],
+            sorting = { "start", "end" },
+            values = {
+              ["start"] = L["Start"],
+              ["end"] = L["End"],
+            },
+            get = function(info) return WarpDeplete.db.profile.alignBossClear end,
+            set = function(info, value)
+              WarpDeplete.db.profile.alignBossClear = value
+              WarpDeplete:UpdateObjectivesDisplay()
+            end
+          },
+
+          lineBreak(),
+
+          range(L["Element Padding"], "verticalOffset", "UpdateLayout",
+            { min = 0, max = 100, step = 0.01 }),
+          range(L["Boss Name Padding"], "objectivesOffset", "UpdateLayout",
+            { min = 0, max = 100, step = 0.01 }),
+          range(L["Bar Padding"], "barPadding", "UpdateLayout",
+            { min = 0, max = 100, step = 0.01 }),
+        }),
+
         group(L["Timer Colors"], true, {
           color(L["Timer color"], "timerRunningColor", "UpdateLayout"),
           color(L["Timer success color"], "timerSuccessColor", "UpdateLayout"),
@@ -572,60 +579,46 @@ function WarpDeplete:InitOptions()
           color(L["Key details color"], "keyDetailsColor", "UpdateLayout"),
         }),
 
-        group(L["Forces"], true, {
-          font(L["Forces font"], "forcesFont", "UpdateLayout"),
-          range(L["Forces font size"], "forcesFontSize", "UpdateLayout"),
-          fontFlags(L["Forces font flags"], "forcesFontFlags", "UpdateLayout"),
-          color(L["Forces color"], "forcesColor", "UpdateLayout"),
-          color(L["Completed forces color"], "completedForcesColor", "UpdateLayout"),
+        group(L["Bars"], true, {
+          range(L["Bar width"], "barWidth", "UpdateLayout",
+            { width = "full", min = 10, max = 600 }),
+          range(L["Bar height"], "barHeight", "UpdateLayout",
+            { width = "full", min = 4, max = 50 })
         }),
 
         group(L["+1 Timer"], true, {
           font(L["+1 Timer font"], "bar1Font", "UpdateLayout"),
           range(L["+1 Timer font size"], "bar1FontSize", "UpdateLayout"),
           fontFlags(L["+1 Timer font flags"], "bar1FontFlags", "UpdateLayout"),
+
+          barTexture(L["+1 Timer bar texture"], "bar1Texture", "UpdateLayout", { width = "double" }),
+          color(L["+1 Timer bar color"], "bar1TextureColor", "UpdateLayout"),
         }),
 
         group(L["+2 Timer"], true, {
           font(L["+2 Timer font"], "bar2Font", "UpdateLayout"),
           range(L["+2 Timer font size"], "bar2FontSize", "UpdateLayout"),
           fontFlags(L["+2 Timer font flags"], "bar2FontFlags", "UpdateLayout"),
+
+          barTexture(L["+2 Timer bar texture"], "bar2Texture", "UpdateLayout", { width = "double" }),
+          color(L["+2 Timer bar color"], "bar2TextureColor", "UpdateLayout") ,
         }),
 
         group(L["+3 Timer"], true, {
           font(L["+3 Timer font"], "bar3Font", "UpdateLayout"),
           range(L["+3 Timer font size"], "bar3FontSize", "UpdateLayout"),
           fontFlags(L["+3 Timer font flags"], "bar3FontFlags", "UpdateLayout"),
-        }),
-
-        group(L["Objectives"], true, {
-          font(L["Objectives font"], "objectivesFont", "UpdateLayout"),
-          range(L["Objectives font size"], "objectivesFontSize", "UpdateLayout"),
-          fontFlags(L["Objectives font flags"], "objectivesFontFlags", "UpdateLayout"),
-          color(L["Objectives color"], "objectivesColor", "UpdateLayout"),
-          color(L["Completed objective color"], "completedObjectivesColor", "UpdateLayout"),
-        }),
-      }, { order = 4 }),
-
-      bars = group(L["Bars"], false, {
-        group(L["Size"], true, {
-          range(L["Bar width"], "barWidth", "UpdateLayout", { width = "full", min = 10, max = 600 }),
-          range(L["Bar height"], "barHeight", "UpdateLayout", { width = "full", min = 4, max = 20 })
-        }),
-
-        group(L["Textures and Colors"], true, {
-          barTexture(L["+1 Timer bar texture"], "bar1Texture", "UpdateLayout", { width = "double" }),
-          color(L["+1 Timer bar color"], "bar1TextureColor", "UpdateLayout"),
-
-          lineBreak(),
-
-          barTexture(L["+2 Timer bar texture"], "bar2Texture", "UpdateLayout", { width = "double" }),
-          color(L["+2 Timer bar color"], "bar2TextureColor", "UpdateLayout") ,
-
-          lineBreak(),
 
           barTexture(L["+3 Timer bar texture"], "bar3Texture", "UpdateLayout", { width = "double" }),
           color(L["+3 Timer bar color"], "bar3TextureColor", "UpdateLayout"),
+        }),
+
+        group(L["Forces"], true, {
+          font(L["Forces font"], "forcesFont", "UpdateLayout"),
+          range(L["Forces font size"], "forcesFontSize", "UpdateLayout"),
+          fontFlags(L["Forces font flags"], "forcesFontFlags", "UpdateLayout"),
+          color(L["Forces color"], "forcesColor", "UpdateLayout"),
+          color(L["Completed forces color"], "completedForcesColor", "UpdateLayout"),
 
           lineBreak(),
 
@@ -636,8 +629,16 @@ function WarpDeplete:InitOptions()
 
           barTexture(L["Current pull bar texture"], "forcesOverlayTexture", "UpdateLayout", { width = "double" }),
           color(L["Current pull bar color"], "forcesOverlayTextureColor", "UpdateLayout"),
-        })
-      }, { order = 5 }),
+        }),
+
+        group(L["Objectives"], true, {
+          font(L["Objectives font"], "objectivesFont", "UpdateLayout"),
+          range(L["Objectives font size"], "objectivesFontSize", "UpdateLayout"),
+          fontFlags(L["Objectives font flags"], "objectivesFontFlags", "UpdateLayout"),
+          color(L["Objectives color"], "objectivesColor", "UpdateLayout"),
+          color(L["Completed objective color"], "completedObjectivesColor", "UpdateLayout"),
+        }),
+      }, { order = 4 }),
     }
   }
 
@@ -759,6 +760,11 @@ function WarpDeplete:HandleChatCommand(input)
 
   if cmd == "debug" then
     self.db.global.DEBUG = not self.db.global.DEBUG
+    if self.db.global.DEBUG then
+      self:Print("|cFF479AEDDEBUG|r Debug mode enabled")
+    else
+      self:Print("|cFF479AEDDEBUG|r Debug mode disabled")
+    end
     return
   end
 
