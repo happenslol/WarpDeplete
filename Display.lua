@@ -549,6 +549,48 @@ function WarpDeplete:UpdateForcesDisplay()
       self.forcesState.completed and self.forcesState.completedTime or nil
     )
   )
+    self:UpdateGlow() 
+end
+  
+function WarpDeplete:UpdateGlow()
+
+  if self.challengeState.challengeCompleted or self.forcesState.completed then
+    if self.forcesState.glowActive then self:HideGlow() end
+    return
+  end
+
+  local percentBeforePull = self.forcesState.currentPercent
+  local percentAfterPull = percentBeforePull + self.forcesState.pullPercent
+  local shouldGlow = percentBeforePull < 1 and percentAfterPull >= 1.0
+
+  -- Already in the correct state
+  if shouldGlow == self.forcesState.glowActive then return end
+
+  if shouldGlow then self:ShowGlow()
+  else self:HideGlow() end
+end
+
+function WarpDeplete:ShowGlow()
+  self.forcesState.glowActive = true
+  local glowR, glowG, glowB = Util.hexToRGB(self.db.profile.glowColor)
+  self.Glow.PixelGlow_Start(
+    self.forces.bar, -- frame
+    {glowR, glowG, glowB, 1}, -- color
+    16, -- line count
+    0.13, -- frequency
+    18, -- length
+    2, -- thiccness
+    1.5, -- x offset
+    1.5, -- y offset
+    false, -- draw border
+    "pride", -- tag
+    0 -- draw layer
+  )
+end
+
+function WarpDeplete:HideGlow()
+  self.forcesState.glowActive = false
+  self.Glow.PixelGlow_Stop(self.forces.bar, "pride")
 end
 
 -- Expect death count as number

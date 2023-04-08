@@ -77,7 +77,8 @@ local defaults = {
     bar3TextureColor = "FF979797",
     forcesTextureColor = "FFBB9E22",
     forcesOverlayTextureColor = "FFFF5515",
-
+	glowColor = "FFFF0000",
+	
     -- Font sizes for text parts
     deathsFontSize = 16,
     timerFontSize = 34,

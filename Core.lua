@@ -30,7 +30,7 @@ WarpDeplete.defaultForcesState = {
 
   pullPercent = 0,
   currentPercent = 0,
-
+  glowActive = false,
   currentPull = {},
 
   completed = false,
@@ -137,7 +137,7 @@ function WarpDeplete:EnableDemoMode()
 
   self:SetTimerLimit(35 * 60)
   self:SetTimerRemaining(20 * 60)
-  self:SetForcesCurrent(34)
+  self:SetForcesCurrent(94)
   self:SetForcesPull(7)
   self:SetDeaths(3)
 
