@@ -30,7 +30,7 @@ WarpDeplete.defaultForcesState = {
 
   pullPercent = 0,
   currentPercent = 0,
-
+  glowActive = false,
   currentPull = {},
 
   completed = false,
