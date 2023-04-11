@@ -112,6 +112,18 @@ end
 function WarpDeplete:OnDisable()
 end
 
+function WarpDeplete:UpdateDemoModeForces()
+  if not self.challengeState.demoModeActive then return end
+
+  if self.db.profile.showForcesGlow and self.db.profile.demoForcesGlow then
+    self:SetForcesCurrent(92)
+    self:SetForcesPull(8)
+  else
+    self:SetForcesCurrent(34)
+    self:SetForcesPull(7)
+  end
+end
+
 function WarpDeplete:EnableDemoMode()
   if self.challengeState.inChallenge then
     self:Print(L["Can't enable demo mode while in an active challenge!"])
@@ -137,9 +149,9 @@ function WarpDeplete:EnableDemoMode()
 
   self:SetTimerLimit(35 * 60)
   self:SetTimerRemaining(20 * 60)
-  self:SetForcesCurrent(34)
-  self:SetForcesPull(7)
   self:SetDeaths(3)
+
+  self:UpdateDemoModeForces()
 
   local classTable = {
     "SHAMAN",

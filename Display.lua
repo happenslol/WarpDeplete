@@ -551,12 +551,23 @@ function WarpDeplete:UpdateForcesDisplay()
   )
   self:UpdateGlow() 
 end
+
+function WarpDeplete:UpdateGlowAppearance()
+  if not self.forcesState.glowActive then return end
+
+  -- LibCustomGlow doesn't let us change the glow properties
+  -- once it's running, so this is the easiest way. Pretty sure
+  -- everybody does this.
+  self:HideGlow()
+  self:ShowGlow()
+end
   
 function WarpDeplete:UpdateGlow()
-
-  if self.challengeState.challengeCompleted or self.forcesState.completed then
-    if self.forcesState.glowActive then self:HideGlow() end
-    return
+  if self.forcesState.glowActive and (
+    self.challengeState.challengeCompleted or
+    self.forcesState.completed
+  ) then
+    self:HideGlow()
   end
 
   local percentBeforePull = self.forcesState.currentPercent
@@ -572,25 +583,25 @@ end
 
 function WarpDeplete:ShowGlow()
   self.forcesState.glowActive = true
-  local glowR, glowG, glowB = Util.hexToRGB(self.db.profile.glowColor)
+  local glowR, glowG, glowB = Util.hexToRGB(self.db.profile.forcesGlowColor)
   self.Glow.PixelGlow_Start(
     self.forces.bar, -- frame
     {glowR, glowG, glowB, 1}, -- color
-    16, -- line count
-    0.13, -- frequency
-    18, -- length
-    2, -- thiccness
+    self.db.profile.forcesGlowLineCount, -- line count
+    self.db.profile.forcesGlowFrequency, -- frequency
+    self.db.profile.forcesGlowLength, -- length
+    self.db.profile.forcesGlowThickness, -- thiccness
     1.5, -- x offset
     1.5, -- y offset
     false, -- draw border
-    "pride", -- tag
+    "forcesComplete", -- tag
     0 -- draw layer
   )
 end
 
 function WarpDeplete:HideGlow()
   self.forcesState.glowActive = false
-  self.Glow.PixelGlow_Stop(self.forces.bar, "pride")
+  self.Glow.PixelGlow_Stop(self.forces.bar, "forcesComplete")
 end
 
 -- Expect death count as number
