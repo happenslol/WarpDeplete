@@ -1,3 +1,7 @@
+Release 2.4.0
+* Add glow when forces hit 100%
+* Add German translations
+
 Release 2.2.5
 * Fix bar frame height scaling
 
