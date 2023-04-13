@@ -24,17 +24,23 @@ function Util.formatForcesText(
   result = gsub(result, ":count:", countText)
   result = gsub(result, ":totalcount:", totalCountText)
   result = gsub(result, ":remainingcount:", remainingCountText)
-  result = gsub(result, ":remainingpercent:", remainingPercentText)
+  result = gsub(result, ":remainingpercent:", remainingPercentText .. "%%")
 
   if pullCount > 0 then
     local pullPercent = (pullCount / totalCount) * 100
     local pullPercentText = ("%.2f"):format(pullPercent)
     local pullCountText = ("%d"):format(pullCount)
-    local remainingCountAfterPullText = ("%d"):format(totalCount-currentCount-pullCount)
-    local remainingPercentAfterlPullText = ("%.2f"):format(100-currentPercent-pullPercent)
+
+    local remainingCountAfterPull = totalCount-currentCount-pullCount
+    if remainingCountAfterPull < 0 then remainingCountAfterPull = 0 end
+    local remainingCountAfterPullText = ("%d"):format(remainingCountAfterPull)
+
+    local remainingPercentAfterlPull = 100-currentPercent-pullPercent
+    if remainingPercentAfterlPull < 0 then remainingPercentAfterlPull = 0 end
+    local remainingPercentAfterlPullText = ("%.2f"):format(remainingPercentAfterlPull)
 
     result = gsub(result, ":remainingcountafterpull:", remainingCountAfterPullText)
-    result = gsub(result, ":remainingpercentafterpull:", remainingPercentAfterlPullText)
+    result = gsub(result, ":remainingpercentafterpull:", remainingPercentAfterlPullText .. "%%")
 
     local pullText = currentPullFormat ~= ":custom:" and currentPullFormat or customCurrentPullFormat
     pullText = gsub(pullText, ":percent:", pullPercentText .. "%%")
@@ -43,8 +49,12 @@ function Util.formatForcesText(
     if pullText and #pullText > 0 then
       result = pullText .. "  " .. result
     end
+  else
+    result = gsub(result, ":remainingcountafterpull:", 0)
+    result = gsub(result, ":remainingpercentafterpull:", "0" .. "%%")
   end
 
+  
   if completedTime and result then
     local completedText = ("[%s] "):format(Util.formatTime(completedTime))
     result = "|c" .. completedColor .. completedText .. result .. "|r"
