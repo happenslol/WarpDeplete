@@ -364,7 +364,11 @@ function WarpDeplete:InitOptions()
             desc = L["Use the following tags to set your custom format"] .. ":"
               .. "\n- :percent: " .. L["Shows the current forces percentage (e.g. 82.52%)"]
               .. "\n- :count: " .. L["Shows the current forces count (e.g. 198)"]
-              .. "\n- :totalcount: " .. L["Shows the total forces count (e.g. 240)"],
+              .. "\n- :totalcount: " .. L["Shows the total forces count (e.g. 240)"]
+              .. "\n- :remainingcount: " .. L["Shows the remaining amount of forces needed to complete"]
+              .. "\n- :remainingcountafterpull: " .. L["Shows the remaining amount of forces needed to complete after current pull"]
+              .. "\n- :remainingpercent: " .. L["Shows the remaining percentage of forces to achieve 100%"]
+              .. "\n- :remainingpercentafterpull: " .. L["Shows the remaining percentage of forces to achieve 100% after current pull"],
             multiline = false,
             width = 2,
             hidden = function() return WarpDeplete.db.profile.forcesFormat ~= ":custom:" end,
