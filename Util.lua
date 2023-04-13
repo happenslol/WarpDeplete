@@ -16,18 +16,25 @@ function Util.formatForcesText(
   local percentText = ("%.2f"):format(currentPercent)
   local countText = ("%d"):format(currentCount)
   local totalCountText = ("%d"):format(totalCount)
-  local leftCountText = ("%d"):format(totalCount-currentCount)
+  local remainingCountText = ("%d"):format(totalCount-currentCount)
+  local remainingPercentText = ("%.2f"):format(100-currentPercent)
   local result = forcesFormat ~= ":custom:" and forcesFormat or customForcesFormat
 
   result = gsub(result, ":percent:", percentText .. "%%")
   result = gsub(result, ":count:", countText)
   result = gsub(result, ":totalcount:", totalCountText)
-  result = gsub(result, ":leftcount:", leftCountText)
+  result = gsub(result, ":remainingcount:", remainingCountText)
+  result = gsub(result, ":remainingpercent:", remainingPercentText)
 
   if pullCount > 0 then
     local pullPercent = (pullCount / totalCount) * 100
     local pullPercentText = ("%.2f"):format(pullPercent)
     local pullCountText = ("%d"):format(pullCount)
+    local remainingCountAfterPullText = ("%d"):format(totalCount-currentCount-pullCount)
+    local remainingPercentAfterlPullText = ("%.2f"):format(100-currentPercent-pullPercent)
+
+    result = gsub(result, ":remainingcountafterpull:", remainingCountAfterPullText)
+    result = gsub(result, ":remainingpercentafterpull:", remainingPercentAfterlPullText)
 
     local pullText = currentPullFormat ~= ":custom:" and currentPullFormat or customCurrentPullFormat
     pullText = gsub(pullText, ":percent:", pullPercentText .. "%%")
