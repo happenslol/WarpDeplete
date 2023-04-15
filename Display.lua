@@ -446,8 +446,14 @@ function WarpDeplete:UpdateTimerDisplay()
     " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
 
   if self.challengeState.challengeCompleted and self.timerState.current <= self.timerState.limit then
+    local blizzardTime = select(3, C_ChallengeMode.GetCompletionInfo())
+    state.timerText = Util.formatTimeMilliseconds(blizzardTime) ..
+            " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
     state.timerText = "|c" .. state.successColor .. state.timerText .. "|r"
   elseif self.challengeState.challengeCompleted and self.timerState.current > self.timerState.limit then
+    local blizzardTime = select(3, C_ChallengeMode.GetCompletionInfo())
+    state.timerText = Util.formatTimeMilliseconds(blizzardTime) ..
+            " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
     state.timerText = "|c" .. state.expiredColor .. state.timerText .. "|r"
   end
 
@@ -474,7 +480,6 @@ function WarpDeplete:UpdateTimerDisplay()
       else
         state.color = state.successColor
       end
-
       state.timeText = "|c" .. state.color .. state.timeText .. "|r"
     end
 

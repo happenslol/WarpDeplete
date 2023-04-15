@@ -96,6 +96,13 @@ function Util.formatTime(time)
   return ("%d:%02d"):format(timeMin, timeSec)
 end
 
+function Util.formatTimeMilliseconds(time)
+  local timeMin = math.floor(time / 60000)
+  local timeSec = math.floor(time / 1000 - (timeMin * 60))
+  local timeMilliseconds = math.floor(time - (timeMin * 60000) - (timeSec * 1000))
+  return ("%d:%02d.%03d"):format(timeMin, timeSec, timeMilliseconds)
+end
+
 local formatTime_OnUpdate_state = {}
 function Util.formatTime_OnUpdate(time)
   formatTime_OnUpdate_state.timeMin = math.floor(time / 60)
