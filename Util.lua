@@ -50,8 +50,8 @@ function Util.formatForcesText(
       result = pullText .. "  " .. result
     end
   else
-    result = gsub(result, ":remainingcountafterpull:", 0)
-    result = gsub(result, ":remainingpercentafterpull:", "0" .. "%%")
+    result = gsub(result, ":remainingcountafterpull:", remainingCountText)
+    result = gsub(result, ":remainingpercentafterpull:", remainingPercentText .. "%%")
   end
 
   
