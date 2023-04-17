@@ -193,6 +193,10 @@ function WarpDeplete:Show()
   self.frames.root:Show()
   self:UpdateLayout()
 
+  if IsAddOnLoaded('SyllingTracker') then
+    return
+  end
+
   ObjectiveTrackerFrame:Hide()
   if KT ~= nil then
     KT.frame:Hide()
@@ -222,8 +226,12 @@ function WarpDeplete:Hide()
   if KT ~= nil then
     KT.frame:Show()
   end
+
+  if not IsAddOnLoaded('SylingTracker') then
   ObjectiveTrackerFrame:Show()
+  end
 end
+
 
 function WarpDeplete:ResetState()
   self:PrintDebug("Resetting state")
