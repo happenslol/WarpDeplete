@@ -193,7 +193,7 @@ function WarpDeplete:Show()
   self.frames.root:Show()
   self:UpdateLayout()
 
-  if IsAddOnLoaded('SyllingTracker') then
+  if IsAddOnLoaded('SylingTracker') then
     return
   end
 
