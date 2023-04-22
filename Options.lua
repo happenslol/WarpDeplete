@@ -121,7 +121,8 @@ local defaults = {
     objectivesOffset = 4,
 
     -- Utility options
-    insertKeystoneAutomatically = true
+    insertKeystoneAutomatically = true,
+    showMillisecondsWhenDungeonCompleted = true
   }
 }
 
@@ -331,6 +332,7 @@ function WarpDeplete:InitOptions()
       general = group(L["General"], false, {
         lineBreak(),
         toggle(L["Insert keystone automatically"], "insertKeystoneAutomatically", "UpdateLayout"),
+        toggle(L["Show millisecond precision after dungeon completion"], "showMillisecondsWhenDungeonCompleted", "UpdateLayout"),
         lineBreak(),
 
         group(L["Forces Display"], true, {

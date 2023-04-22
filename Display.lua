@@ -445,18 +445,26 @@ function WarpDeplete:UpdateTimerDisplay()
   state.timerText = Util.formatTime_OnUpdate(self.timerState.current) ..
     " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
 
-  if self.challengeState.challengeCompleted and self.timerState.current <= self.timerState.limit then
-    local blizzardTime = select(3, C_ChallengeMode.GetCompletionInfo())
-    state.timerText = Util.formatTimeMilliseconds(blizzardTime) ..
-            " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
-    state.timerText = "|c" .. state.successColor .. state.timerText .. "|r"
-  elseif self.challengeState.challengeCompleted and self.timerState.current > self.timerState.limit then
-    local blizzardTime = select(3, C_ChallengeMode.GetCompletionInfo())
-    state.timerText = Util.formatTimeMilliseconds(blizzardTime) ..
-            " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
-    state.timerText = "|c" .. state.expiredColor .. state.timerText .. "|r"
-  end
 
+  if self.challengeState.challengeCompleted then
+    local blizzardTime = select(3, C_ChallengeMode.GetCompletionInfo())
+    local blizzardTimeText = ''
+    if self.db.profile.showMillisecondsWhenDungeonCompleted then
+      blizzardTimeText = Util.formatTimeMilliseconds(blizzardTime)
+    else
+      blizzardTimeText = Util.formatTime(blizzardTime/1000)
+    end
+
+    if self.timerState.current <= self.timerState.limit then
+      state.timerText =  blizzardTimeText ..
+              " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
+      state.timerText = "|c" .. state.successColor .. state.timerText .. "|r"
+    elseif self.timerState.current > self.timerState.limit then
+      state.timerText =  blizzardTimeText ..
+              " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
+      state.timerText = "|c" .. state.expiredColor .. state.timerText .. "|r"
+    end
+  end
   self.frames.root.timerText:SetText(state.timerText)
 
   for i = 1, 3 do
