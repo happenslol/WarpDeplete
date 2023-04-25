@@ -188,19 +188,18 @@ function WarpDeplete:DisableDemoMode()
   self:ResetState()
 end
 
-function WarpDeplete:Show()
-  self.isShown = true
-  self.frames.root:Show()
-  self:UpdateLayout()
-
-  if IsAddOnLoaded('SylingTracker') then
-    return
+function WarpDeplete:ShowBlizzardObjectiveTracker()
+  -- As SylingTracker replaces the blizzard objective tracker in hiding
+  -- it, we prevent WarpDeplete to reshown the tracker.
+  if IsAddOnLoaded("SylingTracker") then 
+    return 
   end
 
+  ObjectiveTrackerFrame:Show()
+end
+
+function WarpDeplete:HideBlizzardObjectiveTracker()
   ObjectiveTrackerFrame:Hide()
-  if KT ~= nil then
-    KT.frame:Hide()
-  end
 
   -- Sometimes, the objective tracker isn't hidden
   -- correctly. This can happen when WarpDeplete is
@@ -219,17 +218,33 @@ function WarpDeplete:Show()
   end)
 end
 
+function WarpDeplete:ShowExternals()
+  if KT ~= nil then
+    KT.frame:Show()
+  end
+end
+
+function WarpDeplete:HideExternals()
+  if KT ~= nil then
+    KT.frame:Hide()
+  end
+end
+
+function WarpDeplete:Show()
+  self.isShown = true
+  self.frames.root:Show()
+  self:UpdateLayout()
+
+  self:HideBlizzardObjectiveTracker()
+  self:HideExternals()
+end
+
 function WarpDeplete:Hide()
   self.isShown = false
   self.frames.root:Hide()
 
-  if KT ~= nil then
-    KT.frame:Show()
-  end
-
-  if not IsAddOnLoaded('SylingTracker') then
-  ObjectiveTrackerFrame:Show()
-  end
+  self:ShowBlizzardObjectiveTracker()
+  self:ShowExternals()
 end
 
 
