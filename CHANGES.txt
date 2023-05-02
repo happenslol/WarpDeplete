@@ -1,3 +1,10 @@
+Release 2.5.0
+* Add ms precision to finished dungeon timer
+* Add exception for Syling Tracker
+* Fix remaining forces after pull showing 0 when not in pull
+* Add "missing count" text
+* Update ruRU.lua
+
 Release 2.4.0
 * Add glow when forces hit 100%
 * Add German translations
