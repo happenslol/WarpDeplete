@@ -12,6 +12,7 @@ Locales\Load_Locales.xml
 
 Core.lua
 Util.lua
+DB.lua
 Options.lua
 Display.lua
 Events.lua

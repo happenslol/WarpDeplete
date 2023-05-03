@@ -1,3 +1,4 @@
+---@class WarpDeplete: AceAddon,AceComm-3.0,AceConsole-3.0,AceEvent-3.0,AceTimer-3.0
 WarpDeplete = LibStub("AceAddon-3.0"):NewAddon(
   "WarpDeplete",
   "AceComm-3.0",
@@ -83,6 +84,7 @@ function WarpDeplete:OnEnable()
   self.objectivesState = Util.copy(self.defaultObjectivesState)
   self.keyDetailsState = Util.copy(self.defaultKeyDetailsState)
 
+  self:InitDb()
   self:InitOptions()
   self:InitChatCommands()
   self:InitDisplay()
