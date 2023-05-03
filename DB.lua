@@ -119,7 +119,19 @@ local defaults = {
 
     -- Utility options
     insertKeystoneAutomatically = true,
-    showMillisecondsWhenDungeonCompleted = true
+    showMillisecondsWhenDungeonCompleted = true,
+
+    -- Timings
+    timingsEnabled = true,
+    timingsOnlyCompleted = true,
+    timingsDisplayStyle = "bestDiff",
+    timingsImprovedTimeColor = "FF00D200",
+    timingsWorseTimeColor = "FFF50000"
+  },
+
+  char = {
+    -- timings = { dungeonId = { keystoneLevel = { 1stAffixId = { best = { objectiveIndex = <time> }, last = { objectiveIndex = <time> } } } }
+    timings = {}
   }
 }
 

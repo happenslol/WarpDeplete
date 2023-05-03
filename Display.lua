@@ -637,6 +637,7 @@ end
 function WarpDeplete:UpdateObjectivesDisplay()
   local completionColor = self.db.profile.completedObjectivesColor
   local alignStart = self.db.profile.alignBossClear == "start"
+  local timingsDisplayStyle = self.db.profile.timingsDisplayStyle
 
   -- Clear existing objective list
   for i = 1, 5 do
@@ -649,11 +650,28 @@ function WarpDeplete:UpdateObjectivesDisplay()
     if boss.time ~= nil then
       if boss.time > 0 then
         local completionTimeStr = Util.formatTime(boss.time)
+        local bestDiffStr = ""
+
+        if timingsDisplayStyle ~= "hidden" then
+          local diff = nil
+          if timingsDisplayStyle == "bestDiff" then
+            local bestTime = self:GetBestTime(i)
+            if bestTime ~= nil then diff = boss.time - bestTime end
+          elseif timingsDisplayStyle == "lastDiff" then
+            local lastTime = self:GetLastTime(i)
+            if lastTime ~= nil then diff = boss.time - lastTime end
+          end
+
+          if diff ~= nil then
+            local color = diff <= 0 and self.db.profile.timingsImprovedTimeColor or self.db.profile.timingsWorseTimeColor
+            bestDiffStr = "[|c" .. color .. Util.formatTime(diff, true) .. "|r|c" .. completionColor .. "]"
+          end
+        end
 
         if alignStart then
-          objectiveStr = "[" .. completionTimeStr .. "] " .. objectiveStr
+          objectiveStr = bestDiffStr .. "[" .. completionTimeStr .. "] " .. objectiveStr
         else
-          objectiveStr =  objectiveStr .. " [" .. completionTimeStr .. "]"
+          objectiveStr =  objectiveStr .. " [" .. completionTimeStr .. "]" .. bestDiffStr
         end
       end
 
@@ -665,9 +683,10 @@ function WarpDeplete:UpdateObjectivesDisplay()
 end
 
 -- Expects level as number and affixes as string array, e.g. {"Tyrannical", "Bolstering"}
-function WarpDeplete:SetKeyDetails(level, affixes)
+function WarpDeplete:SetKeyDetails(level, affixes, affixIds)
   self.keyDetailsState.level = level
   self.keyDetailsState.affixes = affixes
+  self.keyDetailsState.affixIds = affixIds
 
   self:UpdateKeyDetailsDisplay()
 end

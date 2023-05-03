@@ -59,7 +59,8 @@ WarpDeplete.defaultObjectivesState = {}
 
 WarpDeplete.defaultKeyDetailsState = {
   level = 0,
-  affixes = {}
+  affixes = {},
+  affixIds = {}
 }
 
 -- Check if Kaliel's Tracker is loaded, since it creates a
@@ -141,13 +142,13 @@ function WarpDeplete:EnableDemoMode()
   for i = 1, 5 do
     objectives[i] = { name = L["Test Boss Name"] .. " " .. i }
 
-    if i < 3 then
+    if i < 4 then
       objectives[i].time = 520 * i
     end
   end
 
   self:SetObjectives(objectives)
-  self:SetKeyDetails(30, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Thundering"]})
+  self:SetKeyDetails(30, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Thundering"]}, {9, 7, 123, 132})
 
   self:SetTimerLimit(35 * 60)
   self:SetTimerRemaining(20 * 60)

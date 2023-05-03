@@ -80,6 +80,9 @@ function WarpDeplete:CompleteChallengeMode()
   self:UpdateTimerDisplay()
   self:UpdateObjectivesDisplay()
   self:UpdateForcesDisplay()
+  if self.db.profile.timingsEnabled then
+    self:UpdateTimings()
+  end
 end
 
 function WarpDeplete:GetTimerInfo()
@@ -132,9 +135,11 @@ function WarpDeplete:GetKeyInfo()
   local level, affixes = C_ChallengeMode.GetActiveKeystoneInfo()
 
   local affixNames = {}
+  local affixIds = {}
   for i, affixID in ipairs(affixes) do
     local name = C_ChallengeMode.GetAffixInfo(affixID)
     affixNames[i] = name
+    affixIds[i] = affixID
   end
 
   if level <= 0 or #affixNames <= 0 then
@@ -142,7 +147,7 @@ function WarpDeplete:GetKeyInfo()
     return false
   end
 
-  self:SetKeyDetails(level or 0, affixNames)
+  self:SetKeyDetails(level or 0, affixNames, affixIds)
   return true
 end
 
@@ -233,7 +238,13 @@ function WarpDeplete:UpdateObjectives()
     end
   end
 
-  if changed then self:SetObjectives(objectives) end
+  if changed then
+    self:SetObjectives(objectives)
+
+    if self.db.profile.timingsEnabled and not self.db.profile.timingsOnlyCompleted then
+      self:UpdateTimings()
+    end
+  end
 end
 
 function WarpDeplete:ResetCurrentPull()
