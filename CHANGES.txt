@@ -1,3 +1,6 @@
+Release 2.5.1
+* Bump interface version
+
 Release 2.5.0
 * Add ms precision to finished dungeon timer
 * Add exception for Syling Tracker
