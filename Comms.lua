@@ -103,10 +103,7 @@ function WarpDeplete:OnObjectiveSyncResponse(prefix, message, dist, sender)
   end
 
   self:UpdateObjectivesDisplay()
-  
-  if self.db.profile.timingsEnabled and not self.db.profile.timingsOnlyCompleted then
-    self:UpdateTimings()
-  end
+  self:UpdateTimings()
 end
 
 function WarpDeplete:BroadcastDeath()

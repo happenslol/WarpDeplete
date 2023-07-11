@@ -1,6 +1,16 @@
 local Util = WarpDeplete.Util
 
 function WarpDeplete:UpdateTimings()
+  if not self.db.profile.timingsEnabled then
+    self:PrintDebug("Skipping timings update: timings are disabled")
+    return
+  end
+
+  if not self.challengeState.challengeCompleted and not self.db.profile.timingsOnlyCompleted then
+    self:PrintDebug("Skipping timings update: challenge not completed")
+    return
+  end
+
   self:PrintDebug("Updating timings")
   local objectives = Util.copy(self.objectivesState)
   local timings = self:GetTimingsForCurrentInstance()

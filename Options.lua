@@ -625,11 +625,11 @@ function WarpDeplete:InitOptions()
           },
           color(L["Objectives color"], "objectivesColor", "UpdateLayout"),
           color(L["Completed objective color"], "completedObjectivesColor", "UpdateLayout"),
-          color(L["Improved time color"], "timingsImprovedTimeColor", "UpdateLayout", {
-            desc = L["The color to use when a boss kill time difference is less than or equal to zero"]
+          color(L["New best objective clear time"], "timingsImprovedTimeColor", "UpdateLayout", {
+            desc = L["The color to use when you've set a new best objective clear time"]
           }),
-          color(L["Worse time color"], "timingsWorseTimeColor", "UpdateLayout", {
-            desc = L["The color to use when a boss kill time difference is greater than zero"]
+          color(L["Slower objective clear time"], "timingsWorseTimeColor", "UpdateLayout", {
+            desc = L["The color to use for objective clear times slower than your best time"]
           }),
         }),
       }, { order = 4 }),

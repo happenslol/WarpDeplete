@@ -80,9 +80,7 @@ function WarpDeplete:CompleteChallengeMode()
   self:UpdateTimerDisplay()
   self:UpdateObjectivesDisplay()
   self:UpdateForcesDisplay()
-  if self.db.profile.timingsEnabled then
-    self:UpdateTimings()
-  end
+  self:UpdateTimings()
 end
 
 function WarpDeplete:GetTimerInfo()
@@ -240,10 +238,7 @@ function WarpDeplete:UpdateObjectives()
 
   if changed then
     self:SetObjectives(objectives)
-
-    if self.db.profile.timingsEnabled and not self.db.profile.timingsOnlyCompleted then
-      self:UpdateTimings()
-    end
+    self:UpdateTimings()
   end
 end
 

@@ -668,6 +668,7 @@ function WarpDeplete:UpdateObjectivesDisplay()
           end
         end
 
+        -- TODO allow users to provide a custom format string for the objectiveStr
         if alignStart then
           objectiveStr = bestDiffStr .. "[" .. completionTimeStr .. "] " .. objectiveStr
         else

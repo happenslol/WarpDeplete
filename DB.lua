@@ -130,7 +130,22 @@ local defaults = {
   },
 
   char = {
-    -- timings = { dungeonId = { keystoneLevel = { 1stAffixId = { best = { objectiveIndex = <time> }, last = { objectiveIndex = <time> } } } }
+    --[[ Structure of the timings table
+       timings = { 
+         dungeonId = { 
+           keystoneLevel = { 
+             1stAffixId = { 
+               best = { 
+                 objectiveIndex = <time> 
+               }, 
+               last = { 
+                 objectiveIndex = <time> 
+               } 
+             } 
+           } 
+         }
+       }
+    --]]
     timings = {}
   }
 }
