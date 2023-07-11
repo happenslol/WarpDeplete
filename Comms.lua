@@ -103,6 +103,7 @@ function WarpDeplete:OnObjectiveSyncResponse(prefix, message, dist, sender)
   end
 
   self:UpdateObjectivesDisplay()
+  self:UpdateTimings()
 end
 
 function WarpDeplete:BroadcastDeath()

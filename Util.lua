@@ -90,10 +90,24 @@ function Util.formatDeathText(deaths)
   return deathText .. timeAddedText
 end
 
-function Util.formatTime(time)
-  local timeMin = math.floor(time / 60)
-  local timeSec = math.floor(time - (timeMin * 60))
-  return ("%d:%02d"):format(timeMin, timeSec)
+function Util.formatTime(time, sign)
+  sign = sign or false
+  local absTime = math.abs(time)
+  local timeMin = math.floor(absTime / 60)
+  local timeSec = math.floor(absTime - (timeMin * 60))
+  local formatted = ("%d:%02d"):format(timeMin, timeSec)
+
+  if sign then
+    if time < 0 then 
+      return "-" .. formatted
+    elseif time == 0 then
+      return "±" .. formatted
+    else
+      return "+" .. formatted
+    end
+  end
+
+  return formatted
 end
 
 function Util.formatTimeMilliseconds(time)
