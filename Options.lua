@@ -217,12 +217,14 @@ function WarpDeplete:InitOptions()
             desc = L["Choose how your forces progress will be displayed"],
             sorting = {
               ":percent:",
+              ":percentafterpull:",
               ":count:/:totalcount:",
               ":count:/:totalcount: - :percent:",
               ":custom:"
             },
             values = {
               [":percent:"] = "82.52%",
+              [":percentafterpull:"] = "87.84%",
               [":count:/:totalcount:"] = "198/240",
               [":count:/:totalcount: - :percent:"] = "198/240 - 82.52%",
               [":custom:"] = L["Custom"],
@@ -240,6 +242,7 @@ function WarpDeplete:InitOptions()
             name = L["Custom forces text format"],
             desc = L["Use the following tags to set your custom format"] .. ":"
               .. "\n- :percent: " .. L["Shows the current forces percentage (e.g. 82.52%)"]
+              .. "\n- :percentafterpull: " .. L["Shows the current forces percentage including pull (e.g. 87.84%)"]
               .. "\n- :count: " .. L["Shows the current forces count (e.g. 198)"]
               .. "\n- :totalcount: " .. L["Shows the total forces count (e.g. 240)"]
               .. "\n- :remainingcount: " .. L["Shows the remaining amount of forces needed to complete"]
@@ -294,6 +297,18 @@ function WarpDeplete:InitOptions()
               WarpDeplete.db.profile.customCurrentPullFormat = value
               WarpDeplete:UpdateLayout()
             end,
+          },
+
+          {
+            type = "toggle",
+            name = L["Show forces percent above 100%"],
+            desc = L["Show forces percentages exceeding 100% for the above format options"],
+            get = function(info) return WarpDeplete.db.profile.unclampForcesPercent end,
+            set = function(info, value)
+              WarpDeplete.db.profile.unclampForcesPercent = value
+              WarpDeplete:UpdateDemoModeForces()
+            end,
+            width = 3 / 2,
           },
         }),
 

@@ -554,6 +554,7 @@ function WarpDeplete:UpdateForcesDisplay()
       self.db.profile.completedForcesColor,
       self.db.profile.forcesFormat,
       self.db.profile.customForcesFormat,
+      self.db.profile.unclampForcesPercent,
       self.db.profile.currentPullFormat,
       self.db.profile.customCurrentPullFormat,
       self.forcesState.pullCount,

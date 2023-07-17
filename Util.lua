@@ -6,12 +6,11 @@ local L = WarpDeplete.L
 
 function Util.formatForcesText(
   completedColor,
-  forcesFormat, customForcesFormat,
+  forcesFormat, customForcesFormat, unclampForcesPercent,
   currentPullFormat, customCurrentPullFormat,
   pullCount, currentCount, totalCount, completedTime
 )
-  local currentPercent = (currentCount / totalCount) * 100
-  if currentPercent > 100.0 then currentPercent = 100.0 end
+  local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100, unclampForcesPercent)
 
   local percentText = ("%.2f"):format(currentPercent)
   local countText = ("%d"):format(currentCount)
@@ -46,6 +45,10 @@ function Util.formatForcesText(
     pullText = gsub(pullText, ":percent:", pullPercentText .. "%%")
     pullText = gsub(pullText, ":count:", pullCountText)
 
+    local percentAfterPull = Util.calcForcesPercent(pullPercent + currentPercent, unclampForcesPercent)
+    local pulledPercentText = ("%.2f"):format(percentAfterPull)
+    result = gsub(result, ":percentafterpull:", pulledPercentText .. "%%")
+
     if pullText and #pullText > 0 then
       result = pullText .. "  " .. result
     end
@@ -54,7 +57,6 @@ function Util.formatForcesText(
     result = gsub(result, ":remainingpercentafterpull:", remainingPercentText .. "%%")
   end
 
-  
   if completedTime and result then
     local completedText = ("[%s] "):format(Util.formatTime(completedTime))
     result = "|c" .. completedColor .. completedText .. result .. "|r"
@@ -177,6 +179,14 @@ function Util.calcPullCount(pull, total)
 
   local percent = total > 0 and totalPull / total or 0
   return totalPull, percent
+end
+
+function Util.calcForcesPercent(forcesPercent, unclampForcesPercent)
+  -- Returned forces percent will be floored to 100 if unclampForcesPercent is falsy
+  if unclampForcesPercent then
+    return forcesPercent
+  end
+  return math.min(forcesPercent, 100.0)  
 end
 
 function Util.joinStrings(strings, delim)
