@@ -55,6 +55,7 @@ function Util.formatForcesText(
   else
     result = gsub(result, ":remainingcountafterpull:", remainingCountText)
     result = gsub(result, ":remainingpercentafterpull:", remainingPercentText .. "%%")
+    result = gsub(result, ":percentafterpull:", percentText .. "%%")
   end
 
   if completedTime and result then
