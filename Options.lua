@@ -446,11 +446,11 @@ function WarpDeplete:InitOptions()
           }
         }),
 
-        group(L["Timings"], true, {
+        group(L["Clear Time Recording"], true, {
           {
             type = "toggle",
-            name = L["Enable timings"],
-            desc = L["Enable recording of timestamps at which bosses have been killed"],
+            name = L["Enable clear time recording"],
+            desc = L["Enable recording of timestamps at which objectives have been cleared"],
             get = function(info) return WarpDeplete.db.profile.timingsEnabled end,
             set = function(info, value)
                WarpDeplete.db.profile.timingsEnabled = value
@@ -461,7 +461,7 @@ function WarpDeplete:InitOptions()
           {
             type = "toggle",
             name = L["Only record completed runs"],
-            desc = L["When active, timestamps are only recorded once the key has been finished"],
+            desc = L["When active, timestamps are only recorded once the challenge has been completed"],
             get = function(info) return WarpDeplete.db.profile.timingsOnlyCompleted end,
             set = function(info, value) WarpDeplete.db.profile.timingsOnlyCompleted = value end,
             width = 2
