@@ -131,23 +131,47 @@ local defaults = {
   },
 
   char = {
-    --[[ Structure of the timings table
-       timings = { 
-         dungeonId = { 
-           keystoneLevel = { 
-             1stAffixId = { 
-               best = { 
-                 objectiveIndex = <time> 
-               }, 
-               last = { 
-                 objectiveIndex = <time> 
-               } 
-             } 
-           } 
-         }
-       }
+    --[[
+    Used to save timing differences for the
+    current run. We might want to update the values
+    in the database right away when a boss is killed
+    or we might not, so it's safest to calculate the
+    difference that will be displayed and persist it,
+    so it will stay there even if the user disconnects.
+
+    We reset this whenever a new challenge is started,
+    or if we enter demo mode. Since demo mode can't be
+    enabled during a running challenge, we're also safe
+    to clear it then.
+    We also clear this whenever the user enters a challenge
+    and the map id doesn't match the current map id.
+    
+    Layout: {
+      mapId = <number> or <string>,
+      [objectiveId] = {
+        diffToBest = <string>,
+        diffToLast = <string>,
+      }
+    }
     --]]
-    timings = {}
+    currentInstanceTimings = {},
+
+    --[[
+    Used to save the best and last objective clear
+    times for each dungeon.
+
+    Layout: { 
+      [mapId] = { 
+        [keystoneLevel] = { 
+          [affixId] = { 
+            best = { objectiveIndex = <time> }, 
+            last = { objectiveIndex = <time> },
+          } 
+        } 
+      }
+    }
+    --]]
+    timings = {},
   }
 }
 
