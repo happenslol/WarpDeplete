@@ -2,6 +2,7 @@ local defaults = {
   global = {
     DEBUG = false,
     mdtAlertShown = false,
+    dbVersion = 1,
   },
 
   profile = {
@@ -132,44 +133,51 @@ local defaults = {
 
   char = {
     --[[
-    Used to save timing differences for the
-    current run. We might want to update the values
-    in the database right away when a boss is killed
-    or we might not, so it's safest to calculate the
-    difference that will be displayed and persist it,
-    so it will stay there even if the user disconnects.
+      Used to save timing differences for the
+      current run. We might want to update the values
+      in the database right away when a boss is killed
+      or we might not, so it's safest to calculate the
+      difference that will be displayed and persist it,
+      so it will stay there even if the user disconnects.
 
-    We reset this whenever a new challenge is started,
-    or if we enter demo mode. Since demo mode can't be
-    enabled during a running challenge, we're also safe
-    to clear it then.
-    We also clear this whenever the user enters a challenge
-    and the map id doesn't match the current map id.
-    
-    Layout: {
-      mapId = <number> or <string>,
-      [objectiveId] = {
-        diffToBest = <string>,
-        diffToLast = <string>,
+      We basically never need to reset this, and will only
+      do so when entering demo mode (which will not overwrite
+      anything important since demo mode can't be activated
+      during an active challenge).
+      This works because we never show this unless the objective
+      is completed, and it will always be set anew when the
+      objective is completed. So if a value is set here, we
+      can assume that the objective was cleared during the current
+      run and the time saved here is up to date.
+      
+      Layout: {
+        mapId = <number> or <string>,
+        objectives = {
+          [objectiveId] = {
+            diffToBest = <number>,
+            diffToLast = <number>,
+          }
+        },
       }
-    }
     --]]
-    currentInstanceTimings = {},
+    currentTimingDiffs = {},
 
     --[[
-    Used to save the best and last objective clear
-    times for each dungeon.
+      Used to save the best and last objective clear
+      times for each dungeon.
 
-    Layout: { 
-      [mapId] = { 
-        [keystoneLevel] = { 
-          [affixId] = { 
-            best = { objectiveIndex = <time> }, 
-            last = { objectiveIndex = <time> },
+      Layout: { 
+        [mapId] = { 
+          [keystoneLevel] = { 
+            [affixId] = { 
+              [objectiveIndex] = {
+                best = <number>,
+                last = <number>,
+              }
+            } 
           } 
-        } 
+        }
       }
-    }
     --]]
     timings = {},
   }

@@ -59,7 +59,7 @@ function WarpDeplete:OnTimerSyncResponse(prefix, message, dist, sender)
   local current = tonumber(currentRaw)
 
   self:PrintDebug("Received time from " .. sender .. ": "
-    .. tonumber(current) .. ", type: " .. typeRaw)
+    .. current .. ", type: " .. typeRaw)
   
   if self.timerState.isBlizzardTimer and not isBlizzard then
     self:PrintDebug("Updating timer")
