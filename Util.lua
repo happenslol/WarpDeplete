@@ -198,20 +198,6 @@ function Util.calcForcesPercent(forcesPercent, unclampForcesPercent)
   return math.min(forcesPercent, 100.0)  
 end
 
-function Util.joinStrings(strings, delim)
-  local result = ""
-
-  for i, s in ipairs(strings) do
-    result = result .. s
-
-    if i < #strings then
-      result = result .. delim
-    end
-  end
-
-  return result
-end
-
 function Util.showAlert(key, message, okMessage)
   StaticPopupDialogs[key] = {
     text = message,

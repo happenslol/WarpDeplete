@@ -720,7 +720,7 @@ function WarpDeplete:UpdateKeyDetailsDisplay()
     affixNames[#affixNames + 1] = affix.name
   end
 
-  local affixesStr = Util.joinStrings(affixNames, " - ")
+  local affixesStr = table.concat(affixNames, " - ")
   local keyDetails = ("%s"):format(affixesStr)
   self.frames.root.keyDetailsText:SetText(keyDetails)
 end

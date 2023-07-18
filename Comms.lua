@@ -87,7 +87,7 @@ function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
   -- the process of getting times from other users
   if not hasAny then return end
 
-  local text = Util.joinStrings(completionTimes, "|")
+  local text = table.concat(completionTimes, "|")
   self:SendCommMessage(objectiveResponsePrefix, text, "WHISPER", sender, "ALERT")
 end
 
@@ -114,7 +114,7 @@ function WarpDeplete:BroadcastDeath()
   self:AddDeathDetails(time, playerName, playerClass)
 
   local messageTable = {tostring(time), playerName, playerClass}
-  local message = Util.joinStrings(messageTable, "|")
+  local message = table.concat(messageTable, "|")
   self:PrintDebug("Sending death broadcast")
   self:SendCommMessage(deathBroadcastPrefix, message, "PARTY", nil, "ALERT")
 end
