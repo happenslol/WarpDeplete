@@ -6,13 +6,13 @@ function WarpDeplete:UpdateTimings()
     return
   end
 
-  if not self.challengeState.challengeCompleted and not self.db.profile.timingsOnlyCompleted then
+  if not self.challengeState.challengeCompleted and
+    not self.db.profile.timingsOnlyCompleted then
     self:PrintDebug("Skipping timings update: challenge not completed")
     return
   end
 
   self:PrintDebug("Updating timings")
-  local objectives = Util.copy(self.objectivesState)
   local timings = self:GetTimingsForCurrentInstance()
 
   if timings == nil then
@@ -32,8 +32,8 @@ function WarpDeplete:UpdateTimings()
     timings.last = last
   end
 
-  for i = 1, #objectives do
-    local boss = objectives[i]
+  for i = 1, #self.objectivesState do
+    local boss = self.objectivesState[i]
     if boss.time ~= nil then
       self:PrintDebug("Setting last time for " .. boss.name .. " (" .. i .. ")")
       last[i] = boss.time
@@ -76,13 +76,15 @@ end
 
 function WarpDeplete:GetTimingsForCurrentInstance(strict)
   local level = self.keyDetailsState.level
-  local mapId = select(8, GetInstanceInfo())
-  local firstAffix = self.keyDetailsState.affixIds[1]
-  if mapId == nil or level == nil or firstAffix == nil then
+  local mapId = self.keyDetailsState.mapId
+  local affixes = self.keyDetailsState.affixes or {}
+  local firstAffixId = affixes.id
+
+  if mapId == nil or level == nil or firstAffixId == nil then
     return nil
   end
 
-  return self:GetTimings(mapId, level, firstAffix, strict)
+  return self:GetTimings(mapId, level, firstAffixId, strict)
 end
 
 function WarpDeplete:GetTimings(mapId, keystoneLevel, firstAffixId, strict)

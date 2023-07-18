@@ -130,22 +130,21 @@ end
 function WarpDeplete:GetKeyInfo()
   self:PrintDebug("Getting key info")
 
-  local level, affixes = C_ChallengeMode.GetActiveKeystoneInfo()
+  local mapId = C_ChallengeMode.GetActiveChallengeMapID()
+  local level, affixIds = C_ChallengeMode.GetActiveKeystoneInfo()
 
-  local affixNames = {}
-  local affixIds = {}
-  for i, affixID in ipairs(affixes) do
-    local name = C_ChallengeMode.GetAffixInfo(affixID)
-    affixNames[i] = name
-    affixIds[i] = affixID
+  local affixes = {}
+  for i, id in ipairs(affixIds) do
+    local name = C_ChallengeMode.GetAffixInfo(id)
+    affixes[i] = { name = name, id = id }
   end
 
-  if level <= 0 or #affixNames <= 0 then
+  if level <= 0 or #affixes <= 0 then
     self:PrintDebug("No affixes or key level received")
     return false
   end
 
-  self:SetKeyDetails(level or 0, affixNames, affixIds)
+  self:SetKeyDetails(level or 0, affixes, mapId)
   return true
 end
 

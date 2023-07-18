@@ -60,7 +60,7 @@ WarpDeplete.defaultObjectivesState = {}
 WarpDeplete.defaultKeyDetailsState = {
   level = 0,
   affixes = {},
-  affixIds = {}
+  mapId = nil,
 }
 
 -- Check if Kaliel's Tracker is loaded, since it creates a
@@ -151,7 +151,16 @@ function WarpDeplete:EnableDemoMode()
   end
 
   self:SetObjectives(objectives)
-  self:SetKeyDetails(30, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Thundering"]}, {9, 7, 123, 132})
+  self:SetKeyDetails(
+    30,
+    {
+      { id = 9, name = L["Tyrannical"] },
+      { id = 7, name = L["Bolstering"] },
+      { id = 123, name = L["Spiteful"] },
+      { id = 132, name = L["Thundering"] },
+    },
+    "demo"
+  )
 
   self:SetTimerLimit(35 * 60)
   self:SetTimerRemaining(20 * 60)

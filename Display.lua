@@ -701,11 +701,12 @@ function WarpDeplete:UpdateObjectivesDisplay()
   end
 end
 
--- Expects level as number and affixes as string array, e.g. {"Tyrannical", "Bolstering"}
-function WarpDeplete:SetKeyDetails(level, affixes, affixIds)
+-- Expects level as number and affixes as an array of names and ids,
+-- e.g. {{ id = 0, name = "Tyrannical" }, { id = 1, name = "Bolstering" }}
+function WarpDeplete:SetKeyDetails(level, affixes, mapId)
   self.keyDetailsState.level = level
   self.keyDetailsState.affixes = affixes
-  self.keyDetailsState.affixIds = affixIds
+  self.keyDetailsState.mapId = mapId
 
   self:UpdateKeyDetailsDisplay()
 end
@@ -714,7 +715,12 @@ function WarpDeplete:UpdateKeyDetailsDisplay()
   local key = ("[%d]"):format(self.keyDetailsState.level)
   self.frames.root.keyText:SetText(key)
 
-  local affixesStr = Util.joinStrings(self.keyDetailsState.affixes or {}, " - ")
+  local affixNames = {}
+  for _, affix in ipairs(self.keyDetailsState.affixes) do
+    affixNames[#affixNames + 1] = affix.name
+  end
+
+  local affixesStr = Util.joinStrings(affixNames, " - ")
   local keyDetails = ("%s"):format(affixesStr)
   self.frames.root.keyDetailsText:SetText(keyDetails)
 end
