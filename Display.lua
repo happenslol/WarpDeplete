@@ -648,37 +648,54 @@ function WarpDeplete:UpdateObjectivesDisplay()
     local objectiveStr = boss.name
 
     if boss.time ~= nil then
-      if boss.time > 0 then
-        local completionTimeStr = Util.formatTime(boss.time)
-        local bestDiffStr = ""
-
-        if timingsDisplayStyle ~= "hidden" then
-          local diff = nil
-          if timingsDisplayStyle == "bestDiff" then
-            local bestTime = self:GetBestTime(i)
-            if bestTime ~= nil then diff = boss.time - bestTime end
-          elseif timingsDisplayStyle == "lastDiff" then
-            local lastTime = self:GetLastTime(i)
-            if lastTime ~= nil then diff = boss.time - lastTime end
-          end
-
-          if diff ~= nil then
-            local color = diff <= 0 and self.db.profile.timingsImprovedTimeColor or self.db.profile.timingsWorseTimeColor
-            bestDiffStr = "[|c" .. color .. Util.formatTime(diff, true) .. "|r|c" .. completionColor .. "]"
-          end
-        end
-
-        -- TODO allow users to provide a custom format string for the objectiveStr
-        if alignStart then
-          objectiveStr = bestDiffStr .. "[" .. completionTimeStr .. "] " .. objectiveStr
-        else
-          objectiveStr =  objectiveStr .. " [" .. completionTimeStr .. "]" .. bestDiffStr
-        end
-      end
-
-      objectiveStr = "|c" .. completionColor .. objectiveStr .. "|r"
+      objectiveStr = Util.colorText(boss.name, completionColor)
     end
 
+    if boss.time ~= nil and boss.time > 0 then
+      local completionTimeStr = "[" .. Util.formatTime(boss.time) .. "]"
+      completionTimeStr = Util.colorText(completionTimeStr, completionColor)
+
+      if alignStart then
+        objectiveStr = completionTimeStr .. " " .. objectiveStr
+      else
+        objectiveStr = objectiveStr .. " " .. completionTimeStr
+      end
+
+      -- TODO(happens): This is temporarily disabled, due to some
+      -- bugs with the current implementation. We basically need
+      -- to find out time differences for the current run at the
+      -- time when the boss is cleared and then update them in the
+      -- database, and from that point on only display the values
+      -- saved for the current run.
+      -- Otherwise, on each consecutive update we find the new
+      -- best/last times for the current run and the difference
+      -- will always be 0.
+      --
+      -- if timingsDisplayStyle ~= "hidden" then
+      --   local bestDiffStr = ""
+
+      --   local diff = nil
+      --   if timingsDisplayStyle == "bestDiff" then
+      --     local bestTime = self:GetBestTime(i)
+      --     if bestTime ~= nil then diff = boss.time - bestTime end
+      --   elseif timingsDisplayStyle == "lastDiff" then
+      --     local lastTime = self:GetLastTime(i)
+      --     if lastTime ~= nil then diff = boss.time - lastTime end
+      --   end
+
+      --   if diff ~= nil then
+      --     local color = diff <= 0 and
+      --       self.db.profile.timingsImprovedTimeColor or
+      --       self.db.profile.timingsWorseTimeColor
+
+      --     bestDiffStr = "[|c" .. color ..
+      --       Util.formatTime(diff, true) .. "|r|c" ..
+      --       completionColor .. "]"
+      --   end
+      -- end
+    end
+
+    -- TODO allow users to provide a custom format string for the objectiveStr
     self.frames.root.objectiveTexts[i]:SetText(objectiveStr)
   end
 end

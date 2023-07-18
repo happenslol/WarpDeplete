@@ -77,10 +77,10 @@ function WarpDeplete:CompleteChallengeMode()
   -- but if we used our own timer we should redo it.
   self.challengeState.challengeCompleted = true
 
+  self:UpdateTimings()
   self:UpdateTimerDisplay()
   self:UpdateObjectivesDisplay()
   self:UpdateForcesDisplay()
-  self:UpdateTimings()
 end
 
 function WarpDeplete:GetTimerInfo()
@@ -237,8 +237,8 @@ function WarpDeplete:UpdateObjectives()
   end
 
   if changed then
-    self:SetObjectives(objectives)
     self:UpdateTimings()
+    self:SetObjectives(objectives)
   end
 end
 

@@ -102,8 +102,8 @@ function WarpDeplete:OnObjectiveSyncResponse(prefix, message, dist, sender)
     end
   end
 
-  self:UpdateObjectivesDisplay()
   self:UpdateTimings()
+  self:UpdateObjectivesDisplay()
 end
 
 function WarpDeplete:BroadcastDeath()

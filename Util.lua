@@ -165,6 +165,14 @@ function Util.copy(obj, seen)
   return res
 end
 
+function Util.colorText(text, color)
+  return "|c" .. color .. text .. "|r"
+end
+
+function Util.reverseList(list)
+  table.sort(list, function(a, b) return a > b end)
+end
+
 -- Expects a table of guids to count values, as well as the total count value
 -- Returns count, percent
 function Util.calcPullCount(pull, total)
