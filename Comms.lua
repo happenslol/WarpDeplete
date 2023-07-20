@@ -1,6 +1,3 @@
-local Util = WarpDeplete.Util
-
-
 -- Format: "current|type"
 -- current: number
 -- type: "blizz" or "gettime", depending on whether or not the time
@@ -60,7 +57,7 @@ function WarpDeplete:OnTimerSyncResponse(prefix, message, dist, sender)
 
   self:PrintDebug("Received time from " .. sender .. ": "
     .. current .. ", type: " .. typeRaw)
-  
+
   if self.timerState.isBlizzardTimer and not isBlizzard then
     self:PrintDebug("Updating timer")
     local deaths = C_ChallengeMode.GetDeathCount()
@@ -92,17 +89,18 @@ function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
 end
 
 function WarpDeplete:OnObjectiveSyncResponse(prefix, message, dist, sender)
+  self:PrintDebug("Received objective sync from " .. sender .. ": " .. message)
   local parts = {strsplit("|", message)}
 
   for i, objTimeRaw in ipairs(parts) do
     local objTime = tonumber(objTimeRaw)
 
     if self.objectivesState[i] and objTime >= 0 then
+      self:PrintDebug("Sync: Updating objective " .. i .. " time to " .. objTime)
       self.objectivesState[i].time = objTime
     end
   end
 
-  self:UpdateTimings()
   self:UpdateObjectivesDisplay()
 end
 

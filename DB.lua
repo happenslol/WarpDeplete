@@ -84,7 +84,7 @@ local defaults = {
     bar3TextureColor = "FF979797",
     forcesTextureColor = "FFBB9E22",
     forcesOverlayTextureColor = "FFFF5515",
-    
+
     -- Font sizes for text parts
     deathsFontSize = 16,
     timerFontSize = 34,
@@ -136,9 +136,9 @@ local defaults = {
       Used to save timing differences for the
       current run. We might want to update the values
       in the database right away when a boss is killed
-      or we might not, so it's safest to calculate the
-      difference that will be displayed and persist it,
-      so it will stay there even if the user disconnects.
+      or we might not, so it's safest to persist the values,
+      before and after they were changed, so it will stay
+      there even if the user disconnects.
 
       We basically never need to reset this, and will only
       do so when entering demo mode (which will not overwrite
@@ -154,13 +154,16 @@ local defaults = {
         mapId = <number> or <string>,
         objectives = {
           [objectiveId] = {
-            diffToBest = <number>,
-            diffToLast = <number>,
+            lastTime = <number> | nil,
+            newTime = <number>,
+            bestUpdated = <boolean>,
+            lastBest = <number> | nil,
+            newBest = <number> | nil,
           }
         },
       }
     --]]
-    currentTimingDiffs = {},
+    currentRunTimings = {},
 
     --[[
       Used to save the best and last objective clear

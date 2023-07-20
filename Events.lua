@@ -77,7 +77,6 @@ function WarpDeplete:CompleteChallengeMode()
   -- but if we used our own timer we should redo it.
   self.challengeState.challengeCompleted = true
 
-  self:UpdateTimings()
   self:UpdateTimerDisplay()
   self:UpdateObjectivesDisplay()
   self:UpdateForcesDisplay()
@@ -110,10 +109,10 @@ function WarpDeplete:GetTimerInfo()
     -- If we call this without any delay, the timer will be off by 10
     -- seconds. The blizzard timer also has this bug and corrects it
     -- after the first death. Lmao
-    C_Timer.After(0.5, function() 
-      local current = select(2, GetWorldElapsedTime(1))
+    C_Timer.After(0.5, function()
+      local newCurrent = select(2, GetWorldElapsedTime(1))
       local deaths = C_ChallengeMode.GetDeathCount()
-      local trueTime = current - deaths * 5
+      local trueTime = newCurrent - deaths * 5
       self.timerState.startOffset = trueTime
       self.timerState.startTime = GetTime()
       self.timerState.isBlizzardTimer = true
@@ -201,7 +200,6 @@ end
 function WarpDeplete:UpdateForces()
   if not self.challengeState.inChallenge then return end
 
-  local stepCount = select(3, C_Scenario.GetStepInfo())
   local currentCount = self:GetEnemyForcesCount()
   -- This mostly happens when we have already completed the dungeon
   if not currentCount then return end
@@ -218,6 +216,7 @@ end
 
 function WarpDeplete:UpdateObjectives()
   if not self.challengeState.inChallenge then return end
+  self:PrintDebug("Updating objectives")
 
   local objectives = Util.copy(self.objectivesState)
   local changed = false
@@ -225,18 +224,38 @@ function WarpDeplete:UpdateObjectives()
   local stepCount = select(3, C_Scenario.GetStepInfo())
   for i = 1, stepCount - 1 do
     if not objectives[i] or not objectives[i].time then
+      local criteriaString, criteriaType, completed, quantity, totalQuantity,
+        flags, assetID, quantityString, criteriaID, duration, elapsed,
+        criteriaFailed, isWeightedProgress = C_Scenario.GetCriteriaInfo(i)
+
+      self:PrintDebug(
+        "Got criteria info for index " .. i .. ": " .. criteriaString .. " " ..
+        "criteriaType(" .. tostring(criteriaType) .. ") " ..
+        "completed(" .. tostring(completed) .. ") " ..
+        "quantity(" .. tostring(quantity) .. ") " ..
+        "totalQuantity(" .. tostring(totalQuantity) .. ") " ..
+        "flags(" .. tostring(flags) .. ") " ..
+        "assetID(" .. tostring(assetID) .. ") " ..
+        "quantityString(" .. tostring(quantityString) .. ") " ..
+        "criteriaID(" .. tostring(criteriaID) .. ") " ..
+        "duration(" .. tostring(duration) .. ") " ..
+        "elapsed(" .. tostring(elapsed) .. ") " ..
+        "criteriaFailed(" .. tostring(criteriaFailed) .. ") " ..
+        "isWeightedProgress(" .. tostring(isWeightedProgress) .. ")"
+      )
+
       -- If it wasn't completed before and it is now, we've just completed
       -- it and can set the completion time
-      local completed = select(3, C_Scenario.GetCriteriaInfo(i))
       if completed then
-        objectives[i].time = self.timerState.current
+        local completionTime = self.timerState.current
+        objectives[i].time = completionTime
         changed = true
+        self:SetTiming(i, completionTime)
       end
     end
   end
 
   if changed then
-    self:UpdateTimings()
     self:SetObjectives(objectives)
   end
 end
@@ -310,7 +329,7 @@ function WarpDeplete.TooltipOnEnter()
     end
   elseif self.db.profile.deathLogStyle == "count" then
     local countTable = {}
-    for i, d in ipairs(self.timerState.deathDetails) do
+    for _, d in ipairs(self.timerState.deathDetails) do
       if not countTable[d.name] then
         countTable[d.name] = {
           color = select(4, GetClassColor(d.class)),
@@ -386,7 +405,7 @@ function WarpDeplete:UnregisterChallengeEvents()
   self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 end
 
-function WarpDeplete:OnTimerTick(elapsed) 
+function WarpDeplete:OnTimerTick(elapsed)
   if not self.challengeState.inChallenge or
     self.challengeState.challengeCompleted or
     not self.timerState.running then
@@ -540,7 +559,7 @@ function WarpDeplete:OnCombatLogEvent(ev)
 
   --NOTE(happens): We have to check health since we'd count feign death otherwise
   if UnitInParty(name) and UnitHealth(name) <= 1 then
-    local name = UnitName(name)
+    name = UnitName(name)
     local class = select(2, UnitClass(name))
     local time = self.timerState.current
 

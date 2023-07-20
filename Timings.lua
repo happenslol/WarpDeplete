@@ -1,123 +1,53 @@
 local Util = WarpDeplete.Util
 
-function WarpDeplete:UpdateTimings()
-  if not self.db.profile.timingsEnabled then
-    self:PrintDebug("Skipping timings update: timings are disabled")
-    return
-  end
-
-  if not self.challengeState.challengeCompleted and
-    not self.db.profile.timingsOnlyCompleted then
-    self:PrintDebug("Skipping timings update: challenge not completed")
-    return
-  end
-
-  self:PrintDebug("Updating timings")
-  local timings = self:GetTimingsForCurrentInstance()
-
-  if timings == nil then
-    self:PrintDebug("Could not determine timings for current instance")
-    return
-  end
-
-  local best = timings.best
-  if best == nil then
-    best = {}
-    timings.best = best
-  end
-
-  local last = timings.last
-  if last == nil then
-    last = {}
-    timings.last = last
-  end
-
-  for i = 1, #self.objectivesState do
-    local boss = self.objectivesState[i]
-    if boss.time ~= nil then
-      self:PrintDebug("Setting last time for " .. boss.name .. " (" .. i .. ")")
-      last[i] = boss.time
-
-      if best[i] == nil or boss.time < best[i] then
-        self:PrintDebug("Setting best time for " .. boss.name .. " (" .. i .. ")")
-        best[i] = boss.time
-      end
-    end
-  end
-
-  self:PrintDebug("Best times updated")
-end
-
-function WarpDeplete:GetBestTime(objectiveIndex)
-  if self.challengeState.demoModeActive then
-    return 520 * objectiveIndex - 65 + 65 * (objectiveIndex  - 1)
-  end
-  local timings = self:GetTimingsForCurrentInstance(false)
-  if timings == nil then return nil end
-
-  local best = timings.best
-  if best == nil then return nil end
-
-  return best[objectiveIndex]
-end
-
-function WarpDeplete:GetLastTime(objectiveIndex)
-  if self.challengeState.demoModeActive then
-    return 520 * objectiveIndex - 23 + 23 * (objectiveIndex  - 1)
-  end
-  local timings = self:GetTimingsForCurrentInstance(false)
-  if timings == nil then return nil end
-
-  local last = timings.last
-  if last == nil then return nil end
-
-  return last[objectiveIndex]
-end
-
-function WarpDeplete:GetTimingsForCurrentInstance(strict)
+function WarpDeplete:GetCurrentRunTimings(objectiveIndex)
   local level = self.keyDetailsState.level
   local mapId = self.keyDetailsState.mapId
   local affixes = self.keyDetailsState.affixes or {}
   local firstAffixId = affixes.id
 
   if mapId == nil or level == nil or firstAffixId == nil then
+    self:PrintDebug("Failed to get current run timings due to missing keyDetailsState fields")
     return nil
   end
 
-  return self:GetTimings(mapId, level, firstAffixId, strict)
+  local currentTimings = self.db.char.currentRunTimings
+  if currentTimings.mapId == nil or currentTimings.mapId ~= mapId then
+    self:PrintDebug("No current run timings found due to mapId mismatch")
+    return nil
+  end
+
+  if currentTimings.objectives == nil or currentTimings.objectives[objectiveIndex] == nil then
+    self:PrintDebug("No current run timings found due to missing objectiveIndex")
+    return nil
+  end
+
+  return currentTimings.objectives[objectiveIndex]
 end
 
-function WarpDeplete:GetTimings(mapId, keystoneLevel, firstAffixId, strict)
-  if strict == nil then strict = true end
-
-  local mapTimings = self.db.char.timings[mapId]
-  if mapTimings == nil then
-    mapTimings = {}
-    self.db.char.timings[mapId] = mapTimings
+function WarpDeplete:GetBestTimeDifference(objectiveIndex)
+  local objectiveTimings = self:GetObjectiveTimings(objectiveIndex)
+  if objectiveTimings == nil or objectiveTimings.bestUpdated == false then
+    return nil
   end
 
-  local keystoneTimings = mapTimings[keystoneLevel]
-  if keystoneTimings == nil then
-    keystoneTimings = {}
-    mapTimings[keystoneLevel] = keystoneTimings
-
-    if not strict then
-      local lowerLevel = keystoneLevel - 1
-      local lowerTimings = mapTimings[keystoneLevel]
-      while lowerTimings == nil and lowerLevel > 2 do
-        lowerLevel = lowerLevel - 1
-        lowerTimings = mapTimings[keystoneLevel]
-      end
-    end
+  -- Make sure we even have a previous best recorded and didn't just
+  -- record our first best time.
+  if objectiveTimings.lastBest == nil then
+    return nil
   end
 
-  local affixTimings = keystoneTimings[firstAffixId]
-  if affixTimings == nil then
-    affixTimings = {}
-    keystoneTimings[firstAffixId] = affixTimings
+  return objectiveTimings.newBest - objectiveTimings.lastBest
+end
+
+function WarpDeplete:GetLastTimeDifference(objectiveIndex)
+  local objectiveTimings = self:GetObjectiveTimings(objectiveIndex)
+  if objectiveTimings == nil or objectiveTimings.lastTime == nil then
+    return nil
   end
 
-  return affixTimings
+  -- lastTime will only ever be set if newTime is also set.
+  return objectiveTimings.newTime - objectiveTimings.lastTime
 end
 
 --[[
@@ -135,6 +65,19 @@ end
   timings for all the dungeons, so I'm leaving this here for now.
 --]]
 function WarpDeplete:SetTiming(objectiveIndex, newTime)
+  if not self.db.profile.timingsEnabled then
+    self:PrintDebug("Skipping timings update: timings are disabled")
+    return
+  end
+
+  if not self.challengeState.challengeCompleted and
+    not self.db.profile.timingsOnlyCompleted then
+    self:PrintDebug("Skipping timings update: challenge not completed")
+    return
+  end
+
+  self:PrintDebug("Updating timings")
+
   local level = self.keyDetailsState.level
   local mapId = self.keyDetailsState.mapId
   local affixes = self.keyDetailsState.affixes or {}
@@ -156,51 +99,67 @@ function WarpDeplete:SetTiming(objectiveIndex, newTime)
 
   -- TODO(happens): Make a helper function that ensures a deep
   -- field in a nested table exists
-  if self.db.char.timings[mapId] == nil
+  if self.db.char.timings[mapId] == nil then
     self.db.char.timings[mapId] = {}
   end
 
-  if self.db.char.timings[mapId][keystoneLevel] == nil
-    self.db.char.timings[mapId][keystoneLevel] = {}
+  if self.db.char.timings[mapId][level] == nil then
+    self.db.char.timings[mapId][level] = {}
   end
 
-  if self.db.char.timings[mapId][keystoneLevel] == nil
-    self.db.char.timings[mapId][keystoneLevel] = {}
+  if self.db.char.timings[mapId][level] == nil then
+    self.db.char.timings[mapId][level] = {}
   end
 
-  if self.db.char.timings[mapId][keystoneLevel][firstAffixId] == nil
-    self.db.char.timings[mapId][keystoneLevel][firstAffixId] = {}
+  if self.db.char.timings[mapId][level][firstAffixId] == nil then
+    self.db.char.timings[mapId][level][firstAffixId] = {}
   end
 
-  if self.db.char.timings[mapId][keystoneLevel][firstAffixId][objectiveIndex] == nil
-    self.db.char.timings[mapId][keystoneLevel][firstAffixId][objectiveIndex] = {}
+  if self.db.char.timings[mapId][level][firstAffixId][objectiveIndex] == nil then
+    self.db.char.timings[mapId][level][firstAffixId][objectiveIndex] = {}
   end
 
   local prevTiming = Util.copy(
-    self.db.char.timings[mapId][keystoneLevel][firstAffixId][objectiveIndex]
+    self.db.char.timings[mapId][level][firstAffixId][objectiveIndex]
   )
 
   local newTiming = {
-    last = newtime,
+    last = newTime,
     best = prevTiming.best,
   }
 
-  if newTiming.best == nil or newTiming.best > newTime then
+  local currentTimings = {
+    lastTime = prevTiming.last,
+    newTime = newTime,
+    bestUpdated = false,
+    prevBest = prevTiming.best,
+  }
+
+  if prevTiming.best == nil or newTime < prevTiming.best then
     self:PrintDebug(
       "Setting new best time for objective " .. objectiveIndex ..
-      ": " .. newtime
+      ": " .. newTime
     )
 
+    -- We want to record whether or not we changed this value,
+    -- since it's possible that we get the exact same time twice.
+    -- In that case, we don't want to show something incorrect
+    -- to the user.
+    currentTimings.bestUpdated = true
+    currentTimings.newBest = newTime
     newTiming.best = newTiming.last
   end
 
-  self.db.char.timings[mapId][keystoneLevel][firstAffixId][objectiveIndex] = newTiming
+  self.db.char.timings[mapId][level][firstAffixId][objectiveIndex] = newTiming
 
-  -- Now, calculate the current run differences
-  if self.db.char.currentTimingDiffs.mapId ~= mapId then
-    self.db.char.currentTimingDiffs = {
+  -- Persist the changes we just saved for the current map id.
+  if self.db.char.currentRunTimings.mapId == nil or
+    self.db.char.currentRunTimings.mapId ~= mapId then
+    self.db.char.currentRunTimings = {
       mapId = mapId,
       objectives = {},
     }
   end
+
+  self.db.char.currentRunTimings.objectives[objectiveIndex] = currentTimings
 end

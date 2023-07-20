@@ -99,7 +99,6 @@ end
 
 function WarpDeplete:CreateProgressBar(frame)
   local result = {}
-  local progress = 0
 
   local barFrame = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   result.frame = barFrame
@@ -248,7 +247,7 @@ function WarpDeplete:UpdateLayout()
   keyDetailsText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
   r, g, b = Util.hexToRGB(self.db.profile.keyDetailsColor)
   keyDetailsText:SetTextColor(r, g, b, 1)
-  
+
   -- Key level Text
   local keyText = self.frames.root.keyText
   keyText:SetFont(self.LSM:Fetch("font", keyFont), keyFontSize, keyFontFlags)
@@ -284,7 +283,7 @@ function WarpDeplete:UpdateLayout()
 
   -- Bars
   local timerBarPixelAdjust = 0.5
-  local r, g, b = Util.hexToRGB(self.db.profile.timerRunningColor)
+  r, g, b = Util.hexToRGB(self.db.profile.timerRunningColor)
 
   -- +3 bar
   local bar3Width = barWidth / 100 * 60
@@ -343,7 +342,7 @@ function WarpDeplete:UpdateLayout()
 
   -- Forces bar
   local forcesBarPixelAdjust = 0.5
-  local r, g, b = Util.hexToRGB(self.db.profile.forcesColor)
+  r, g, b = Util.hexToRGB(self.db.profile.forcesColor)
   self.forces:SetLayout(self.db.profile.forcesTexture, self.db.profile.forcesTextureColor,
     barWidth, barHeight + forcesBarPixelAdjust, 0, -barPadding - barHeight / 2)
   self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont), forcesFontSize, forcesFontFlags)
@@ -376,7 +375,7 @@ function WarpDeplete:UpdateLayout()
     objectiveText:SetFont(self.LSM:Fetch("font", objectivesFont), objectivesFontSize, objectivesFontFlags)
     objectiveText:SetNonSpaceWrap(false)
     objectiveText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
-    local r, g, b = Util.hexToRGB(self.db.profile.objectivesColor)
+    r, g, b = Util.hexToRGB(self.db.profile.objectivesColor)
     objectiveText:SetTextColor(r, g, b, 1)
     objectiveText:SetPoint(
       alignRight and "TOPRIGHT" or "TOPLEFT",
@@ -563,7 +562,7 @@ function WarpDeplete:UpdateForcesDisplay()
       self.forcesState.completed and self.forcesState.completedTime or nil
     )
   )
-  self:UpdateGlow() 
+  self:UpdateGlow()
 end
 
 function WarpDeplete:UpdateGlowAppearance()
@@ -575,7 +574,7 @@ function WarpDeplete:UpdateGlowAppearance()
   self:HideGlow()
   self:ShowGlow()
 end
-  
+
 function WarpDeplete:UpdateGlow()
   if self.forcesState.glowActive and (
     self.challengeState.challengeCompleted or
@@ -662,38 +661,31 @@ function WarpDeplete:UpdateObjectivesDisplay()
         objectiveStr = objectiveStr .. " " .. completionTimeStr
       end
 
-      -- TODO(happens): This is temporarily disabled, due to some
-      -- bugs with the current implementation. We basically need
-      -- to find out time differences for the current run at the
-      -- time when the boss is cleared and then update them in the
-      -- database, and from that point on only display the values
-      -- saved for the current run.
-      -- Otherwise, on each consecutive update we find the new
-      -- best/last times for the current run and the difference
-      -- will always be 0.
-      --
-      -- if timingsDisplayStyle ~= "hidden" then
-      --   local bestDiffStr = ""
+      if self.db.profile.timingsEnabled then
+        local timeDiff = nil
 
-      --   local diff = nil
-      --   if timingsDisplayStyle == "bestDiff" then
-      --     local bestTime = self:GetBestTime(i)
-      --     if bestTime ~= nil then diff = boss.time - bestTime end
-      --   elseif timingsDisplayStyle == "lastDiff" then
-      --     local lastTime = self:GetLastTime(i)
-      --     if lastTime ~= nil then diff = boss.time - lastTime end
-      --   end
+        if timingsDisplayStyle == "best" then
+          timeDiff = self:GetBestTimeDifference(i)
+        elseif timingsDisplayStyle == "last" then
+          timeDiff = self:GetLastTimeDifference(i)
+        end
 
-      --   if diff ~= nil then
-      --     local color = diff <= 0 and
-      --       self.db.profile.timingsImprovedTimeColor or
-      --       self.db.profile.timingsWorseTimeColor
+        if timeDiff ~= nil then
+          local timeDiffColor = self.db.profile.timingsWorseColor
+          if timeDiff < 0 then
+            timeDiffColor = self.db.profile.timingsImprovedColor
+          end
 
-      --     bestDiffStr = "[|c" .. color ..
-      --       Util.formatTime(diff, true) .. "|r|c" ..
-      --       completionColor .. "]"
-      --   end
-      -- end
+          local timeDiffStr = Util.formatTime(timeDiff, true)
+          timeDiffStr = Util.colorText(timeDiffStr, timeDiffColor)
+
+          if alignStart then
+            objectiveStr = timeDiffStr .. " " .. objectiveStr
+          else
+            objectiveStr = objectiveStr .. " " .. timeDiffStr
+          end
+        end
+      end
     end
 
     -- TODO allow users to provide a custom format string for the objectiveStr
