@@ -458,14 +458,15 @@ function WarpDeplete:InitOptions()
             end,
             width = 1
           },
-          {
-            type = "toggle",
-            name = L["Only record completed runs"],
-            desc = L["When active, timestamps are only recorded once the key has been finished"],
-            get = function(info) return WarpDeplete.db.profile.timingsOnlyCompleted end,
-            set = function(info, value) WarpDeplete.db.profile.timingsOnlyCompleted = value end,
-            width = 2
-          }
+          -- TODO: Temporarilty disabled (see Timings.lua)
+          -- {
+          --   type = "toggle",
+          --   name = L["Only record completed runs"],
+          --   desc = L["When active, timestamps are only recorded once the key has been finished"],
+          --   get = function(info) return WarpDeplete.db.profile.timingsOnlyCompleted end,
+          --   set = function(info, value) WarpDeplete.db.profile.timingsOnlyCompleted = value end,
+          --   width = 2
+          -- }
         })
       }, { order = 3 }),
 

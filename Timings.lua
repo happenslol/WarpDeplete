@@ -5,15 +5,24 @@ function WarpDeplete:UpdateTimings()
     self:PrintDebug("Skipping timings update: timings are disabled")
     return
   end
+  
+  -- TODO: Disabled until we find a solution for the following problem:
+  -- When updating objective timings while the key is not completed we
+  -- would calculate wrong time-diffs on consecutive objective completions
+  -- due to the fact, that we already wrote the last/best timing to the
+  -- database. This causes the time-diff of previously solved objectives
+  -- to become 0.
+  local onlyCompleted = self.db.profile.timingsOnlyCompleted or true
+  local challengeCompleted = self.challengeState.challengeCompleted
 
-  if not self.challengeState.challengeCompleted and not self.db.profile.timingsOnlyCompleted then
+  if onlyCompleted and not challengeCompleted then
     self:PrintDebug("Skipping timings update: challenge not completed")
     return
   end
 
   self:PrintDebug("Updating timings")
   local objectives = Util.copy(self.objectivesState)
-  local timings = self:GetTimingsForCurrentInstance()
+  local timings = self:GetTimingsForCurrentInstance(false)
 
   if timings == nil then
     self:PrintDebug("Could not determine timings for current instance")
@@ -52,7 +61,7 @@ function WarpDeplete:GetBestTime(objectiveIndex)
   if self.challengeState.demoModeActive then
     return 520 * objectiveIndex - 65 + 65 * (objectiveIndex  - 1)
   end
-  local timings = self:GetTimingsForCurrentInstance(false)
+  local timings = self:GetTimingsForCurrentInstance(true)
   if timings == nil then return nil end
 
   local best = timings.best
@@ -65,7 +74,7 @@ function WarpDeplete:GetLastTime(objectiveIndex)
   if self.challengeState.demoModeActive then
     return 520 * objectiveIndex - 23 + 23 * (objectiveIndex  - 1)
   end
-  local timings = self:GetTimingsForCurrentInstance(false)
+  local timings = self:GetTimingsForCurrentInstance(true)
   if timings == nil then return nil end
 
   local last = timings.last
@@ -74,7 +83,7 @@ function WarpDeplete:GetLastTime(objectiveIndex)
   return last[objectiveIndex]
 end
 
-function WarpDeplete:GetTimingsForCurrentInstance(strict)
+function WarpDeplete:GetTimingsForCurrentInstance(returnNextLower)
   local level = self.keyDetailsState.level
   local mapId = select(8, GetInstanceInfo())
   local firstAffix = self.keyDetailsState.affixIds[1]
@@ -82,11 +91,16 @@ function WarpDeplete:GetTimingsForCurrentInstance(strict)
     return nil
   end
 
-  return self:GetTimings(mapId, level, firstAffix, strict)
+  return self:GetTimings(mapId, level, firstAffix, returnNextLower)
 end
 
-function WarpDeplete:GetTimings(mapId, keystoneLevel, firstAffixId, strict)
-  strict = strict or true
+--
+-- @param returnNextLower whether to return the timings of the next lower key if no 
+--                        timings for current keystoneLevel are available.
+function WarpDeplete:GetTimings(mapId, keystoneLevel, firstAffixId, returnNextLower)
+  if returnNextLower == nil then
+    returnNextLower = false
+  end
 
   local mapTimings = self.db.char.timings[mapId]
   if mapTimings == nil then
@@ -98,21 +112,26 @@ function WarpDeplete:GetTimings(mapId, keystoneLevel, firstAffixId, strict)
   if keystoneTimings == nil then
     keystoneTimings = {}
     mapTimings[keystoneLevel] = keystoneTimings
-
-    if not strict then
-      local lowerLevel = keystoneLevel - 1
-      local lowerTimings = mapTimings[keystoneLevel]
-      while lowerTimings == nil and lowerLevel > 2 do
-        lowerLevel = lowerLevel - 1
-        lowerTimings = mapTimings[keystoneLevel]
-      end
-    end
   end
 
   local affixTimings = keystoneTimings[firstAffixId]
   if affixTimings == nil then
     affixTimings = {}
     keystoneTimings[firstAffixId] = affixTimings
+  end
+
+  if returnNextLower and affixTimings.best == nil or affixTimings.last == nil then
+    local lowerLevel = keystoneLevel - 1
+    while lowerLevel > 2 do
+      local lowerKeystoneTimings = mapTimings[lowerLevel]
+      if lowerKeystoneTimings ~= nil then 
+        local lowerAffixTimings =  lowerKeystoneTimings[firstAffixId]
+        if lowerAffixTimings ~= nil and lowerAffixTimings.best ~= nil and lowerAffixTimings.last ~= nil then
+          return lowerAffixTimings
+        end
+      end
+      lowerLevel = lowerLevel - 1
+    end
   end
 
   return affixTimings
