@@ -77,6 +77,18 @@ function WarpDeplete:CompleteChallengeMode()
   -- but if we used our own timer we should redo it.
   self.challengeState.challengeCompleted = true
 
+  -- If we're set to update timings whenever the key is completed, we have
+  -- to do it now
+  if self.db.profile.timingsOnlyCompleted then
+    self:PrintDebug("Setting objective timings after challenge is complete")
+
+    for i, obj in ipairs(self.objectivesState) do
+      if obj.time then
+        self:SetTiming(i, obj.time)
+      end
+    end
+  end
+
   self:UpdateTimerDisplay()
   self:UpdateObjectivesDisplay()
   self:UpdateForcesDisplay()
@@ -224,29 +236,13 @@ function WarpDeplete:UpdateObjectives()
   local stepCount = select(3, C_Scenario.GetStepInfo())
   for i = 1, stepCount - 1 do
     if not objectives[i] or not objectives[i].time then
-      local criteriaString, criteriaType, completed, quantity, totalQuantity,
-        flags, assetID, quantityString, criteriaID, duration, elapsed,
-        criteriaFailed, isWeightedProgress = C_Scenario.GetCriteriaInfo(i)
-
-      self:PrintDebug(
-        "Got criteria info for index " .. i .. ": " .. criteriaString .. " " ..
-        "criteriaType(" .. tostring(criteriaType) .. ") " ..
-        "completed(" .. tostring(completed) .. ") " ..
-        "quantity(" .. tostring(quantity) .. ") " ..
-        "totalQuantity(" .. tostring(totalQuantity) .. ") " ..
-        "flags(" .. tostring(flags) .. ") " ..
-        "assetID(" .. tostring(assetID) .. ") " ..
-        "quantityString(" .. tostring(quantityString) .. ") " ..
-        "criteriaID(" .. tostring(criteriaID) .. ") " ..
-        "duration(" .. tostring(duration) .. ") " ..
-        "elapsed(" .. tostring(elapsed) .. ") " ..
-        "criteriaFailed(" .. tostring(criteriaFailed) .. ") " ..
-        "isWeightedProgress(" .. tostring(isWeightedProgress) .. ")"
-      )
+      self:PrintDebug("Updating objective " .. i)
+      local completed = select(3, C_Scenario.GetCriteriaInfo(i))
 
       -- If it wasn't completed before and it is now, we've just completed
       -- it and can set the completion time
       if completed then
+        self:PrintDebug("Setting objective " .. i .. " to completed")
         local completionTime = self.timerState.current
         objectives[i].time = completionTime
         changed = true
@@ -438,7 +434,7 @@ function WarpDeplete:OnCheckChallengeMode(ev)
 end
 
 function WarpDeplete:OnChallengeModeStart(ev)
-  self:PrintDebugGlobalEvent(ev)
+  -- self:PrintDebugGlobalEvent(ev)
   if self.timerState.running then
     self:PrintDebug("Start event received while timer was already running")
     return
@@ -452,7 +448,7 @@ function WarpDeplete:OnChallengeModeStart(ev)
 end
 
 function WarpDeplete:OnPlayerDead(ev)
-  self:PrintDebugEvent(ev)
+  -- self:PrintDebugEvent(ev)
   --TODO(happens): It would be better to also broadcast the death
   -- and then deduplicate deaths, since we can also catch deaths
   -- that weren't logged for us that way. We need to figure out a
@@ -462,17 +458,17 @@ function WarpDeplete:OnPlayerDead(ev)
 end
 
 function WarpDeplete:OnChallengeModeReset(ev)
-  self:PrintDebugEvent(ev)
+  -- self:PrintDebugEvent(ev)
   self:ResetState()
 end
 
 function WarpDeplete:OnChallengeModeCompleted(ev)
-  self:PrintDebugEvent(ev)
+  -- self:PrintDebugEvent(ev)
   self:CompleteChallengeMode()
 end
 
 function WarpDeplete:OnKeystoneOpen(ev)
-  self:PrintDebugEvent(ev)
+  -- self:PrintDebugEvent(ev)
 
   if not self.db.profile.insertKeystoneAutomatically then
     return
@@ -513,24 +509,24 @@ function WarpDeplete:OnKeystoneOpen(ev)
 end
 
 function WarpDeplete:OnScenarioPOIUpdate(ev)
-  self:PrintDebugEvent(ev)
+  -- self:PrintDebugEvent(ev)
   self:UpdateForces()
   self:UpdateObjectives()
 end
 
 function WarpDeplete:OnScenarioCriteriaUpdate(ev)
-  self:PrintDebugEvent(ev)
+  -- self:PrintDebugEvent(ev)
   self:UpdateForces()
   self:UpdateObjectives()
 end
 
 function WarpDeplete:OnResetCurrentPull(ev)
-  self:PrintDebugEvent(ev)
+  -- self:PrintDebugEvent(ev)
   self:ResetCurrentPull()
 end
 
 function WarpDeplete:OnThreatListUpdate(ev, unit)
-  self:PrintDebugEvent(ev)
+  -- self:PrintDebugEvent(ev)
   if not MDT then return end
   if not InCombatLockdown() or not unit or not UnitExists(unit) then return end
 
@@ -554,7 +550,7 @@ end
 function WarpDeplete:OnCombatLogEvent(ev)
   local _, subEv, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo()
   if subEv ~= "UNIT_DIED" then return end
-  self:PrintDebugEvent(ev)
+  -- self:PrintDebugEvent(ev)
   if not guid then return end
 
   --NOTE(happens): We have to check health since we'd count feign death otherwise

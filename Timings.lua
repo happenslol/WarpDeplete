@@ -4,9 +4,9 @@ function WarpDeplete:GetCurrentRunTimings(objectiveIndex)
   local level = self.keyDetailsState.level
   local mapId = self.keyDetailsState.mapId
   local affixes = self.keyDetailsState.affixes or {}
-  local firstAffixId = affixes.id
+  local firstAffix = affixes[1] or {}
 
-  if mapId == nil or level == nil or firstAffixId == nil then
+  if mapId == nil or level == nil or firstAffix.id == nil then
     self:PrintDebug("Failed to get current run timings due to missing keyDetailsState fields")
     return nil
   end
@@ -71,7 +71,7 @@ function WarpDeplete:SetTiming(objectiveIndex, newTime)
   end
 
   if not self.challengeState.challengeCompleted and
-    not self.db.profile.timingsOnlyCompleted then
+    self.db.profile.timingsOnlyCompleted then
     self:PrintDebug("Skipping timings update: challenge not completed")
     return
   end
@@ -81,9 +81,9 @@ function WarpDeplete:SetTiming(objectiveIndex, newTime)
   local level = self.keyDetailsState.level
   local mapId = self.keyDetailsState.mapId
   local affixes = self.keyDetailsState.affixes or {}
-  local firstAffixId = affixes.id
+  local firstAffix = affixes[1] or {}
 
-  if mapId == nil or level == nil or firstAffixId == nil then
+  if mapId == nil or level == nil or firstAffix.id == nil then
     self:PrintDebug("Failed to set new timing due to missing keyDetailsState fields")
     return
   end
@@ -92,7 +92,7 @@ function WarpDeplete:SetTiming(objectiveIndex, newTime)
     "Setting new timing: " ..
     "mapId(" .. mapId .. ") " ..
     "level(" .. level .. ") " ..
-    "firstAffixId(" .. firstAffixId .. ") " ..
+    "firstAffix.id(" .. firstAffix.id .. ") " ..
     "objectiveIndex(" .. objectiveIndex .. ") " ..
     "newTime(" .. newTime .. ")"
   )
@@ -111,16 +111,16 @@ function WarpDeplete:SetTiming(objectiveIndex, newTime)
     self.db.char.timings[mapId][level] = {}
   end
 
-  if self.db.char.timings[mapId][level][firstAffixId] == nil then
-    self.db.char.timings[mapId][level][firstAffixId] = {}
+  if self.db.char.timings[mapId][level][firstAffix.id] == nil then
+    self.db.char.timings[mapId][level][firstAffix.id] = {}
   end
 
-  if self.db.char.timings[mapId][level][firstAffixId][objectiveIndex] == nil then
-    self.db.char.timings[mapId][level][firstAffixId][objectiveIndex] = {}
+  if self.db.char.timings[mapId][level][firstAffix.id][objectiveIndex] == nil then
+    self.db.char.timings[mapId][level][firstAffix.id][objectiveIndex] = {}
   end
 
   local prevTiming = Util.copy(
-    self.db.char.timings[mapId][level][firstAffixId][objectiveIndex]
+    self.db.char.timings[mapId][level][firstAffix.id][objectiveIndex]
   )
 
   local newTiming = {
@@ -150,7 +150,7 @@ function WarpDeplete:SetTiming(objectiveIndex, newTime)
     newTiming.best = newTiming.last
   end
 
-  self.db.char.timings[mapId][level][firstAffixId][objectiveIndex] = newTiming
+  self.db.char.timings[mapId][level][firstAffix.id][objectiveIndex] = newTiming
 
   -- Persist the changes we just saved for the current map id.
   if self.db.char.currentRunTimings.mapId == nil or

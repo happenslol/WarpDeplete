@@ -531,9 +531,11 @@ function WarpDeplete:SetForcesCurrent(currentCount)
   local currentPercent = self.forcesState.totalCount > 0
     and self.forcesState.currentCount / self.forcesState.totalCount or 0
 
-  if currentPercent > 1.0 then currentPercent = 1.0 end
-  self.forcesState.currentPercent = currentPercent
+  if currentPercent > 1.0 or self.forcesState.completed then
+    currentPercent = 1.0
+  end
 
+  self.forcesState.currentPercent = currentPercent
   self:UpdateForcesDisplay()
 end
 
@@ -580,12 +582,19 @@ function WarpDeplete:UpdateGlow()
     self.challengeState.challengeCompleted or
     self.forcesState.completed
   ) then
+    self:PrintDebug("Hiding glow after challenge complete")
     self:HideGlow()
   end
 
   local percentBeforePull = self.forcesState.currentPercent
   local percentAfterPull = percentBeforePull + self.forcesState.pullPercent
-  local shouldGlow = percentBeforePull < 1 and percentAfterPull >= 1.0
+  local shouldGlow = percentBeforePull < 1.0 and percentAfterPull >= 1.0
+  -- self:PrintDebug(
+  --   "Updating glow: " ..
+  --   "percentBeforePull(" .. tostring(percentBeforePull) .. ") " ..
+  --   "percentAfterPull(" .. tostring(percentAfterPull) .. ") " ..
+  --   "shouldGlow(" .. tostring(shouldGlow) .. ")"
+  -- )
 
   -- Already in the correct state
   if shouldGlow == self.forcesState.glowActive then return end

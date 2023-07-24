@@ -271,4 +271,6 @@ function WarpDeplete:ResetState()
   self.challengeState = Util.copy(self.defaultChallengeState)
   self.objectivesState = Util.copy(self.defaultObjectivesState)
   self.keyDetailsState = Util.copy(self.defaultKeyDetailsState)
+
+  self:HideGlow()
 end
