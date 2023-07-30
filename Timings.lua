@@ -26,8 +26,8 @@ function WarpDeplete:GetCurrentRunTimings(objectiveIndex)
 end
 
 function WarpDeplete:GetBestTimeDifference(objectiveIndex)
-  local objectiveTimings = self:GetObjectiveTimings(objectiveIndex)
-  if objectiveTimings == nil or objectiveTimings.bestUpdated == false then
+  local objectiveTimings = self:GetCurrentRunTimings(objectiveIndex)
+  if objectiveTimings == nil then
     return nil
   end
 
@@ -37,11 +37,11 @@ function WarpDeplete:GetBestTimeDifference(objectiveIndex)
     return nil
   end
 
-  return objectiveTimings.newBest - objectiveTimings.lastBest
+  return objectiveTimings.newTime - objectiveTimings.lastBest
 end
 
 function WarpDeplete:GetLastTimeDifference(objectiveIndex)
-  local objectiveTimings = self:GetObjectiveTimings(objectiveIndex)
+  local objectiveTimings = self:GetCurrentRunTimings(objectiveIndex)
   if objectiveTimings == nil or objectiveTimings.lastTime == nil then
     return nil
   end
@@ -132,7 +132,7 @@ function WarpDeplete:SetTiming(objectiveIndex, newTime)
     lastTime = prevTiming.last,
     newTime = newTime,
     bestUpdated = false,
-    prevBest = prevTiming.best,
+    lastBest = prevTiming.best,
   }
 
   if prevTiming.best == nil or newTime < prevTiming.best then
@@ -146,7 +146,6 @@ function WarpDeplete:SetTiming(objectiveIndex, newTime)
     -- In that case, we don't want to show something incorrect
     -- to the user.
     currentTimings.bestUpdated = true
-    currentTimings.newBest = newTime
     newTiming.best = newTiming.last
   end
 

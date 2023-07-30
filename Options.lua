@@ -700,7 +700,41 @@ function WarpDeplete:InitOptions()
       step = 1,
       get = function(info) return WarpDeplete.forcesState.currentCount end,
       set = function(info, value) WarpDeplete:SetForcesCurrent(value) end
-    }
+    },
+
+    lineBreak(),
+
+    {
+      type = "execute",
+      name = "Print Timings DB",
+      func = function()
+        self:PrintDebug("Timings:")
+        for mapId, levels in pairs(self.db.char.timings) do
+          for level, affixIds in pairs(levels) do
+            for affixId, objectives in pairs(affixIds) do
+              for objective, timing in pairs(objectives) do
+                self:PrintDebug(
+                  "Timing: mapId(" .. mapId .. ") " ..
+                  "level(" .. level .. ") " ..
+                  "affixId(" .. affixId .. ") " ..
+                  "objective(" .. objective .. ") " ..
+                  "best(" .. timing.best .. ") " ..
+                  "last(" .. timing.last .. ")"
+                )
+              end
+            end
+          end
+        end
+
+        self:PrintDebug("Current Timings mapId(" .. self.db.char.currentRunTimings.mapId .. "):")
+        for objective, timing in pairs(self.db.char.currentRunTimings.objectives) do
+          self:PrintDebug("objective " .. objective)
+          for k, v in pairs(timing) do
+            self:PrintDebug("-- " .. k .. ": " .. tostring(v))
+          end
+        end
+      end
+    },
   })
 
   options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)

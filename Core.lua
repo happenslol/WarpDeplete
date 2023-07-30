@@ -141,16 +141,23 @@ function WarpDeplete:EnableDemoMode()
   self:ResetState()
   self.challengeState.demoModeActive = true
 
-  local objectives = {}
-  for i = 1, 5 do
-    objectives[i] = { name = L["Test Boss Name"] .. " " .. i }
+  self:SetObjectives({
+    { name = L["Test Boss Name"] .. " 1", time = 520 },
+    { name = L["Test Boss Name"] .. " 2", time = 1040 },
+    { name = L["Test Boss Name"] .. " 3", time = 1560 },
+    { name = L["Test Boss Name"] .. " 4" },
+    { name = L["Test Boss Name"] .. " 5" },
+  })
 
-    if i < 4 then
-      objectives[i].time = 520 * i
-    end
-  end
+  self.db.char.currentRunTimings = {
+    mapId = "demo",
+    objectives = {
+      { lastTime = 560, lastBest = 560, newTime = 520, bestUpdated = true },
+      { lastTime = 1260, lastBest = 980, newTime = 1040, bestUpdated = false },
+      { lastTime = 1600, lastBest = 1580, newTime = 1560, bestUpdated = true },
+    }
+  }
 
-  self:SetObjectives(objectives)
   self:SetKeyDetails(
     30,
     {

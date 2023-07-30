@@ -127,8 +127,8 @@ local defaults = {
     timingsEnabled = true,
     timingsOnlyCompleted = true,
     timingsDisplayStyle = "bestDiff",
-    timingsImprovedTimeColor = "FF00D200",
-    timingsWorseTimeColor = "FFF50000"
+    timingsImprovedTimeColor = "FFF3E600",
+    timingsWorseTimeColor = "FFFF5614"
   },
 
   char = {
@@ -153,12 +153,11 @@ local defaults = {
       Layout: {
         mapId = <number> or <string>,
         objectives = {
-          [objectiveId] = {
+          [objectiveIndex] = {
             lastTime = <number> | nil,
+            lastBest = <number> | nil,
             newTime = <number>,
             bestUpdated = <boolean>,
-            lastBest = <number> | nil,
-            newBest = <number> | nil,
           }
         },
       }

@@ -215,7 +215,6 @@ function WarpDeplete:UpdateForces()
   local currentCount = self:GetEnemyForcesCount()
   -- This mostly happens when we have already completed the dungeon
   if not currentCount then return end
-  self:PrintDebug("currentCount: " .. currentCount)
 
   if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
     -- If we just went above the total count (or matched it), we completed it just now
@@ -223,12 +222,16 @@ function WarpDeplete:UpdateForces()
     self.forcesState.completedTime = self.timerState.current
   end
 
-  self:SetForcesCurrent(currentCount)
+  -- When the dungeon is complete, we'll get 0 count back here,
+  -- so we don't set the current count in that case to preserve our
+  -- actual clear count
+  if currentCount > 0 or not self.challengeState.challengeCompleted then
+    self:SetForcesCurrent(currentCount)
+  end
 end
 
 function WarpDeplete:UpdateObjectives()
   if not self.challengeState.inChallenge then return end
-  self:PrintDebug("Updating objectives")
 
   local objectives = Util.copy(self.objectivesState)
   local changed = false
@@ -236,7 +239,6 @@ function WarpDeplete:UpdateObjectives()
   local stepCount = select(3, C_Scenario.GetStepInfo())
   for i = 1, stepCount - 1 do
     if not objectives[i] or not objectives[i].time then
-      self:PrintDebug("Updating objective " .. i)
       local completed = select(3, C_Scenario.GetCriteriaInfo(i))
 
       -- If it wasn't completed before and it is now, we've just completed

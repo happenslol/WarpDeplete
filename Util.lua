@@ -211,32 +211,6 @@ function Util.showAlert(key, message, okMessage)
   StaticPopup_Show(key)
 end
 
-Util.MapIDToInstanceID = {
-  [1677] = 1188, -- De Other Side
-  [1678] = 1188, -- De Other Side
-  [1679] = 1188, -- De Other Side
-  [1680] = 1188, -- De Other Side
-  [1669] = 1184, -- Mists of Tirna Scithe
-  [1697] = 1183, -- Plaguefall
-  [1675] = 1189, -- Sanguine Depths
-  [1676] = 1189, -- Sanguine Depths
-  [1692] = 1186, -- Spires of Ascension
-  [1693] = 1186, -- Spires of Ascension
-  [1694] = 1186, -- Spires of Ascension
-  [1695] = 1186, -- Spires of Ascension
-  [1666] = 1182, -- The Necrotic Wake
-  [1667] = 1182, -- The Necrotic Wake
-  [1668] = 1182, -- The Necrotic Wake
-  [1683] = 1187, -- Theater of Pain
-  [1684] = 1187, -- Theater of Pain
-  [1685] = 1187, -- Theater of Pain
-  [1686] = 1187, -- Theater of Pain
-  [1687] = 1187, -- Theater of Pain
-  [1663] = 1185, -- Halls of Atonement
-  [1664] = 1185, -- Halls of Atonement
-  [1665] = 1185, -- Halls of Atonement
-}
-
 function WarpDeplete:PrintDebug(str)
   if not self.db.global.DEBUG then return end
   self:Print("|cFF479AEDDEBUG|r " .. str)

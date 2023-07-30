@@ -589,12 +589,6 @@ function WarpDeplete:UpdateGlow()
   local percentBeforePull = self.forcesState.currentPercent
   local percentAfterPull = percentBeforePull + self.forcesState.pullPercent
   local shouldGlow = percentBeforePull < 1.0 and percentAfterPull >= 1.0
-  -- self:PrintDebug(
-  --   "Updating glow: " ..
-  --   "percentBeforePull(" .. tostring(percentBeforePull) .. ") " ..
-  --   "percentAfterPull(" .. tostring(percentAfterPull) .. ") " ..
-  --   "shouldGlow(" .. tostring(shouldGlow) .. ")"
-  -- )
 
   -- Already in the correct state
   if shouldGlow == self.forcesState.glowActive then return end
@@ -673,16 +667,16 @@ function WarpDeplete:UpdateObjectivesDisplay()
       if self.db.profile.timingsEnabled then
         local timeDiff = nil
 
-        if timingsDisplayStyle == "best" then
+        if timingsDisplayStyle == "bestDiff" then
           timeDiff = self:GetBestTimeDifference(i)
-        elseif timingsDisplayStyle == "last" then
+        elseif timingsDisplayStyle == "lastDiff" then
           timeDiff = self:GetLastTimeDifference(i)
         end
 
         if timeDiff ~= nil then
-          local timeDiffColor = self.db.profile.timingsWorseColor
+          local timeDiffColor = self.db.profile.timingsWorseTimeColor
           if timeDiff < 0 then
-            timeDiffColor = self.db.profile.timingsImprovedColor
+            timeDiffColor = self.db.profile.timingsImprovedTimeColor
           end
 
           local timeDiffStr = Util.formatTime(timeDiff, true)
@@ -705,6 +699,7 @@ end
 -- Expects level as number and affixes as an array of names and ids,
 -- e.g. {{ id = 0, name = "Tyrannical" }, { id = 1, name = "Bolstering" }}
 function WarpDeplete:SetKeyDetails(level, affixes, mapId)
+  self:PrintDebug("Setting key details map id: " .. mapId)
   self.keyDetailsState.level = level
   self.keyDetailsState.affixes = affixes
   self.keyDetailsState.mapId = mapId
