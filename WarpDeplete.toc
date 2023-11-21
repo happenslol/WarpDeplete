@@ -1,8 +1,8 @@
-## Interface: 100105
+## Interface: 100200
 ## Title: WarpDeplete
 ## Notes-ruRU: WarpDeplete - таймер для подземелий М+ с гибкими настройками
 ## Author: Happens
-## Version: 2.6.2
+## Version: 2.6.3
 ## SavedVariables: WarpDepleteDB
 ## X-Curse-Project-ID: 460155
 ## X-Wago-ID: 5bGoOqG0
