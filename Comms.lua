@@ -1,6 +1,3 @@
-local Util = WarpDeplete.Util
-
-
 -- Format: "current|type"
 -- current: number
 -- type: "blizz" or "gettime", depending on whether or not the time
@@ -59,8 +56,8 @@ function WarpDeplete:OnTimerSyncResponse(prefix, message, dist, sender)
   local current = tonumber(currentRaw)
 
   self:PrintDebug("Received time from " .. sender .. ": "
-    .. tonumber(current) .. ", type: " .. typeRaw)
-  
+    .. current .. ", type: " .. typeRaw)
+
   if self.timerState.isBlizzardTimer and not isBlizzard then
     self:PrintDebug("Updating timer")
     local deaths = C_ChallengeMode.GetDeathCount()
@@ -87,22 +84,23 @@ function WarpDeplete:OnObjectiveSyncRequest(prefix, message, dist, sender)
   -- the process of getting times from other users
   if not hasAny then return end
 
-  local text = Util.joinStrings(completionTimes, "|")
+  local text = table.concat(completionTimes, "|")
   self:SendCommMessage(objectiveResponsePrefix, text, "WHISPER", sender, "ALERT")
 end
 
 function WarpDeplete:OnObjectiveSyncResponse(prefix, message, dist, sender)
+  self:PrintDebug("Received objective sync from " .. sender .. ": " .. message)
   local parts = {strsplit("|", message)}
 
   for i, objTimeRaw in ipairs(parts) do
     local objTime = tonumber(objTimeRaw)
 
     if self.objectivesState[i] and objTime >= 0 then
+      self:PrintDebug("Sync: Updating objective " .. i .. " time to " .. objTime)
       self.objectivesState[i].time = objTime
     end
   end
 
-  self:UpdateTimings()
   self:UpdateObjectivesDisplay()
 end
 
@@ -114,7 +112,7 @@ function WarpDeplete:BroadcastDeath()
   self:AddDeathDetails(time, playerName, playerClass)
 
   local messageTable = {tostring(time), playerName, playerClass}
-  local message = Util.joinStrings(messageTable, "|")
+  local message = table.concat(messageTable, "|")
   self:PrintDebug("Sending death broadcast")
   self:SendCommMessage(deathBroadcastPrefix, message, "PARTY", nil, "ALERT")
 end

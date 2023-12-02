@@ -446,11 +446,11 @@ function WarpDeplete:InitOptions()
           }
         }),
 
-        group(L["Timings"], true, {
+        group(L["Clear Time Recording"], true, {
           {
             type = "toggle",
-            name = L["Enable timings"],
-            desc = L["Enable recording of timestamps at which bosses have been killed"],
+            name = L["Enable clear time recording"],
+            desc = L["Enable recording of timestamps at which objectives have been cleared"],
             get = function(info) return WarpDeplete.db.profile.timingsEnabled end,
             set = function(info, value)
                WarpDeplete.db.profile.timingsEnabled = value
@@ -461,11 +461,33 @@ function WarpDeplete:InitOptions()
           {
             type = "toggle",
             name = L["Only record completed runs"],
-            desc = L["When active, timestamps are only recorded once the key has been finished"],
+            desc = L["When active, timestamps are only recorded once the challenge has been completed"],
+            hidden = function() return not WarpDeplete.db.profile.timingsEnabled end,
             get = function(info) return WarpDeplete.db.profile.timingsOnlyCompleted end,
             set = function(info, value) WarpDeplete.db.profile.timingsOnlyCompleted = value end,
             width = 2
-          }
+          },
+
+          lineBreak(),
+
+          {
+            type = "select",
+            name = L["Objectives time difference"],
+            desc = L["How to display timing differences in the objective display"],
+            sorting = { "hidden", "bestDiff", "lastDiff" },
+            values = {
+              ["hidden"] = L["Hidden"],
+              ["bestDiff"] = L["Difference to best kill time"],
+              ["lastDiff"] = L["Difference to last kill time"]
+            },
+            hidden = function() return not WarpDeplete.db.profile.timingsEnabled end,
+            get = function(info) return WarpDeplete.db.profile.timingsDisplayStyle end,
+            set = function(info, value)
+              WarpDeplete.db.profile.timingsDisplayStyle = value
+              self:UpdateLayout()
+            end,
+            width = 3 / 2
+          },
         })
       }, { order = 3 }),
 
@@ -616,35 +638,13 @@ function WarpDeplete:InitOptions()
           font(L["Objectives font"], "objectivesFont", "UpdateLayout", { width = 3 / 2 }),
           fontFlags(L["Objectives font flags"], "objectivesFontFlags", "UpdateLayout", { width = 3 / 2 }),
           range(L["Objectives font size"], "objectivesFontSize", "UpdateLayout", { width = 3 / 2 }),
-          {
-            type = "select",
-            name = L["Objectives time difference"],
-            desc = L["How to display timing differences in the objective display"],
-            sorting = {
-              "hidden",
-              "bestDiff",
-              "lastDiff"
-            },
-            values = {
-              ["hidden"] = L["Hidden"],
-              ["bestDiff"] = L["Difference to best kill time"],
-              ["lastDiff"] = L["Difference to last kill time"]
-            },
-            hidden = function() return not WarpDeplete.db.profile.timingsEnabled end,
-            get = function(info) return WarpDeplete.db.profile.timingsDisplayStyle end,
-            set = function(info, value)
-              WarpDeplete.db.profile.timingsDisplayStyle = value
-              self:UpdateLayout()
-            end,
-            width = 3 / 2
-          },
           color(L["Objectives color"], "objectivesColor", "UpdateLayout"),
           color(L["Completed objective color"], "completedObjectivesColor", "UpdateLayout"),
-          color(L["New best objective clear time"], "timingsImprovedTimeColor", "UpdateLayout", {
-            desc = L["The color to use when you've set a new best objective clear time"]
+          color(L["Faster objective clear time"], "timingsImprovedTimeColor", "UpdateLayout", {
+            desc = L["The color to use when you've set a new best objective clear time or improved your last time"]
           }),
           color(L["Slower objective clear time"], "timingsWorseTimeColor", "UpdateLayout", {
-            desc = L["The color to use for objective clear times slower than your best time"]
+            desc = L["The color to use for objective clear times slower than your best or last time"]
           }),
         }),
       }, { order = 4 }),
@@ -700,7 +700,41 @@ function WarpDeplete:InitOptions()
       step = 1,
       get = function(info) return WarpDeplete.forcesState.currentCount end,
       set = function(info, value) WarpDeplete:SetForcesCurrent(value) end
-    }
+    },
+
+    lineBreak(),
+
+    {
+      type = "execute",
+      name = "Print Timings DB",
+      func = function()
+        self:PrintDebug("Timings:")
+        for mapId, levels in pairs(self.db.char.timings) do
+          for level, affixIds in pairs(levels) do
+            for affixId, objectives in pairs(affixIds) do
+              for objective, timing in pairs(objectives) do
+                self:PrintDebug(
+                  "Timing: mapId(" .. mapId .. ") " ..
+                  "level(" .. level .. ") " ..
+                  "affixId(" .. affixId .. ") " ..
+                  "objective(" .. objective .. ") " ..
+                  "best(" .. timing.best .. ") " ..
+                  "last(" .. timing.last .. ")"
+                )
+              end
+            end
+          end
+        end
+
+        self:PrintDebug("Current Timings mapId(" .. self.db.char.currentRunTimings.mapId .. "):")
+        for objective, timing in pairs(self.db.char.currentRunTimings.objectives) do
+          self:PrintDebug("objective " .. objective)
+          for k, v in pairs(timing) do
+            self:PrintDebug("-- " .. k .. ": " .. tostring(v))
+          end
+        end
+      end
+    },
   })
 
   options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)

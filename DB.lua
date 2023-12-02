@@ -2,6 +2,7 @@ local defaults = {
   global = {
     DEBUG = false,
     mdtAlertShown = false,
+    dbVersion = 1,
   },
 
   profile = {
@@ -83,7 +84,7 @@ local defaults = {
     bar3TextureColor = "FF979797",
     forcesTextureColor = "FFBB9E22",
     forcesOverlayTextureColor = "FFFF5515",
-    
+
     -- Font sizes for text parts
     deathsFontSize = 16,
     timerFontSize = 34,
@@ -126,28 +127,61 @@ local defaults = {
     timingsEnabled = true,
     timingsOnlyCompleted = true,
     timingsDisplayStyle = "bestDiff",
-    timingsImprovedTimeColor = "FF00D200",
-    timingsWorseTimeColor = "FFF50000"
+    timingsImprovedTimeColor = "FFF3E600",
+    timingsWorseTimeColor = "FFFF5614"
   },
 
   char = {
-    --[[ Structure of the timings table
-       timings = { 
-         dungeonId = { 
-           keystoneLevel = { 
-             1stAffixId = { 
-               best = { 
-                 objectiveIndex = <time> 
-               }, 
-               last = { 
-                 objectiveIndex = <time> 
-               } 
-             } 
-           } 
-         }
-       }
+    --[[
+      Used to save timing differences for the
+      current run. We might want to update the values
+      in the database right away when a boss is killed
+      or we might not, so it's safest to persist the values,
+      before and after they were changed, so it will stay
+      there even if the user disconnects.
+
+      We basically never need to reset this, and will only
+      do so when entering demo mode (which will not overwrite
+      anything important since demo mode can't be activated
+      during an active challenge).
+      This works because we never show this unless the objective
+      is completed, and it will always be set anew when the
+      objective is completed. So if a value is set here, we
+      can assume that the objective was cleared during the current
+      run and the time saved here is up to date.
+      
+      Layout: {
+        mapId = <number> or <string>,
+        objectives = {
+          [objectiveIndex] = {
+            lastTime = <number> | nil,
+            lastBest = <number> | nil,
+            newTime = <number>,
+            bestUpdated = <boolean>,
+          }
+        },
+      }
     --]]
-    timings = {}
+    currentRunTimings = {},
+
+    --[[
+      Used to save the best and last objective clear
+      times for each dungeon.
+
+      Layout: { 
+        [mapId] = { 
+          [keystoneLevel] = { 
+            [affixId] = { 
+              [objectiveIndex] = {
+                best = <number>,
+                last = <number>,
+              }
+            } 
+          } 
+        }
+      }
+    --]]
+    timings = {},
   }
 }
 

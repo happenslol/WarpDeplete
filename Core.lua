@@ -60,7 +60,7 @@ WarpDeplete.defaultObjectivesState = {}
 WarpDeplete.defaultKeyDetailsState = {
   level = 0,
   affixes = {},
-  affixIds = {}
+  mapId = nil,
 }
 
 -- Check if Kaliel's Tracker is loaded, since it creates a
@@ -141,17 +141,33 @@ function WarpDeplete:EnableDemoMode()
   self:ResetState()
   self.challengeState.demoModeActive = true
 
-  local objectives = {}
-  for i = 1, 5 do
-    objectives[i] = { name = L["Test Boss Name"] .. " " .. i }
+  self:SetObjectives({
+    { name = L["Test Boss Name"] .. " 1", time = 520 },
+    { name = L["Test Boss Name"] .. " 2", time = 1040 },
+    { name = L["Test Boss Name"] .. " 3", time = 1560 },
+    { name = L["Test Boss Name"] .. " 4" },
+    { name = L["Test Boss Name"] .. " 5" },
+  })
 
-    if i < 4 then
-      objectives[i].time = 520 * i
-    end
-  end
+  self.db.char.currentRunTimings = {
+    mapId = "demo",
+    objectives = {
+      { lastTime = 560, lastBest = 560, newTime = 520, bestUpdated = true },
+      { lastTime = 1260, lastBest = 980, newTime = 1040, bestUpdated = false },
+      { lastTime = 1600, lastBest = 1580, newTime = 1560, bestUpdated = true },
+    }
+  }
 
-  self:SetObjectives(objectives)
-  self:SetKeyDetails(30, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Thundering"]}, {9, 7, 123, 132})
+  self:SetKeyDetails(
+    30,
+    {
+      { id = 9, name = L["Tyrannical"] },
+      { id = 7, name = L["Bolstering"] },
+      { id = 123, name = L["Spiteful"] },
+      { id = 132, name = L["Thundering"] },
+    },
+    "demo"
+  )
 
   self:SetTimerLimit(35 * 60)
   self:SetTimerRemaining(20 * 60)
@@ -262,4 +278,6 @@ function WarpDeplete:ResetState()
   self.challengeState = Util.copy(self.defaultChallengeState)
   self.objectivesState = Util.copy(self.defaultObjectivesState)
   self.keyDetailsState = Util.copy(self.defaultKeyDetailsState)
+
+  self:HideGlow()
 end
