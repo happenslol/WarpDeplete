@@ -497,15 +497,29 @@ function WarpDeplete:UpdateTimerDisplay()
 end
 
 function WarpDeplete:SetForcesTotal(totalCount)
-  self.forcesState.totalCount = totalCount
-  self.forcesState.pullPercent = totalCount > 0 and self.forcesState.pullCount / totalCount or 0
+  if self.challengeState.challengeCompleted then
+    -- Make sure we always show a full bar when the dungeon is completed. We might
+    -- get an incorrect value from the API here.
+    self.forcesState.currentPercent = 1.0
+    self.forcesState.completed = true
 
-  local currentPercent = totalCount > 0 and self.forcesState.currentCount / totalCount or 0
-  if currentPercent > 1.0 then currentPercent = 1.0 end
-  self.forcesState.currentPercent = currentPercent
+    -- If at this point the current count is still less than the total
+    -- count we had previously saved, we'll just bump it up to that.
+    if self.forcesState.currentCount < self.forcesState.totalCount then
+      self.forcesState.currentCount = self.forcesState.totalCount
+    end
+  else
+    self.forcesState.totalCount = totalCount
+    self.forcesState.pullPercent = totalCount > 0 and self.forcesState.pullCount / totalCount or 0
 
-  self.forcesState.completed = false
-  self.forcesState.completedTime = 0
+    local currentPercent = totalCount > 0 and self.forcesState.currentCount / totalCount or 0
+    if currentPercent > 1.0 then currentPercent = 1.0 end
+    self.forcesState.currentPercent = currentPercent
+
+    self.forcesState.completed = false
+    self.forcesState.completedTime = 0
+  end
+
   self:UpdateForcesDisplay()
 end
 
@@ -527,26 +541,48 @@ function WarpDeplete:SetForcesCurrent(currentCount)
     self.forcesState.completedTime = self.timerState.current
   end
 
-  self.forcesState.currentCount = currentCount
+  -- Again, make sure a full bar is always shown when the dungeon is completed
+  if self.challengeState.challengeCompleted then
+    self.forcesState.currentPercent = 1.0
+    self.forcesState.completed = true
 
-  local currentPercent = self.forcesState.totalCount > 0
-    and self.forcesState.currentCount / self.forcesState.totalCount or 0
+    -- If the API reports anything higher than the total count, we'll accept
+    -- it. If the dungeon is complete and the API reports less than the total,
+    -- we'll just take the total.
+    if currentCount >= self.forcesState.currentCount then
+      self.forcesState.currentCount = currentCount
+    else
+      self.forcesState.currentCount = self.forcesState.totalCount
+    end
+  else
+    self.forcesState.currentCount = currentCount
 
-  if currentPercent > 1.0 then currentPercent = 1.0 end
-  self.forcesState.currentPercent = currentPercent
+    local currentPercent = self.forcesState.totalCount > 0
+      and self.forcesState.currentCount / self.forcesState.totalCount or 0
+
+    if currentPercent > 1.0 then currentPercent = 1.0 end
+    self.forcesState.currentPercent = currentPercent
+  end
+
 
   self:UpdateForcesDisplay()
 end
 
 function WarpDeplete:UpdateForcesDisplay()
-  -- clamp pull progress so that the bar won't exceed 100%
-  local pullPercent = self.forcesState.pullPercent
-  if self.forcesState.pullPercent + self.forcesState.currentPercent > 1 then
-    pullPercent = 1 - self.forcesState.currentPercent
+  if self.forcesState.currentPercent < 1.0 then
+    -- clamp pull progress so that the bar won't exceed 100%
+    local pullPercent = self.forcesState.pullPercent
+    if self.forcesState.pullPercent + self.forcesState.currentPercent > 1.0 then
+      pullPercent = 1 - self.forcesState.currentPercent
+    end
+
+    self.forces.overlayBar:SetValue(pullPercent - 0.005)
+  else
+    self.forces.overlayBar:SetValue(0)
   end
 
-  self.forces.overlayBar:SetValue(pullPercent - 0.005)
   self.forces.overlayBar:SetPoint("LEFT", 1 + self.db.profile.barWidth * self.forcesState.currentPercent, 0)
+
   self.forces.bar:SetValue(self.forcesState.currentPercent)
 
   self.forces.text:SetText(
@@ -563,7 +599,7 @@ function WarpDeplete:UpdateForcesDisplay()
       self.forcesState.completed and self.forcesState.completedTime or nil
     )
   )
-  self:UpdateGlow() 
+  self:UpdateGlow()
 end
 
 function WarpDeplete:UpdateGlowAppearance()
@@ -575,13 +611,14 @@ function WarpDeplete:UpdateGlowAppearance()
   self:HideGlow()
   self:ShowGlow()
 end
-  
+
 function WarpDeplete:UpdateGlow()
   if self.forcesState.glowActive and (
     self.challengeState.challengeCompleted or
     self.forcesState.completed
   ) then
     self:HideGlow()
+    return
   end
 
   local percentBeforePull = self.forcesState.currentPercent
