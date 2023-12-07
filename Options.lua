@@ -446,27 +446,28 @@ function WarpDeplete:InitOptions()
           }
         }),
 
-        group(L["Timings"], true, {
-          {
-            type = "toggle",
-            name = L["Enable timings"],
-            desc = L["Enable recording of timestamps at which bosses have been killed"],
-            get = function(info) return WarpDeplete.db.profile.timingsEnabled end,
-            set = function(info, value)
-               WarpDeplete.db.profile.timingsEnabled = value
-               self:UpdateLayout()
-            end,
-            width = 1
-          },
-          {
-            type = "toggle",
-            name = L["Only record completed runs"],
-            desc = L["When active, timestamps are only recorded once the key has been finished"],
-            get = function(info) return WarpDeplete.db.profile.timingsOnlyCompleted end,
-            set = function(info, value) WarpDeplete.db.profile.timingsOnlyCompleted = value end,
-            width = 2
-          }
-        })
+        -- TODO: Re-enable this when the feature has been re-implemented
+        -- group(L["Timings"], true, {
+        --   {
+        --     type = "toggle",
+        --     name = L["Enable timings"],
+        --     desc = L["Enable recording of timestamps at which bosses have been killed"],
+        --     get = function(info) return WarpDeplete.db.profile.timingsEnabled end,
+        --     set = function(info, value)
+        --        WarpDeplete.db.profile.timingsEnabled = value
+        --        self:UpdateLayout()
+        --     end,
+        --     width = 1
+        --   },
+        --   {
+        --     type = "toggle",
+        --     name = L["Only record completed runs"],
+        --     desc = L["When active, timestamps are only recorded once the key has been finished"],
+        --     get = function(info) return WarpDeplete.db.profile.timingsOnlyCompleted end,
+        --     set = function(info, value) WarpDeplete.db.profile.timingsOnlyCompleted = value end,
+        --     width = 2
+        --   }
+        -- })
       }, { order = 3 }),
 
       texts = group(L["Display"], false, {
