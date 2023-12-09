@@ -445,7 +445,6 @@ function WarpDeplete:UpdateTimerDisplay()
   state.timerText = Util.formatTime_OnUpdate(self.timerState.current) ..
     " / " .. Util.formatTime_OnUpdate(self.timerState.limit)
 
-
   if self.challengeState.challengeCompleted then
     local blizzardTime = select(3, C_ChallengeMode.GetCompletionInfo())
     local blizzardTimeText = ''
@@ -497,28 +496,15 @@ function WarpDeplete:UpdateTimerDisplay()
 end
 
 function WarpDeplete:SetForcesTotal(totalCount)
-  if self.challengeState.challengeCompleted then
-    -- Make sure we always show a full bar when the dungeon is completed. We might
-    -- get an incorrect value from the API here.
-    self.forcesState.currentPercent = 1.0
-    self.forcesState.completed = true
+  self.forcesState.totalCount = totalCount
+  self.forcesState.pullPercent = totalCount > 0 and self.forcesState.pullCount / totalCount or 0
 
-    -- If at this point the current count is still less than the total
-    -- count we had previously saved, we'll just bump it up to that.
-    if self.forcesState.currentCount < self.forcesState.totalCount then
-      self.forcesState.currentCount = self.forcesState.totalCount
-    end
-  else
-    self.forcesState.totalCount = totalCount
-    self.forcesState.pullPercent = totalCount > 0 and self.forcesState.pullCount / totalCount or 0
+  local currentPercent = totalCount > 0 and self.forcesState.currentCount / totalCount or 0
+  if currentPercent > 1.0 then currentPercent = 1.0 end
+  self.forcesState.currentPercent = currentPercent
 
-    local currentPercent = totalCount > 0 and self.forcesState.currentCount / totalCount or 0
-    if currentPercent > 1.0 then currentPercent = 1.0 end
-    self.forcesState.currentPercent = currentPercent
-
-    self.forcesState.completed = false
-    self.forcesState.completedTime = 0
-  end
+  self.forcesState.completed = false
+  self.forcesState.completedTime = 0
 
   self:UpdateForcesDisplay()
 end
@@ -541,34 +527,34 @@ function WarpDeplete:SetForcesCurrent(currentCount)
     self.forcesState.completedTime = self.timerState.current
   end
 
-  -- Again, make sure a full bar is always shown when the dungeon is completed
-  if self.challengeState.challengeCompleted then
-    self.forcesState.currentPercent = 1.0
-    self.forcesState.completed = true
-
-    -- If the API reports anything higher than the total count, we'll accept
-    -- it. If the dungeon is complete and the API reports less than the total,
-    -- we'll just take the total.
-    if currentCount >= self.forcesState.currentCount then
-      self.forcesState.currentCount = currentCount
-    else
-      self.forcesState.currentCount = self.forcesState.totalCount
-    end
-  else
+  -- The current count can only ever go up. The only place where it should
+  -- ever decrease is when it's reset in ResetState.
+  -- It seems that the API reports a current count of 0 when the dungeon is
+  -- finished, but possibly right before the challengeCompleted flag is triggered.
+  -- So, to make sure we don't reset the bar to 0 in that case, we only allow
+  -- the count to go up here.
+  if currentCount >= self.forcesState.currentCount then
     self.forcesState.currentCount = currentCount
-
-    local currentPercent = self.forcesState.totalCount > 0
-      and self.forcesState.currentCount / self.forcesState.totalCount or 0
-
-    if currentPercent > 1.0 then currentPercent = 1.0 end
-    self.forcesState.currentPercent = currentPercent
   end
 
+  local currentPercent = self.forcesState.totalCount > 0
+    and self.forcesState.currentCount / self.forcesState.totalCount or 0
+
+  if currentPercent > 1.0 then currentPercent = 1.0 end
+  self.forcesState.currentPercent = currentPercent
 
   self:UpdateForcesDisplay()
 end
 
 function WarpDeplete:UpdateForcesDisplay()
+  if self.challengeState.challengeCompleted then
+    self.forcesState.currentPercent = 1.0
+
+    if self.forcesState.currentCount < self.forcesState.totalCount then
+      self.forcesState.currentCount = self.forcesState.totalCount
+    end
+  end
+
   if self.forcesState.currentPercent < 1.0 then
     -- clamp pull progress so that the bar won't exceed 100%
     local pullPercent = self.forcesState.pullPercent
