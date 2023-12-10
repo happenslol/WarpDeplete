@@ -4,6 +4,7 @@
 ## Author: Happens
 ## Version: 2.6.5
 ## SavedVariables: WarpDepleteDB
+## IconTexture: Interface\AddOns\WarpDeplete\logo
 ## X-Curse-Project-ID: 460155
 ## X-Wago-ID: 5bGoOqG0
 
