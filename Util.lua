@@ -19,43 +19,54 @@ function Util.formatForcesText(
   local remainingPercentText = ("%.2f"):format(100-currentPercent)
   local result = forcesFormat ~= ":custom:" and forcesFormat or customForcesFormat
 
-  result = gsub(result, ":percent:", percentText .. "%%")
   result = gsub(result, ":count:", countText)
+  result = gsub(result, ":percent:", percentText .. "%%")
   result = gsub(result, ":totalcount:", totalCountText)
   result = gsub(result, ":remainingcount:", remainingCountText)
   result = gsub(result, ":remainingpercent:", remainingPercentText .. "%%")
 
   if pullCount > 0 then
+    local pullText = currentPullFormat ~= ":custom:" and currentPullFormat or customCurrentPullFormat
+
     local pullPercent = (pullCount / totalCount) * 100
     local pullPercentText = ("%.2f"):format(pullPercent)
     local pullCountText = ("%d"):format(pullCount)
 
-    local remainingCountAfterPull = totalCount-currentCount-pullCount
+    local countAfterPull = currentCount + pullCount
+    local countAfterPullText = ("%d"):format(countAfterPull)
+
+    local remainingCountAfterPull = totalCount - countAfterPull
     if remainingCountAfterPull < 0 then remainingCountAfterPull = 0 end
     local remainingCountAfterPullText = ("%d"):format(remainingCountAfterPull)
 
-    local remainingPercentAfterlPull = 100-currentPercent-pullPercent
-    if remainingPercentAfterlPull < 0 then remainingPercentAfterlPull = 0 end
-    local remainingPercentAfterlPullText = ("%.2f"):format(remainingPercentAfterlPull)
-
-    result = gsub(result, ":remainingcountafterpull:", remainingCountAfterPullText)
-    result = gsub(result, ":remainingpercentafterpull:", remainingPercentAfterlPullText .. "%%")
-
-    local pullText = currentPullFormat ~= ":custom:" and currentPullFormat or customCurrentPullFormat
-    pullText = gsub(pullText, ":percent:", pullPercentText .. "%%")
-    pullText = gsub(pullText, ":count:", pullCountText)
+    local remainingPercentAfterPull = 100-currentPercent-pullPercent
+    if remainingPercentAfterPull < 0 then remainingPercentAfterPull = 0 end
+    local remainingPercentAfterPullText = ("%.2f"):format(remainingPercentAfterPull)
 
     local percentAfterPull = Util.calcForcesPercent(pullPercent + currentPercent, unclampForcesPercent)
     local pulledPercentText = ("%.2f"):format(percentAfterPull)
+
+    pullText = gsub(pullText, ":count:", pullCountText)
+    pullText = gsub(pullText, ":percent:", pullPercentText .. "%%")
+
+    pullText = gsub(pullText, ":countafterpull:", countAfterPullText)
+    pullText = gsub(pullText, ":remainingcountafterpull:", remainingCountAfterPullText)
+    pullText = gsub(pullText, ":percentafterpull:", pulledPercentText .. "%%")
+    pullText = gsub(pullText, ":remainingpercentafterpull:", remainingPercentAfterPullText .. "%%")
+
+    result = gsub(result, ":countafterpull:", countAfterPullText)
+    result = gsub(result, ":remainingcountafterpull:", remainingCountAfterPullText)
     result = gsub(result, ":percentafterpull:", pulledPercentText .. "%%")
+    result = gsub(result, ":remainingpercentafterpull:", remainingPercentAfterPullText .. "%%")
 
     if pullText and #pullText > 0 then
       result = pullText .. "  " .. result
     end
   else
+    result = gsub(result, ":countafterpull:", countText)
     result = gsub(result, ":remainingcountafterpull:", remainingCountText)
-    result = gsub(result, ":remainingpercentafterpull:", remainingPercentText .. "%%")
     result = gsub(result, ":percentafterpull:", percentText .. "%%")
+    result = gsub(result, ":remainingpercentafterpull:", remainingPercentText .. "%%")
   end
 
   if completedTime and result then
