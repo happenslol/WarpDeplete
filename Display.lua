@@ -272,30 +272,32 @@ function WarpDeplete:UpdateLayout()
   -- This makes the vertical centering a bit messy, since we need to get the offset
   -- between the two (larger - smaller) / 2 and then shift the smaller one by that amount
   -- compared to the larger one, which changes depending on alignment.
-  -- Additionally, we invert the offset because our offsets are always negative.
-  if keyTextHeight <= keyDetailsTextHeight then
+  -- Note that what the element that was smaller (and thus offset) is the anchor, we need
+  -- to subtract the anchor again from the bigger element to cancel it out.
+  -- Also, all offsets are negative, as usual.
+  if keyTextHeight >= keyDetailsTextHeight then
     local offset = (keyTextHeight - keyDetailsTextHeight) / 2
 
     if alignRight then
-      keyDetailsText:SetPoint("TOPRIGHT", -framePadding - 3, -currentOffset)
-      keyText:SetPoint("TOPRIGHT", keyDetailsText, "TOPLEFT", -3, offset + 1)
+      keyDetailsText:SetPoint("TOPRIGHT", -framePadding - 3, -currentOffset - offset - 1)
+      keyText:SetPoint("TOPRIGHT", keyDetailsText, "TOPLEFT", -3, offset)
     else
-      keyText:SetPoint("TOPLEFT", framePadding + 3, offset - currentOffset)
+      keyText:SetPoint("TOPLEFT", framePadding, -currentOffset)
       keyDetailsText:SetPoint("TOPLEFT", keyText, "TOPRIGHT", 3, -offset - 1)
     end
   else
     local offset = (keyDetailsTextHeight - keyTextHeight) / 2
 
     if alignRight then
-      keyDetailsText:SetPoint("TOPRIGHT", -framePadding - 3, -currentOffset)
-      keyText:SetPoint("TOPRIGHT", keyDetailsText, "TOPLEFT", -3, 1 - offset)
+      keyDetailsText:SetPoint("TOPRIGHT", -framePadding - 3, -currentOffset - 1)
+      keyText:SetPoint("TOPRIGHT", keyDetailsText, "TOPLEFT", -3, -offset)
     else
-      keyText:SetPoint("TOPLEFT", framePadding + 3, -currentOffset)
+      keyText:SetPoint("TOPLEFT", framePadding, -currentOffset - offset)
       keyDetailsText:SetPoint("TOPLEFT", keyText, "TOPRIGHT", 3, offset - 1)
     end
   end
 
-  currentOffset = currentOffset + keyRowHeight + verticalOffset + barFramePaddingTop
+  currentOffset = currentOffset + keyRowHeight + verticalOffset + barFramePaddingTop + 1
 
   -- Bars frame
   self.frames.bars:SetWidth(barWidth)
