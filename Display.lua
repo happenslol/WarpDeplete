@@ -527,7 +527,7 @@ function WarpDeplete:SetForcesTotal(totalCount)
   self.forcesState.pullPercent = totalCount > 0 and self.forcesState.pullCount / totalCount or 0
 
   local currentPercent = totalCount > 0 and self.forcesState.currentCount / totalCount or 0
-  if currentPercent > 1.0 then currentPercent = 1.0 end
+  --if currentPercent > 1.0 then currentPercent = 1.0 end
   self.forcesState.currentPercent = currentPercent
 
   self.forcesState.completed = false
@@ -567,7 +567,7 @@ function WarpDeplete:SetForcesCurrent(currentCount)
   local currentPercent = self.forcesState.totalCount > 0
     and self.forcesState.currentCount / self.forcesState.totalCount or 0
 
-  if currentPercent > 1.0 then currentPercent = 1.0 end
+  --if currentPercent > 1.0 then currentPercent = 1.0 end
   self.forcesState.currentPercent = currentPercent
 
   self:UpdateForcesDisplay()
@@ -575,11 +575,11 @@ end
 
 function WarpDeplete:UpdateForcesDisplay()
   if self.challengeState.challengeCompleted then
-    self.forcesState.currentPercent = 1.0
+    self.forcesState.currentPercent = currentPercent
 
-    if self.forcesState.currentCount < self.forcesState.totalCount then
-      self.forcesState.currentCount = self.forcesState.totalCount
-    end
+    -- if self.forcesState.currentCount < self.forcesState.totalCount then
+    --   self.forcesState.currentCount = self.forcesState.totalCount
+    -- end
   end
 
   if self.forcesState.currentPercent < 1.0 then

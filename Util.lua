@@ -206,7 +206,7 @@ function Util.calcForcesPercent(forcesPercent, unclampForcesPercent)
   if unclampForcesPercent then
     return forcesPercent
   end
-  return math.min(forcesPercent, 100.0)  
+  return math.min(forcesPercent, 200.0)  
 end
 
 function Util.joinStrings(strings, delim)
