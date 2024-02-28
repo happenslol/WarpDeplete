@@ -532,7 +532,7 @@ function WarpDeplete:SetForcesTotal(totalCount)
 
   self.forcesState.completed = false
   self.forcesState.completedTime = 0
-
+  self:PrintDebug("SetForcesTotal Updated")
   self:UpdateForcesDisplay()
 end
 
@@ -569,19 +569,19 @@ function WarpDeplete:SetForcesCurrent(currentCount)
 
   --if currentPercent > 1.0 then currentPercent = 1.0 end
   self.forcesState.currentPercent = currentPercent
-
+  self:PrintDebug("UpdateForcesDispaly ran - self currentCount: ".. self.forcesState.currentCount)
   self:UpdateForcesDisplay()
 end
 
 function WarpDeplete:UpdateForcesDisplay()
-  if self.challengeState.challengeCompleted then
-    self.forcesState.currentPercent = currentPercent
+  -- if self.challengeState.challengeCompleted then
+  --   self.forcesState.currentPercent = currentPercent
 
-    -- if self.forcesState.currentCount < self.forcesState.totalCount then
-    --   self.forcesState.currentCount = self.forcesState.totalCount
-    -- end
-  end
-
+  --    if self.forcesState.currentCount < self.forcesState.totalCount then
+  --      self.forcesState.currentCount = self.forcesState.totalCount
+  --    end
+  -- end
+  self:PrintDebug("UpdatedForcesDisplay 2.0 - self currentCount: ".. self.forcesState.currentCount)
   if self.forcesState.currentPercent < 1.0 then
     -- clamp pull progress so that the bar won't exceed 100%
     local pullPercent = self.forcesState.pullPercent
@@ -613,6 +613,7 @@ function WarpDeplete:UpdateForcesDisplay()
     )
   )
   self:UpdateGlow()
+  self:PrintDebug("UpdatedForcesDisplay 3.0 - self currentCount: ".. self.forcesState.currentCount)
 end
 
 function WarpDeplete:UpdateGlowAppearance()
