@@ -212,6 +212,9 @@ function WarpDeplete:UpdateForces()
     -- If we just went above the total count (or matched it), we completed it just now
     self.forcesState.completed = true
     self.forcesState.completedTime = self.timerState.current
+
+    -- If we just went above the total count (or matched it), grab the value of currentCount right before it updates
+    self.forcesState.preComplete = self.forcesState.currentCount
   end
 
   self:SetForcesCurrent(currentCount)
@@ -553,6 +556,29 @@ function WarpDeplete:OnCombatLogEvent(ev)
   if not self.forcesState.currentPull[guid] then return end
   self:PrintDebug("removing unit " .. guid .. " from current pull")
   -- See comment above (OnThreadListUpdate)
+
+  -- only do this IF unclampForcesPercent is true and checked
+  if WarpDeplete.db.profile.unclampForcesPercent then
+    -- get the force amount for enemies
+    local npcID = select(6, strsplit("-", guid))
+    local guidForceCount = MDT:GetEnemyForces(tonumber(npcID))
+
+    -- only add in the post 100% counts once BOTH checks are complete
+    if self.forcesState.completed and self.forcesState.triggered then
+      self.forcesState.currentCount = self.forcesState.currentCount + guidForceCount
+      self:SetForcesCurrent(self.forcesState.currentCount)
+    end
+    -- when testing, the mob that triggers completion wouldn't provide the full amount of force if it went over totalCount
+    -- Ex. if total required is 305, current is 303 and you kill a mob worth 5 - it should become 308, but it stops at 305
+    -- because of this, we use the last saved value PRE 100% force, add the new guidForceCount onto that, and then use that value
+    if self.forcesState.preComplete + guidForceCount > self.forcesState.totalCount and not self.forcesState.triggered then
+      self.forcesState.triggered = true
+      local actual = self.forcesState.preComplete + guidForceCount
+      self.forcesState.currentCount = actual
+      self:SetForcesCurrent(self.forcesState.currentCount)
+    end
+  end
+
   self.forcesState.currentPull[guid] = "DEAD"
   local pullCount = Util.calcPullCount(self.forcesState.currentPull, self.forcesState.totalCount)
   self:SetForcesPull(pullCount)

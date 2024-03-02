@@ -1,6 +1,6 @@
 local defaults = {
   global = {
-    DEBUG = true,
+    DEBUG = false,
     mdtAlertShown = false,
   },
 
