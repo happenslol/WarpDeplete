@@ -208,16 +208,19 @@ function WarpDeplete:UpdateForces()
   if not currentCount then return end
   self:PrintDebug("currentCount: " .. currentCount)
 
-  if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
-    -- If we just went above the total count (or matched it), we completed it just now
-    self.forcesState.completed = true
-    self.forcesState.completedTime = self.timerState.current
-
-    -- If we just went above the total count (or matched it), grab the value of currentCount right before it updates
-    self.forcesState.preComplete = self.forcesState.currentCount
+  -- only go down this path if the unclampForcesPercent is checked true
+  if self.db.profile.unclampForcesPercent then
+    if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
+      -- If we just went above the total count (or matched it), we completed it just now
+      self.forcesState.completed = true
+      self.forcesState.completedTime = self.timerState.current
+    else
+      self:SetForcesCurrent(currentCount)
+    end
+  -- otherwise, behave like normal and always pass through the value returned from self:GetEnemyForcesCount()
+  else
+    self:SetForcesCurrent(currentCount)
   end
-
-  self:SetForcesCurrent(currentCount)
 end
 
 function WarpDeplete:UpdateObjectives()
@@ -558,24 +561,31 @@ function WarpDeplete:OnCombatLogEvent(ev)
   -- See comment above (OnThreadListUpdate)
 
   -- only do this IF unclampForcesPercent is true and checked
-  if WarpDeplete.db.profile.unclampForcesPercent then
-    -- get the force amount for enemies
-    local npcID = select(6, strsplit("-", guid))
-    local guidForceCount = MDT:GetEnemyForces(tonumber(npcID))
+  if self.db.profile.unclampForcesPercent then
 
-    -- only add in the post 100% counts once BOTH checks are complete
-    if self.forcesState.completed and self.forcesState.triggered then
-      self.forcesState.currentCount = self.forcesState.currentCount + guidForceCount
-      self:SetForcesCurrent(self.forcesState.currentCount)
-    end
-    -- when testing, the mob that triggers completion wouldn't provide the full amount of force if it went over totalCount
-    -- Ex. if total required is 305, current is 303 and you kill a mob worth 5 - it should become 308, but it stops at 305
-    -- because of this, we use the last saved value PRE 100% force, add the new guidForceCount onto that, and then use that value
-    if self.forcesState.preComplete + guidForceCount > self.forcesState.totalCount and not self.forcesState.triggered then
-      self.forcesState.triggered = true
-      local actual = self.forcesState.preComplete + guidForceCount
-      self.forcesState.currentCount = actual
-      self:SetForcesCurrent(self.forcesState.currentCount)
+    -- check if user has MDT
+    if MDT then
+
+      -- get the force amount for enemies
+      local npcID = select(6, strsplit("-", guid))
+      local guidForceCount = MDT:GetEnemyForces(tonumber(npcID))
+
+      -- only add in the once we would've hit 100% force count
+      -- need to add in countingExtra since completed would always be true (due to updateForces() always running first)
+      if self.forcesState.completed and self.forcesState.countingExtra then
+        self.forcesState.extraCount = self.forcesState.extraCount + guidForceCount
+        -- trigger display update
+        self:UpdateForcesDisplay()
+      elseif self.forcesState.currentCount + guidForceCount >= self.forcesState.totalCount then
+        self.forcesState.countingExtra = true
+        local rest = self.forcesState.totalCount - self.forcesState.currentCount
+        self.forcesState.extraCount = guidForceCount - rest
+        -- since we know this only triggers once it hits the 100% cap count
+        -- set currentCount to totalCount as a base
+        self.forcesState.currentCount = self.forcesState.totalCount
+        -- update to make sure it goes through
+        self:SetForcesCurrent(self.forcesState.currentCount)
+      end
     end
   end
 
