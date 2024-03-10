@@ -203,17 +203,23 @@ function WarpDeplete:UpdateForces()
   if not self.challengeState.inChallenge then return end
 
   local stepCount = select(3, C_Scenario.GetStepInfo())
-  local newCurrentCount = self:GetEnemyForcesCount()
+  local currentCount = self:GetEnemyForcesCount()
   -- This mostly happens when we have already completed the dungeon
-  if not newCurrentCount then return end
-  self:PrintDebug("currentCount: " .. newCurrentCount)
+  if not currentCount then return end
+  self:PrintDebug("currentCount: " .. currentCount)
 
-  if newCurrentCount >= self.forcesState.totalCount and not self.forcesState.completed then
-    -- If we just went above the total count (or matched it), we completed it just now
-    self.forcesState.completed = true
-    self.forcesState.completedTime = self.timerState.current
+  -- only go down this path if the unclampForcesPercent is checked true
+  if self.db.profile.unclampForcesPercent then
+    if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
+      -- If we just went above the total count (or matched it), we completed it just now
+      self.forcesState.completed = true
+      self.forcesState.completedTime = self.timerState.current
+    else
+      self:SetForcesCurrent(currentCount)
+    end
+  -- otherwise, behave like normal and always pass through the value returned from self:GetEnemyForcesCount()
   else
-    self:SetForcesCurrent(newCurrentCount)
+    self:SetForcesCurrent(currentCount)
   end
 end
 
@@ -555,7 +561,7 @@ function WarpDeplete:OnCombatLogEvent(ev)
   -- See comment above (OnThreadListUpdate)
 
   -- only do this IF unclampForcesPercent is true and checked
-  if self.profile.unclampForcesPercent then
+  if self.db.profile.unclampForcesPercent then
 
     -- check if user has MDT
     if MDT then
@@ -565,16 +571,21 @@ function WarpDeplete:OnCombatLogEvent(ev)
       local guidForceCount = MDT:GetEnemyForces(tonumber(npcID))
 
       -- only add in the once we would've hit 100% force count
-      if self.forcesState.completed then
+      -- need to add in countingExtra since completed would always be true (due to updateForces() always running first)
+      if self.forcesState.completed and self.forcesState.countingExtra then
         self.forcesState.extraCount = self.forcesState.extraCount + guidForceCount
-      else if self.forcesState.currentCount + guidForceCount >= self.forcesState.totalCount then
-        -- self.forcesState.countingExtra = true
+        -- trigger display update
+        self:UpdateForcesDisplay()
+      elseif self.forcesState.currentCount + guidForceCount >= self.forcesState.totalCount then
+        self.forcesState.countingExtra = true
         local rest = self.forcesState.totalCount - self.forcesState.currentCount
-        self.forcesState.extraCount = guidForceCount - rest 
+        self.forcesState.extraCount = guidForceCount - rest
+        -- since we know this only triggers once it hits the 100% cap count
+        -- set currentCount to totalCount as a base
         self.forcesState.currentCount = self.forcesState.totalCount
-      end 
-      local newCurrentCount = self.forcesState.currentCount + self.forcesState.extraCount
-      self:SetForcesCurrent(newCurrentCount)
+        -- update to make sure it goes through
+        self:SetForcesCurrent(self.forcesState.currentCount)
+      end
     end
   end
 

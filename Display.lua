@@ -531,7 +531,7 @@ function WarpDeplete:SetForcesTotal(totalCount)
   if not self.db.profile.unclampForcesPercent then
     if currentPercent > 1.0 then currentPercent = 1.0 end
   end
-  
+
   self.forcesState.currentPercent = currentPercent
 
   self.forcesState.completed = false
@@ -577,14 +577,14 @@ function WarpDeplete:SetForcesCurrent(currentCount)
   if not self.db.profile.unclampForcesPercent then
     if currentPercent > 1.0 then currentPercent = 1.0 end
   end
-  
+
   self.forcesState.currentPercent = currentPercent
 
   self:UpdateForcesDisplay()
 end
 
 function WarpDeplete:UpdateForcesDisplay()
-  if not self.db.profile.unclampForcesPercent then 
+  if not self.db.profile.unclampForcesPercent then
     if self.challengeState.challengeCompleted then
       self.forcesState.currentPercent = 1.0
 
@@ -621,6 +621,7 @@ function WarpDeplete:UpdateForcesDisplay()
       self.forcesState.pullCount,
       self.forcesState.currentCount,
       self.forcesState.totalCount,
+      self.forcesState.extraCount,
       self.forcesState.completed and self.forcesState.completedTime or nil
     )
   )
