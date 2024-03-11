@@ -527,10 +527,16 @@ function WarpDeplete:SetForcesTotal(totalCount)
   self.forcesState.pullPercent = totalCount > 0 and self.forcesState.pullCount / totalCount or 0
 
   local currentPercent = totalCount > 0 and self.forcesState.currentCount / totalCount or 0
-  if currentPercent > 1.0 then currentPercent = 1.0 end
+
+  if not self.db.profile.unclampForcesPercent then
+    if currentPercent > 1.0 then currentPercent = 1.0 end
+  end
+
   self.forcesState.currentPercent = currentPercent
 
   self.forcesState.completed = false
+  self.forcesState.countingExtra = false
+  self.forcesState.extraCount = 0
   self.forcesState.completedTime = 0
 
   self:UpdateForcesDisplay()
@@ -567,18 +573,23 @@ function WarpDeplete:SetForcesCurrent(currentCount)
   local currentPercent = self.forcesState.totalCount > 0
     and self.forcesState.currentCount / self.forcesState.totalCount or 0
 
-  if currentPercent > 1.0 then currentPercent = 1.0 end
+  if not self.db.profile.unclampForcesPercent then
+    if currentPercent > 1.0 then currentPercent = 1.0 end
+  end
+
   self.forcesState.currentPercent = currentPercent
 
   self:UpdateForcesDisplay()
 end
 
 function WarpDeplete:UpdateForcesDisplay()
-  if self.challengeState.challengeCompleted then
-    self.forcesState.currentPercent = 1.0
+  if not self.db.profile.unclampForcesPercent then
+    if self.challengeState.challengeCompleted then
+      self.forcesState.currentPercent = 1.0
 
-    if self.forcesState.currentCount < self.forcesState.totalCount then
-      self.forcesState.currentCount = self.forcesState.totalCount
+      if self.forcesState.currentCount < self.forcesState.totalCount then
+        self.forcesState.currentCount = self.forcesState.totalCount
+      end
     end
   end
 
@@ -609,6 +620,7 @@ function WarpDeplete:UpdateForcesDisplay()
       self.forcesState.pullCount,
       self.forcesState.currentCount,
       self.forcesState.totalCount,
+      self.forcesState.extraCount,
       self.forcesState.completed and self.forcesState.completedTime or nil
     )
   )

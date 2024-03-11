@@ -208,13 +208,19 @@ function WarpDeplete:UpdateForces()
   if not currentCount then return end
   self:PrintDebug("currentCount: " .. currentCount)
 
-  if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
-    -- If we just went above the total count (or matched it), we completed it just now
-    self.forcesState.completed = true
-    self.forcesState.completedTime = self.timerState.current
+  -- only go down this path if the unclampForcesPercent is checked true
+  if self.db.profile.unclampForcesPercent then
+    if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
+      -- If we just went above the total count (or matched it), we completed it just now
+      self.forcesState.completed = true
+      self.forcesState.completedTime = self.timerState.current
+    else
+      self:SetForcesCurrent(currentCount)
+    end
+  -- otherwise, behave like normal and always pass through the value returned from self:GetEnemyForcesCount()
+  else
+    self:SetForcesCurrent(currentCount)
   end
-
-  self:SetForcesCurrent(currentCount)
 end
 
 function WarpDeplete:UpdateObjectives()
@@ -553,6 +559,36 @@ function WarpDeplete:OnCombatLogEvent(ev)
   if not self.forcesState.currentPull[guid] then return end
   self:PrintDebug("removing unit " .. guid .. " from current pull")
   -- See comment above (OnThreadListUpdate)
+
+  -- only do this IF unclampForcesPercent is true and checked
+  if self.db.profile.unclampForcesPercent then
+
+    -- check if user has MDT
+    if MDT then
+
+      -- get the force amount for enemies
+      local npcID = select(6, strsplit("-", guid))
+      local guidForceCount = MDT:GetEnemyForces(tonumber(npcID))
+
+      -- only add in the once we would've hit 100% force count
+      -- need to add in countingExtra since completed would always be true (due to updateForces() always running first)
+      if self.forcesState.completed and self.forcesState.countingExtra then
+        self.forcesState.extraCount = self.forcesState.extraCount + guidForceCount
+        -- trigger display update
+        self:UpdateForcesDisplay()
+      elseif self.forcesState.currentCount + guidForceCount >= self.forcesState.totalCount then
+        self.forcesState.countingExtra = true
+        local rest = self.forcesState.totalCount - self.forcesState.currentCount
+        self.forcesState.extraCount = guidForceCount - rest
+        -- since we know this only triggers once it hits the 100% cap count
+        -- set currentCount to totalCount as a base
+        self.forcesState.currentCount = self.forcesState.totalCount
+        -- update to make sure it goes through
+        self:SetForcesCurrent(self.forcesState.currentCount)
+      end
+    end
+  end
+
   self.forcesState.currentPull[guid] = "DEAD"
   local pullCount = Util.calcPullCount(self.forcesState.currentPull, self.forcesState.totalCount)
   self:SetForcesPull(pullCount)
