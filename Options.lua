@@ -785,10 +785,8 @@ function WarpDeplete:HandleChatCommand(input)
     return
   end
 
-  -- We have to call this twice in a row due to a stupid bug...
-  -- See https://www.wowinterface.com/forums/showthread.php?t=54599
-  InterfaceOptionsFrame_OpenToCategory("WarpDeplete")
-  InterfaceOptionsFrame_OpenToCategory("WarpDeplete")
+  -- Fix InterfaceOptionsFrame_OpenToCategory deprecation issue
+  Settings.OpenToCategory("WarpDeplete")
 end
 
 function WarpDeplete.SetUnlocked(info, value)

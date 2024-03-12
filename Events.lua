@@ -172,7 +172,7 @@ function WarpDeplete:GetObjectivesInfo()
 
   local objectives = {}
   for i = 1, stepCount - 1 do
-    local name, _, completed = C_Scenario.GetCriteriaInfo(i)
+    local name, _, completed = C_ScenarioInfo.GetCriteriaInfo(i)
     if not name then break end
 
     name = gsub(name, " defeated", "")
@@ -191,7 +191,7 @@ end
 
 function WarpDeplete:GetEnemyForcesCount()
   local stepCount = select(3, C_Scenario.GetStepInfo())
-  local _, _, _, _, totalCount, _, _, mobPointsStr = C_Scenario.GetCriteriaInfo(stepCount)
+  local _, _, _, _, totalCount, _, _, mobPointsStr = C_ScenarioInfo.GetCriteriaInfo(stepCount)
   if not totalCount or not mobPointsStr then return nil, nil end
 
   local currentCountStr = gsub(mobPointsStr, "%%", "")
@@ -228,7 +228,7 @@ function WarpDeplete:UpdateObjectives()
     if not objectives[i] or not objectives[i].time then
       -- If it wasn't completed before and it is now, we've just completed
       -- it and can set the completion time
-      local completed = select(3, C_Scenario.GetCriteriaInfo(i))
+      local completed = select(3, C_ScenarioInfo.GetCriteriaInfo(i))
       if completed then
         objectives[i].time = self.timerState.current
         changed = true
