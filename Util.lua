@@ -8,14 +8,14 @@ function Util.formatForcesText(
   completedColor,
   forcesFormat, customForcesFormat, unclampForcesPercent,
   currentPullFormat, customCurrentPullFormat,
-  pullCount, currentCount, totalCount, extraCount, completedTime
+  pullCount, currentCount, totalCount, completedTime
 )
-  local currentPercent = Util.calcForcesPercent(((currentCount + extraCount) / totalCount) * 100, unclampForcesPercent)
+  local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100, unclampForcesPercent)
 
   local percentText = ("%.2f"):format(currentPercent)
-  local countText = ("%d"):format(currentCount + extraCount)
+  local countText = ("%d"):format(currentCount)
   local totalCountText = ("%d"):format(totalCount)
-  local remainingCountText = ("%d"):format(totalCount-(currentCount + extraCount))
+  local remainingCountText = ("%d"):format(totalCount-currentCount)
   local remainingPercentText = ("%.2f"):format(100-currentPercent)
   local result = forcesFormat ~= ":custom:" and forcesFormat or customForcesFormat
 
@@ -206,7 +206,7 @@ function Util.calcForcesPercent(forcesPercent, unclampForcesPercent)
   if unclampForcesPercent then
     return forcesPercent
   end
-  return math.min(forcesPercent, 100.0)
+  return math.min(forcesPercent, 100.0)  
 end
 
 function Util.joinStrings(strings, delim)
