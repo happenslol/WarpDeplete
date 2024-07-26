@@ -197,7 +197,7 @@ end
 function WarpDeplete:ShowBlizzardObjectiveTracker()
   -- As SylingTracker replaces the blizzard objective tracker in hiding
   -- it, we prevent WarpDeplete to reshown the tracker.
-  if IsAddOnLoaded("SylingTracker") then 
+  if C_AddOns.IsAddOnLoaded("SylingTracker") then 
     return 
   end
 

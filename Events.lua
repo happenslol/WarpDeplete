@@ -172,7 +172,9 @@ function WarpDeplete:GetObjectivesInfo()
 
   local objectives = {}
   for i = 1, stepCount - 1 do
-    local name, _, completed = C_ScenarioInfo.GetCriteriaInfo(i)
+    local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(i)
+    local name = CriteriaInfo.description
+    local completed = CriteriaInfo.completed
     if not name then break end
 
     name = gsub(name, " defeated", "")
@@ -191,7 +193,9 @@ end
 
 function WarpDeplete:GetEnemyForcesCount()
   local stepCount = select(3, C_Scenario.GetStepInfo())
-  local _, _, _, _, totalCount, _, _, mobPointsStr = C_ScenarioInfo.GetCriteriaInfo(stepCount)
+  local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(stepCount)
+  local totalCount = CriteriaInfo.totalQuantity
+  local mobPointsStr = CriteriaInfo.quantity
   if not totalCount or not mobPointsStr then return nil, nil end
 
   local currentCountStr = gsub(mobPointsStr, "%%", "")
@@ -228,7 +232,8 @@ function WarpDeplete:UpdateObjectives()
     if not objectives[i] or not objectives[i].time then
       -- If it wasn't completed before and it is now, we've just completed
       -- it and can set the completion time
-      local completed = select(3, C_ScenarioInfo.GetCriteriaInfo(i))
+      local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(i)
+      local completed = CriteriaInfo.completed
       if completed then
         objectives[i].time = self.timerState.current
         changed = true
@@ -441,6 +446,9 @@ function WarpDeplete:OnPlayerDead(ev)
   -- good method for deduping though.
   -- self:BroadcastDeath()
   self:ResetCurrentPull()
+  -- Blizzard re-shows the objective tracker every time the player
+  -- dies, so we need to re-hide it
+  ObjectiveTrackerFrame:Hide()
 end
 
 function WarpDeplete:OnChallengeModeReset(ev)
