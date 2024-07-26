@@ -446,6 +446,8 @@ function WarpDeplete:OnPlayerDead(ev)
   -- good method for deduping though.
   -- self:BroadcastDeath()
   self:ResetCurrentPull()
+  -- Blizzard re-shows the objective tracker every time the player
+  -- dies, so we need to re-hide it
   ObjectiveTrackerFrame:Hide()
 end
 
