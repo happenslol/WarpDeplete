@@ -785,7 +785,6 @@ function WarpDeplete:HandleChatCommand(input)
     return
   end
 
-  -- Fix InterfaceOptionsFrame_OpenToCategory deprecation issue
   Settings.OpenToCategory("WarpDeplete")
 end
 
