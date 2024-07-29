@@ -159,7 +159,7 @@ function WarpDeplete:GetObjectivesInfo()
   end
 
   local currentCount, totalCount = self:GetEnemyForcesCount()
-  -- The last step will forces, all previous steps are bosses
+  -- The last step is forces, all previous steps are bosses
   self:PrintDebug("Got forces info: " .. currentCount .. "/" .. totalCount)
 
   if totalCount <= 0 then
@@ -173,6 +173,8 @@ function WarpDeplete:GetObjectivesInfo()
   local objectives = {}
   for i = 1, stepCount - 1 do
     local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(i)
+    if CriteriaInfo == nil then return false end
+
     local name = CriteriaInfo.description
     local completed = CriteriaInfo.completed
     if not name then break end
@@ -194,6 +196,8 @@ end
 function WarpDeplete:GetEnemyForcesCount()
   local stepCount = select(3, C_Scenario.GetStepInfo())
   local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(stepCount)
+  if not CriteriaInfo then return nil, nil end
+
   local totalCount = CriteriaInfo.totalQuantity
   local mobPointsStr = CriteriaInfo.quantity
   if not totalCount or not mobPointsStr then return nil, nil end
@@ -233,10 +237,12 @@ function WarpDeplete:UpdateObjectives()
       -- If it wasn't completed before and it is now, we've just completed
       -- it and can set the completion time
       local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(i)
-      local completed = CriteriaInfo.completed
-      if completed then
-        objectives[i].time = self.timerState.current
-        changed = true
+      if CriteriaInfo ~= nil then
+        local completed = CriteriaInfo.completed
+        if completed then
+          objectives[i].time = self.timerState.current
+          changed = true
+        end
       end
     end
   end
