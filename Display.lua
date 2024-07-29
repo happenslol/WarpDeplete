@@ -590,14 +590,13 @@ function WarpDeplete:SetForcesPercent(currentPercent)
     self.forcesState.currentPercent = scaledPercent
   end
 
-  if false then
+  if self.forcesState.hasMDTTotalCount then
     -- TODO(happens): Get count information from MDT and set the totalCount
     -- based on that
   else
     -- If we don't have any count information, we just use the percentage as
     -- the count, as 100 as the max count.
     self.forcesState.currentCount = currentPercent
-    self.forcesState.totalCount = 100
   end
 
   self:UpdateForcesDisplay()

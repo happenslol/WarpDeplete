@@ -158,6 +158,12 @@ function WarpDeplete:GetObjectivesInfo()
     return false
   end
 
+  local mdtTotalCount = self:GetMDTTotalCountInfo()
+  if mdtTotalCount then
+    self.forcesState.hasMDTTotalCount = true
+    self.forcesState.totalCount = mdtTotalCount
+  end
+
   local currentPercent = self:GetEnemyForcesPercent()
   -- The last step is forces, all previous steps are bosses
   self:PrintDebug("Got forces info: " .. currentPercent .. "%")
@@ -190,6 +196,26 @@ function WarpDeplete:GetObjectivesInfo()
 
   self:SetObjectives(objectives)
   return true
+end
+
+function WarpDeplete:GetMDTTotalCountInfo()
+  if not MDT then return nil end
+  local zoneId = C_Map.GetBestMapForUnit("player")
+  local mdtDungeonIdx = MDT.zoneIdToDungeonIdx[zoneId]
+
+  if not mdtDungeonIdx then
+    self:PrintDebug("No MDT dungeon index found for zoneId " .. zoneId)
+    return nil
+  end
+
+  local mdtDungeonCountInfo = MDT.dungeonTotalCount[mdtDungeonIdx]
+  if not mdtDungeonCountInfo then
+    self:PrintDebug("No MDT dungeon count found for dungeon index " .. mdtDungeonIdx)
+    return nil
+  end
+
+  self:PrintDebug("Got MDT total count: " .. mdtDungeonCountInfo.normal)
+  return mdtDungeonCountInfo.normal or nil
 end
 
 function WarpDeplete:GetEnemyForcesPercent()

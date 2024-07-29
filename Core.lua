@@ -35,7 +35,9 @@ WarpDeplete.defaultForcesState = {
   currentPull = {},
 
   completed = false,
-  completedTime = 0
+  completedTime = 0,
+
+  hasMDTTotalCount = false,
 }
 
 WarpDeplete.defaultTimerState = {
