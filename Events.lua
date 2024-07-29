@@ -158,17 +158,16 @@ function WarpDeplete:GetObjectivesInfo()
     return false
   end
 
-  local currentCount, totalCount = self:GetEnemyForcesCount()
+  local currentPercent = self:GetEnemyForcesPercent()
   -- The last step is forces, all previous steps are bosses
-  self:PrintDebug("Got forces info: " .. currentCount .. "/" .. totalCount)
+  self:PrintDebug("Got forces info: " .. currentPercent .. "%")
 
-  if totalCount <= 0 then
+  if currentPercent == nil then
     self:PrintDebug("No mob count received")
     return false
   end
 
-  self:SetForcesTotal(totalCount)
-  self:SetForcesCurrent(currentCount)
+  self:SetForcesPercent(currentPercent)
 
   local objectives = {}
   for i = 1, stepCount - 1 do
@@ -193,36 +192,40 @@ function WarpDeplete:GetObjectivesInfo()
   return true
 end
 
-function WarpDeplete:GetEnemyForcesCount()
+function WarpDeplete:GetEnemyForcesPercent()
   local stepCount = select(3, C_Scenario.GetStepInfo())
+
   local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(stepCount)
-  if not CriteriaInfo then return nil, nil end
+  if not CriteriaInfo then return nil end
 
-  local totalCount = CriteriaInfo.totalQuantity
-  local mobPointsStr = CriteriaInfo.quantity
-  if not totalCount or not mobPointsStr then return nil, nil end
+  -- NOTE(happens): Blizzard decided in 11.0 to not return count
+  -- anymore, but instead a percentage. This means the totalQuantity
+  -- is useless to us now.
+  -- local totalCount = CriteriaInfo.totalQuantity
 
-  local currentCountStr = gsub(mobPointsStr, "%%", "")
-  local currentCount = tonumber(currentCountStr)
-  return currentCount, totalCount
+  local mobPercentStr = CriteriaInfo.quantity
+  if not mobPercentStr then return nil end
+
+  local currentPercentStr = gsub(mobPercentStr, "%%", "")
+  local currentPercent = tonumber(currentPercentStr)
+  return currentPercent
 end
 
 function WarpDeplete:UpdateForces()
   if not self.challengeState.inChallenge then return end
 
-  local stepCount = select(3, C_Scenario.GetStepInfo())
-  local currentCount = self:GetEnemyForcesCount()
+  local currentPercent = self:GetEnemyForcesPercent()
   -- This mostly happens when we have already completed the dungeon
-  if not currentCount then return end
-  self:PrintDebug("currentCount: " .. currentCount)
+  if not currentPercent then return end
+  self:PrintDebug("currentPercent: " .. currentPercent)
 
-  if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
+  if currentPercent >= 100 and not self.forcesState.completed then
     -- If we just went above the total count (or matched it), we completed it just now
     self.forcesState.completed = true
     self.forcesState.completedTime = self.timerState.current
   end
 
-  self:SetForcesCurrent(currentCount)
+  self:SetForcesPercent(currentPercent)
 end
 
 function WarpDeplete:UpdateObjectives()

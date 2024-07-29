@@ -522,34 +522,60 @@ function WarpDeplete:UpdateTimerDisplay()
   end
 end
 
-function WarpDeplete:SetForcesTotal(totalCount)
-  self.forcesState.totalCount = totalCount
-  self.forcesState.pullPercent = totalCount > 0 and self.forcesState.pullCount / totalCount or 0
-
-  local currentPercent = totalCount > 0 and self.forcesState.currentCount / totalCount or 0
-  if currentPercent > 1.0 then currentPercent = 1.0 end
-  self.forcesState.currentPercent = currentPercent
-
-  self.forcesState.completed = false
-  self.forcesState.completedTime = 0
-
-  self:UpdateForcesDisplay()
-end
+-- Expects direct forces value
+-- NOTE(happens): This is currently unused as Blizzard does not offer
+-- direct forces values anymore, only percentages.
+-- function WarpDeplete:SetForcesTotal(totalCount)
+--   self.forcesState.totalCount = totalCount
+--   self.forcesState.pullPercent = totalCount > 0 and self.forcesState.pullCount / totalCount or 0
+--
+--   local currentPercent = totalCount > 0 and self.forcesState.currentCount / totalCount or 0
+--   if currentPercent > 1.0 then currentPercent = 1.0 end
+--   self.forcesState.currentPercent = currentPercent
+--
+--   self.forcesState.completed = false
+--   self.forcesState.completedTime = 0
+--
+--   self:UpdateForcesDisplay()
+-- end
 
 -- Expects direct forces value
-function WarpDeplete:SetForcesPull(pullCount)
-  self.forcesState.pullCount = pullCount
-  self.forcesState.pullPercent = self.forcesState.totalCount > 0
-    and pullCount / self.forcesState.totalCount or 0
+-- NOTE(happens): This is currently unused as Blizzard does not offer
+-- direct forces values anymore, only percentages.
+-- function WarpDeplete:SetForcesCurrent(currentCount)
+--   if self.forcesState.currentCount < self.forcesState.totalCount and
+--     currentCount >= self.forcesState.totalCount
+--   then
+--     self.forcesState.completed = true
+--     self.forcesState.completedTime = self.timerState.current
+--   end
+--
+--   -- The current count can only ever go up. The only place where it should
+--   -- ever decrease is when it's reset in ResetState.
+--   -- It seems that the API reports a current count of 0 when the dungeon is
+--   -- finished, but possibly right before the challengeCompleted flag is triggered.
+--   -- So, to make sure we don't reset the bar to 0 in that case, we only allow
+--   -- the count to go up here.
+--   if currentCount >= self.forcesState.currentCount then
+--     self.forcesState.currentCount = currentCount
+--   end
+--
+--   local currentPercent = self.forcesState.totalCount > 0
+--     and self.forcesState.currentCount / self.forcesState.totalCount or 0
+--
+--   if currentPercent > 1.0 then currentPercent = 1.0 end
+--   self.forcesState.currentPercent = currentPercent
+--
+--   self:UpdateForcesDisplay()
+-- end
 
-  self:UpdateForcesDisplay()
-end
+-- Expects a number between 0 and 100
+function WarpDeplete:SetForcesPercent(currentPercent)
+  -- We want the percentage in a scale from 0.0 to 1.0
+  local scaledPercent = currentPercent / 100
 
--- Expects direct forces value
-function WarpDeplete:SetForcesCurrent(currentCount)
-  if self.forcesState.currentCount < self.forcesState.totalCount and
-    currentCount >= self.forcesState.totalCount
-  then
+  -- Check if we just completed the dungeon
+  if self.forcesState.currentPercent < 1.0 and scaledPercent >= 1.0 then
     self.forcesState.completed = true
     self.forcesState.completedTime = self.timerState.current
   end
@@ -560,15 +586,28 @@ function WarpDeplete:SetForcesCurrent(currentCount)
   -- finished, but possibly right before the challengeCompleted flag is triggered.
   -- So, to make sure we don't reset the bar to 0 in that case, we only allow
   -- the count to go up here.
-  if currentCount >= self.forcesState.currentCount then
-    self.forcesState.currentCount = currentCount
+  if scaledPercent >= self.forcesState.currentPercent then
+    self.forcesState.currentPercent = scaledPercent
   end
 
-  local currentPercent = self.forcesState.totalCount > 0
-    and self.forcesState.currentCount / self.forcesState.totalCount or 0
+  if false then
+    -- TODO(happens): Get count information from MDT and set the totalCount
+    -- based on that
+  else
+    -- If we don't have any count information, we just use the percentage as
+    -- the count, as 100 as the max count.
+    self.forcesState.currentCount = currentPercent
+    self.forcesState.totalCount = 100
+  end
 
-  if currentPercent > 1.0 then currentPercent = 1.0 end
-  self.forcesState.currentPercent = currentPercent
+  self:UpdateForcesDisplay()
+end
+
+-- Expects direct forces value
+function WarpDeplete:SetForcesPull(pullCount)
+  self.forcesState.pullCount = pullCount
+  self.forcesState.pullPercent = self.forcesState.totalCount > 0
+    and pullCount / self.forcesState.totalCount or 0
 
   self:UpdateForcesDisplay()
 end
