@@ -552,6 +552,7 @@ end
 function WarpDeplete:OnResetCurrentPull(ev)
   self:PrintDebugEvent(ev)
   self:ResetCurrentPull()
+  self:HideBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:OnThreatListUpdate(ev, unit)
