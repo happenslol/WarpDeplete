@@ -578,6 +578,14 @@ function WarpDeplete:OnThreatListUpdate(ev, unit)
 end
 
 function WarpDeplete:OnCombatLogEvent(ev)
+  -- FIXME(happens): This is a hack and I'm not sure how badly it impacts
+  -- performance, however we don't currently know the exact events blizzard chooses
+  -- to unhide the objective tracker. This ensures it's never unhidden inside
+  -- a running challenge.
+  if self.challengeState.inChallenge or self.challengeState.demoModeActive then
+    ObjectiveTrackerFrame:Hide()
+  end
+
   local _, subEv, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo()
   if subEv ~= "UNIT_DIED" then return end
   self:PrintDebugEvent(ev)
