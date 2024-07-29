@@ -599,7 +599,7 @@ function WarpDeplete:SetForcesPercent(currentPercent)
     -- If we have count information from MDT, we use that to calculate the
     -- current count.
     local estimatedCount = self.forcesState.totalCount * scaledPercent
-    self.currentCount = math.floor(estimatedCount)
+    self.forcesState.currentCount = math.floor(estimatedCount)
     if self.forcesState.currentCount >= self.forcesState.totalCount then
       self.forcesState.currentCount = self.forcesState.totalCount
     end
