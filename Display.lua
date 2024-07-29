@@ -575,7 +575,7 @@ function WarpDeplete:SetForcesPercent(currentPercent)
   local scaledPercent = currentPercent / 100
 
   self:PrintDebug("Setting forces percent to " ..
-    currentPercent .. "(" .. scaledPercent .. ") " ..
+    currentPercent .. " (" .. scaledPercent .. ") " ..
     "current: " .. self.forcesState.currentPercent
   )
 
@@ -599,10 +599,9 @@ function WarpDeplete:SetForcesPercent(currentPercent)
     -- If we have count information from MDT, we use that to calculate the
     -- current count.
     local estimatedCount = self.forcesState.totalCount * scaledPercent
-    self:PrintDebug("Estimated count: " .. estimatedCount)
     self.currentCount = math.ceil(estimatedCount)
-    if self.currentCount >= self.forcesState.totalCount then
-      self.currentCount = self.forcesState.totalCount
+    if self.forcesState.currentCount >= self.forcesState.totalCount then
+      self.forcesState.currentCount = self.forcesState.totalCount
     end
   else
     -- If we don't have any count information, we just use the percentage as
