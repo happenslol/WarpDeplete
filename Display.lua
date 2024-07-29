@@ -574,6 +574,11 @@ function WarpDeplete:SetForcesPercent(currentPercent)
   -- We want the percentage in a scale from 0.0 to 1.0
   local scaledPercent = currentPercent / 100
 
+  self:PrintDebug("Setting forces percent to " ..
+    currentPercent .. "(" .. scaledPercent .. ") " ..
+    "current: " .. self.forcesState.currentPercent
+  )
+
   -- Check if we just completed the dungeon
   if self.forcesState.currentPercent < 1.0 and scaledPercent >= 1.0 then
     self.forcesState.completed = true
