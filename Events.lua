@@ -448,7 +448,7 @@ function WarpDeplete:OnPlayerDead(ev)
   self:ResetCurrentPull()
   -- Blizzard re-shows the objective tracker every time the player
   -- dies, so we need to re-hide it
-  ObjectiveTrackerFrame:Hide()
+  self:HideBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:OnChallengeModeReset(ev)
