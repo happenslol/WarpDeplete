@@ -452,6 +452,7 @@ function WarpDeplete:OnTimerTick(elapsed)
   -- if current < 0 then return end
 
   self:SetTimerCurrent(current)
+  self:HideBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:OnCheckChallengeMode(ev)

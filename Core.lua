@@ -207,7 +207,7 @@ function WarpDeplete:ShowBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:HideBlizzardObjectiveTracker()
-  ObjectiveTrackerFrame:Hide()
+  self:CheckAndHideObjectiveTrackerFrame()
 
   -- Sometimes, the objective tracker isn't hidden
   -- correctly. This can happen when WarpDeplete is
@@ -222,8 +222,15 @@ function WarpDeplete:HideBlizzardObjectiveTracker()
     end
 
     self:PrintDebug("Re-hiding objective frame")
-    ObjectiveTrackerFrame:Hide()
+    self:CheckAndHideObjectiveTrackerFrame()
   end)
+end
+
+-- Why repeat myself :)
+function WarpDeplete:CheckAndHideObjectiveTrackerFrame()
+  if ObjectiveTrackerFrame:IsVisible() then
+    ObjectiveTrackerFrame:Hide()
+  end
 end
 
 function WarpDeplete:ShowExternals()
