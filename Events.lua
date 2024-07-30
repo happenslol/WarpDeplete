@@ -158,21 +158,28 @@ function WarpDeplete:GetObjectivesInfo()
     return false
   end
 
-  local currentCount, totalCount = self:GetEnemyForcesCount()
-  -- The last step will forces, all previous steps are bosses
-  self:PrintDebug("Got forces info: " .. currentCount .. "/" .. totalCount)
+  local mdtTotalCount = self:GetMDTTotalCountInfo()
+  if mdtTotalCount then
+    self.forcesState.hasMDTTotalCount = true
+    self.forcesState.totalCount = mdtTotalCount
+  end
 
-  if totalCount <= 0 then
+  local currentPercent = self:GetEnemyForcesPercent()
+  -- The last step is forces, all previous steps are bosses
+  self:PrintDebug("Got forces info: " .. currentPercent .. "%")
+
+  if currentPercent == nil then
     self:PrintDebug("No mob count received")
     return false
   end
 
-  self:SetForcesTotal(totalCount)
-  self:SetForcesCurrent(currentCount)
+  self:SetForcesPercent(currentPercent)
 
   local objectives = {}
   for i = 1, stepCount - 1 do
     local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(i)
+    if CriteriaInfo == nil then return false end
+
     local name = CriteriaInfo.description
     local completed = CriteriaInfo.completed
     if not name then break end
@@ -191,34 +198,60 @@ function WarpDeplete:GetObjectivesInfo()
   return true
 end
 
-function WarpDeplete:GetEnemyForcesCount()
-  local stepCount = select(3, C_Scenario.GetStepInfo())
-  local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(stepCount)
-  local totalCount = CriteriaInfo.totalQuantity
-  local mobPointsStr = CriteriaInfo.quantity
-  if not totalCount or not mobPointsStr then return nil, nil end
+function WarpDeplete:GetMDTTotalCountInfo()
+  if not MDT then return nil end
+  local zoneId = C_Map.GetBestMapForUnit("player")
+  local mdtDungeonIdx = MDT.zoneIdToDungeonIdx[zoneId]
 
-  local currentCountStr = gsub(mobPointsStr, "%%", "")
-  local currentCount = tonumber(currentCountStr)
-  return currentCount, totalCount
+  if not mdtDungeonIdx then
+    self:PrintDebug("No MDT dungeon index found for zoneId " .. zoneId)
+    return nil
+  end
+
+  local mdtDungeonCountInfo = MDT.dungeonTotalCount[mdtDungeonIdx]
+  if not mdtDungeonCountInfo then
+    self:PrintDebug("No MDT dungeon count found for dungeon index " .. mdtDungeonIdx)
+    return nil
+  end
+
+  self:PrintDebug("Got MDT total count: " .. mdtDungeonCountInfo.normal)
+  return mdtDungeonCountInfo.normal or nil
+end
+
+function WarpDeplete:GetEnemyForcesPercent()
+  local stepCount = select(3, C_Scenario.GetStepInfo())
+
+  local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(stepCount)
+  if not CriteriaInfo then return nil end
+
+  -- NOTE(happens): Blizzard decided in 11.0 to not return count
+  -- anymore, but instead a percentage. This means the totalQuantity
+  -- is useless to us now.
+  -- local totalCount = CriteriaInfo.totalQuantity
+
+  local mobPercentStr = CriteriaInfo.quantity
+  if not mobPercentStr then return nil end
+
+  local currentPercentStr = gsub(mobPercentStr, "%%", "")
+  local currentPercent = tonumber(currentPercentStr)
+  return currentPercent
 end
 
 function WarpDeplete:UpdateForces()
   if not self.challengeState.inChallenge then return end
 
-  local stepCount = select(3, C_Scenario.GetStepInfo())
-  local currentCount = self:GetEnemyForcesCount()
+  local currentPercent = self:GetEnemyForcesPercent()
   -- This mostly happens when we have already completed the dungeon
-  if not currentCount then return end
-  self:PrintDebug("currentCount: " .. currentCount)
+  if not currentPercent then return end
+  self:PrintDebug("currentPercent: " .. currentPercent)
 
-  if currentCount >= self.forcesState.totalCount and not self.forcesState.completed then
+  if currentPercent >= 100 and not self.forcesState.completed then
     -- If we just went above the total count (or matched it), we completed it just now
     self.forcesState.completed = true
     self.forcesState.completedTime = self.timerState.current
   end
 
-  self:SetForcesCurrent(currentCount)
+  self:SetForcesPercent(currentPercent)
 end
 
 function WarpDeplete:UpdateObjectives()
@@ -233,10 +266,12 @@ function WarpDeplete:UpdateObjectives()
       -- If it wasn't completed before and it is now, we've just completed
       -- it and can set the completion time
       local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(i)
-      local completed = CriteriaInfo.completed
-      if completed then
-        objectives[i].time = self.timerState.current
-        changed = true
+      if CriteriaInfo ~= nil then
+        local completed = CriteriaInfo.completed
+        if completed then
+          objectives[i].time = self.timerState.current
+          changed = true
+        end
       end
     end
   end
@@ -448,7 +483,7 @@ function WarpDeplete:OnPlayerDead(ev)
   self:ResetCurrentPull()
   -- Blizzard re-shows the objective tracker every time the player
   -- dies, so we need to re-hide it
-  ObjectiveTrackerFrame:Hide()
+  self:HideBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:OnChallengeModeReset(ev)
@@ -517,6 +552,7 @@ end
 function WarpDeplete:OnResetCurrentPull(ev)
   self:PrintDebugEvent(ev)
   self:ResetCurrentPull()
+  self:HideBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:OnThreatListUpdate(ev, unit)
