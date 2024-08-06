@@ -199,31 +199,17 @@ end
 function WarpDeplete:ShowBlizzardObjectiveTracker()
   -- As SylingTracker replaces the blizzard objective tracker in hiding
   -- it, we prevent WarpDeplete to reshown the tracker.
-  if C_AddOns.IsAddOnLoaded("SylingTracker") then 
-    return 
+  if C_AddOns.IsAddOnLoaded("SylingTracker") then
+    return
   end
 
   ObjectiveTrackerFrame:Show()
 end
 
 function WarpDeplete:HideBlizzardObjectiveTracker()
-  ObjectiveTrackerFrame:Hide()
-
-  -- Sometimes, the objective tracker isn't hidden
-  -- correctly. This can happen when WarpDeplete is
-  -- loaded before the blizzard dungeon timer.
-  -- In this case, we can to check again after a bit
-  -- to make sure we're actually hiding it.
-  C_Timer.After(1, function()
-    -- Check if we're still showing WDP
-    if not self.isShown then
-      self:PrintDebug("Skipping re-hiding objective frame, wdp closed")
-      return
-    end
-
-    self:PrintDebug("Re-hiding objective frame")
+  if ObjectiveTrackerFrame:IsVisible() then
     ObjectiveTrackerFrame:Hide()
-  end)
+  end
 end
 
 function WarpDeplete:ShowExternals()
