@@ -196,6 +196,9 @@ function WarpDeplete:DisableDemoMode()
   self:ResetState()
 end
 
+local hiddenParent = CreateFrame('frame')
+hiddenParent:Hide()
+local oldParent
 function WarpDeplete:ShowBlizzardObjectiveTracker()
   -- As SylingTracker replaces the blizzard objective tracker in hiding
   -- it, we prevent WarpDeplete to reshown the tracker.
@@ -203,12 +206,13 @@ function WarpDeplete:ShowBlizzardObjectiveTracker()
     return
   end
 
-  ObjectiveTrackerFrame:Show()
+  ObjectiveTrackerFrame:SetParent(oldParent or UIParent)
 end
 
 function WarpDeplete:HideBlizzardObjectiveTracker()
   if ObjectiveTrackerFrame:IsVisible() then
-    ObjectiveTrackerFrame:Hide()
+    oldParent = ObjectiveTrackerFrame:GetParent()
+    ObjectiveTrackerFrame:SetParent(hiddenParent)
   end
 end
 
