@@ -77,6 +77,12 @@ function WarpDeplete:OnInitialize()
   frames.bars = CreateFrame("Frame", "WarpDepleteBars", frames.root)
   frames.deathsTooltip = CreateFrame("Frame", "WarpDepleteDeathsTooltip", frames.root)
 
+  -- We use an empty frame to which we parent the blizzard objective tracker.
+  -- This can then be hidden and not be affected by blizzard unhiding the
+  -- objective tracker itself.
+  frames.hiddenObjectiveTrackerParent = CreateFrame("frame")
+  frames.hiddenObjectiveTrackerParent:Hide()
+
   self.frames = frames
 end
 
@@ -203,13 +209,12 @@ function WarpDeplete:ShowBlizzardObjectiveTracker()
     return
   end
 
-  ObjectiveTrackerFrame:Show()
+  ObjectiveTrackerFrame:SetParent(self.originalObjectiveTrackerParent or UIParent)
 end
 
 function WarpDeplete:HideBlizzardObjectiveTracker()
-  if ObjectiveTrackerFrame:IsVisible() then
-    ObjectiveTrackerFrame:Hide()
-  end
+  self.originalObjectiveTrackerParent = ObjectiveTrackerFrame:GetParent()
+  ObjectiveTrackerFrame:SetParent(self.frames.hiddenObjectiveTrackerParent)
 end
 
 function WarpDeplete:ShowExternals()

@@ -450,14 +450,6 @@ function WarpDeplete:OnTimerTick(elapsed)
   local current = GetTime() + self.timerState.startOffset - self.timerState.startTime + deathPenalty
 
   self:SetTimerCurrent(current)
-
-  -- FIXME(happens): Blizzard seems to randomly re-show the objective tracker on
-  -- a lot of events, and even re-hiding it on CLEU events doesn't seem to cover
-  -- all cases.
-  -- The best solution would be to somehow hook into the actual function that
-  -- shows the objective tracker or some event that fires when it's unhidden, but
-  -- that currently doesn't seem to be possible.
-  self:HideBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:OnCheckChallengeMode(ev)
@@ -487,10 +479,6 @@ function WarpDeplete:OnPlayerDead(ev)
   -- good method for deduping though.
   -- self:BroadcastDeath()
   self:ResetCurrentPull()
-
-  -- Blizzard re-shows the objective tracker every time the player
-  -- dies, so we need to re-hide it
-  self:HideBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:OnChallengeModeReset(ev)
@@ -559,7 +547,6 @@ end
 function WarpDeplete:OnResetCurrentPull(ev)
   self:PrintDebugEvent(ev)
   self:ResetCurrentPull()
-  self:HideBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:OnThreatListUpdate(ev, unit)
