@@ -209,7 +209,9 @@ function WarpDeplete:ShowBlizzardObjectiveTracker()
     return
   end
 
-  ObjectiveTrackerFrame:SetParent(self.originalObjectiveTrackerParent or UIParent)
+  if ObjectiveTrackerFrame:GetParent() == self.frames.hiddenObjectiveTrackerParent then
+    ObjectiveTrackerFrame:SetParent(self.originalObjectiveTrackerParent or UIParent)
+  end
 end
 
 function WarpDeplete:HideBlizzardObjectiveTracker()
