@@ -209,12 +209,19 @@ function WarpDeplete:ShowBlizzardObjectiveTracker()
     return
   end
 
+  -- FIXME(happens): See HideBlizzardObjectiveTracker
+  ObjectiveTrackerFrame:SetAlpha(1)
+
   if ObjectiveTrackerFrame:GetParent() == self.frames.hiddenObjectiveTrackerParent then
     ObjectiveTrackerFrame:SetParent(self.originalObjectiveTrackerParent or UIParent)
   end
 end
 
 function WarpDeplete:HideBlizzardObjectiveTracker()
+  -- FIXME(happens): The reparenting method seems to not work for some people.
+  -- As an additional fallback, we set the alpha to 0.
+  ObjectiveTrackerFrame:SetAlpha(0)
+
   self.originalObjectiveTrackerParent = ObjectiveTrackerFrame:GetParent()
   ObjectiveTrackerFrame:SetParent(self.frames.hiddenObjectiveTrackerParent)
 end
