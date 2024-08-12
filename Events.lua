@@ -185,6 +185,7 @@ function WarpDeplete:GetObjectivesInfo()
     if not name then break end
 
     name = gsub(name, " defeated", "")
+    name = gsub(name, " Defeated", "")
     self:PrintDebug("Got boss name for index " .. i .. ": " .. tostring(name))
     objectives[i] = { name = name, time = completed and 0 or nil }
   end
