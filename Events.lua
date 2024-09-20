@@ -127,6 +127,37 @@ function WarpDeplete:GetTimerInfo()
   return true
 end
 
+-- TODO(happens): Add missing locales
+local affixNameFilters = {
+  ["enUS"] = {"Xal'atath's", "Challenger's", "Bargain:"},
+  ["deDE"] = {"Xal'ataths", "des Herausforderers", "Handel:"},
+  ["frFR"] = {},
+  ["itIT"] = {},
+  ["koKR"] = {},
+  ["zhCN"] = {},
+  ["zhTW"] = {},
+  ["ruRU"] = {},
+  ["esES"] = {},
+  ["esMX"] = {},
+  ["ptBR"] = {},
+}
+
+local locale = GetLocale()
+-- These should have the same names
+if locale == "enGB" then
+  locale = "enUS"
+end
+
+local function formatAffixName(name)
+  local result = name
+  local filters = affixNameFilters[locale] or {}
+  for _, filter in ipairs(filters) do
+    result = result:gsub(filter, "")
+  end
+
+  return result:match("^%s*(.-)%s*$")
+end
+
 function WarpDeplete:GetKeyInfo()
   self:PrintDebug("Getting key info")
 
@@ -137,7 +168,7 @@ function WarpDeplete:GetKeyInfo()
   local deathPenalty = 5
   for i, affixID in ipairs(affixes) do
     local name = C_ChallengeMode.GetAffixInfo(affixID)
-    affixNames[i] = name
+    affixNames[i] = formatAffixName(name)
     affixIds[i] = affixID
     if affixID == 152 then
       deathPenalty = 15
