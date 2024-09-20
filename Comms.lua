@@ -66,7 +66,7 @@ function WarpDeplete:OnTimerSyncResponse(prefix, message, dist, sender)
     local deaths = C_ChallengeMode.GetDeathCount()
     self.timerState.current = current
     self.timerState.deaths = deaths
-    local trueTime = current - deaths * 5
+    local trueTime = current - deaths * self.keyDetailsState.deathPenalty
     self.timerState.startOffset = trueTime
     self.timerState.startTime = GetTime()
     self.timerState.isBlizzardTimer = false

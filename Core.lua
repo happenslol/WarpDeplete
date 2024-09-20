@@ -61,6 +61,7 @@ WarpDeplete.defaultObjectivesState = {}
 
 WarpDeplete.defaultKeyDetailsState = {
   level = 0,
+  deathPenalty = 0,
   affixes = {},
   affixIds = {}
 }
@@ -159,7 +160,7 @@ function WarpDeplete:EnableDemoMode()
   end
 
   self:SetObjectives(objectives)
-  self:SetKeyDetails(30, {L["Tyrannical"], L["Bolstering"], L["Spiteful"]}, {9, 7, 123, 132})
+  self:SetKeyDetails(30, 15, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Challenger's Peril"]}, {9, 7, 123, 152})
 
   self:SetTimerLimit(35 * 60)
   self:SetTimerRemaining(20 * 60)

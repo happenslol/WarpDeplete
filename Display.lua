@@ -800,8 +800,9 @@ function WarpDeplete:UpdateObjectivesDisplay()
 end
 
 -- Expects level as number and affixes as string array, e.g. {"Tyrannical", "Bolstering"}
-function WarpDeplete:SetKeyDetails(level, affixes, affixIds)
+function WarpDeplete:SetKeyDetails(level, deathPenalty, affixes, affixIds)
   self.keyDetailsState.level = level
+  self.keyDetailsState.deathPenalty = deathPenalty
   self.keyDetailsState.affixes = affixes
   self.keyDetailsState.affixIds = affixIds
 
