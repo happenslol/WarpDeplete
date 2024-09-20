@@ -741,7 +741,7 @@ function WarpDeplete:HandleChatCommand(input)
     self:PrintDebug("Offset: " .. self.timerState.startOffset .. ", " .. WarpDeplete.Util.formatTime(self.timerState.startOffset))
     self:PrintDebug("Start time: " .. self.timerState.startTime)
     self:PrintDebug("Deaths: " .. self.timerState.deaths)
-    local deathPenalty = self.timerState.deaths * 5
+    local deathPenalty = self.timerState.deaths * self.keyDetailsState.deathPenalty
     local current = GetTime() - self.timerState.startTime 
     local currentWithOffset = current + self.timerState.startOffset
     self:PrintDebug("Current: " .. current .. ", " .. WarpDeplete.Util.formatTime(current))

@@ -90,7 +90,7 @@ end
 function Util.formatDeathText(deaths)
   if not deaths then return "" end
 
-  local timeAdded = deaths * 5
+  local timeAdded = deaths * WarpDeplete.keyDetailsState.deathPenalty
   local deathText = "" .. deaths
   if deaths == 1 then deathText = deathText .. " " .. L["Deaths"] .. " "
   else deathText = deathText .. " " .. L["Deaths"] .. " " end
