@@ -61,7 +61,7 @@ WarpDeplete.defaultObjectivesState = {}
 
 WarpDeplete.defaultKeyDetailsState = {
   level = 0,
-  deathPentalty = 0,
+  deathPenalty = 0,
   affixes = {},
   affixIds = {}
 }
