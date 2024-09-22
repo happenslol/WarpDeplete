@@ -158,7 +158,7 @@ function WarpDeplete:EnableDemoMode()
   end
 
   self:SetObjectives(objectives)
-  self:SetKeyDetails(30, 15, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Challenger's Peril"]}, {9, 7, 123, 152})
+  self:SetKeyDetails(30, 15, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Peril"]}, {9, 7, 123, 152})
 
   self:SetTimerLimit(35 * 60)
   self:SetTimerRemaining(20 * 60)
@@ -210,6 +210,7 @@ function WarpDeplete:ShowBlizzardObjectiveTracker()
 
   -- FIXME(happens): See HideBlizzardObjectiveTracker
   ObjectiveTrackerFrame:SetAlpha(1)
+  ObjectiveTrackerFrame:Show()
 
   if ObjectiveTrackerFrame:GetParent() == self.frames.hiddenObjectiveTrackerParent then
     ObjectiveTrackerFrame:SetParent(self.originalObjectiveTrackerParent or UIParent)
@@ -223,6 +224,7 @@ function WarpDeplete:HideBlizzardObjectiveTracker()
 
   self.originalObjectiveTrackerParent = ObjectiveTrackerFrame:GetParent()
   ObjectiveTrackerFrame:SetParent(self.frames.hiddenObjectiveTrackerParent)
+  ObjectiveTrackerFrame:Hide()
 end
 
 function WarpDeplete:ShowExternals()
