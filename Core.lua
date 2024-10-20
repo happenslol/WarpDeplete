@@ -40,7 +40,6 @@ WarpDeplete.defaultForcesState = {
 
 WarpDeplete.defaultTimerState = {
   startTime = nil,
-  isBlizzardTimer = false,
   running = false,
   deaths = 0,
   deathDetails = {},

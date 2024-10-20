@@ -454,28 +454,19 @@ function WarpDeplete:InitOptions()
           }
         }),
 
-        -- TODO: Re-enable this when the feature has been re-implemented
-        -- group(L["Timings"], true, {
-        --   {
-        --     type = "toggle",
-        --     name = L["Enable timings"],
-        --     desc = L["Enable recording of timestamps at which bosses have been killed"],
-        --     get = function(info) return WarpDeplete.db.profile.timingsEnabled end,
-        --     set = function(info, value)
-        --        WarpDeplete.db.profile.timingsEnabled = value
-        --        self:UpdateLayout()
-        --     end,
-        --     width = 1
-        --   },
-        --   {
-        --     type = "toggle",
-        --     name = L["Only record completed runs"],
-        --     desc = L["When active, timestamps are only recorded once the key has been finished"],
-        --     get = function(info) return WarpDeplete.db.profile.timingsOnlyCompleted end,
-        --     set = function(info, value) WarpDeplete.db.profile.timingsOnlyCompleted = value end,
-        --     width = 2
-        --   }
-        -- })
+        group(L["Objective Completion Splits"], true, {
+          {
+            type = "toggle",
+            name = L["Enable Personal Best Times for Objectives"],
+            desc = L["Show time difference to best objective completion times"],
+            get = function(info) return WarpDeplete.db.profile.timingsEnabled end,
+            set = function(info, value)
+               WarpDeplete.db.profile.timingsEnabled = value
+               self:UpdateLayout()
+            end,
+            width = 1
+          },
+        })
       }, { order = 3 }),
 
       texts = group(L["Display"], false, {
@@ -625,28 +616,6 @@ function WarpDeplete:InitOptions()
           font(L["Objectives font"], "objectivesFont", "UpdateLayout", { width = 3 / 2 }),
           fontFlags(L["Objectives font flags"], "objectivesFontFlags", "UpdateLayout", { width = 3 / 2 }),
           range(L["Objectives font size"], "objectivesFontSize", "UpdateLayout", { width = 3 / 2 }),
-          {
-            type = "select",
-            name = L["Objectives time difference"],
-            desc = L["How to display timing differences in the objective display"],
-            sorting = {
-              "hidden",
-              "bestDiff",
-              "lastDiff"
-            },
-            values = {
-              ["hidden"] = L["Hidden"],
-              ["bestDiff"] = L["Difference to best kill time"],
-              ["lastDiff"] = L["Difference to last kill time"]
-            },
-            hidden = function() return not WarpDeplete.db.profile.timingsEnabled end,
-            get = function(info) return WarpDeplete.db.profile.timingsDisplayStyle end,
-            set = function(info, value)
-              WarpDeplete.db.profile.timingsDisplayStyle = value
-              self:UpdateLayout()
-            end,
-            width = 3 / 2
-          },
           color(L["Objectives color"], "objectivesColor", "UpdateLayout"),
           color(L["Completed objective color"], "completedObjectivesColor", "UpdateLayout"),
           color(L["New best objective clear time"], "timingsImprovedTimeColor", "UpdateLayout", {
@@ -750,7 +719,6 @@ function WarpDeplete:HandleChatCommand(input)
     self:PrintDebug("Blizzard Current: " .. blizzardCurrent .. ", " .. WarpDeplete.Util.formatTime(blizzardCurrent))
     local blizzardCurrentWODeaths = blizzardCurrent - deathPenalty
     self:PrintDebug("Blizzard Current w/o deaths: " .. blizzardCurrentWODeaths .. ", " .. WarpDeplete.Util.formatTime(blizzardCurrentWODeaths))
-    self:PrintDebug("isBlizzardTimer: " .. tostring(self.timerState.isBlizzardTimer))
     return
   end
 

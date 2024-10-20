@@ -124,31 +124,25 @@ local defaults = {
 
     -- Timings
     timingsEnabled = true,
-    timingsOnlyCompleted = true,
-    timingsDisplayStyle = "bestDiff",
     timingsImprovedTimeColor = "FF00D200",
     timingsWorseTimeColor = "FFF50000"
   },
 
-  char = {
-    --[[ Structure of the timings table
-       timings = { 
-         dungeonId = { 
-           keystoneLevel = { 
-             1stAffixId = { 
-               best = { 
-                 objectiveIndex = <time> 
-               }, 
-               last = { 
-                 objectiveIndex = <time> 
-               } 
-             } 
-           } 
-         }
-       }
-    --]]
-    timings = {}
-  }
+  global = {
+    timings = {
+      --[[ Structure of the timings table
+        timings = { 
+          dungeonId = { 
+            keystoneLevel = { 
+              best = { objectiveIndex = <time> }, 
+              current = { objectiveIndex = <time> },
+              currentDiff = { objectiveIndex = <time> },
+            } 
+          }
+        }
+      --]]
+    },
+  },
 }
 
 function WarpDeplete:InitDb()

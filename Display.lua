@@ -539,14 +539,6 @@ end
 
 -- Expects direct forces value
 function WarpDeplete:SetForcesCurrent(currentCount)
-  -- Check if we just completed the dungeon
-  if self.forcesState.currentCount < self.forcesState.totalCount and
-    currentCount >= self.forcesState.totalCount
-  then
-    self.forcesState.completed = true
-    self.forcesState.completedTime = self.timerState.current
-  end
-
   -- The current count can only ever go up. The only place where it should
   -- ever decrease is when it's reset in ResetState.
   -- It seems that the API reports a current count of 0 when the dungeon is
@@ -566,6 +558,23 @@ function WarpDeplete:SetForcesCurrent(currentCount)
   self:UpdateForcesDisplay()
 end
 
+function WarpDeplete:SetForcesCompletionTime(completionTime)
+  self.forcesState.completed = true
+  self.forcesState.completedTime = completionTime
+
+  -- Make sure we always show max forces/100% on completion
+  if self.challengeState.challengeCompleted then
+    self.forcesState.currentPercent = 1.0
+
+    if self.forcesState.currentCount < self.forcesState.totalCount then
+      self.forcesState.currentCount = self.forcesState.totalCount
+    end
+  end
+
+  self:UpdateTimings()
+  self:UpdateForcesDisplay()
+end
+
 -- Expects direct forces value
 function WarpDeplete:SetForcesPull(pullCount)
   self.forcesState.pullCount = pullCount
@@ -576,14 +585,6 @@ function WarpDeplete:SetForcesPull(pullCount)
 end
 
 function WarpDeplete:UpdateForcesDisplay()
-  if self.challengeState.challengeCompleted then
-    self.forcesState.currentPercent = 1.0
-
-    if self.forcesState.currentCount < self.forcesState.totalCount then
-      self.forcesState.currentCount = self.forcesState.totalCount
-    end
-  end
-
   if self.forcesState.currentPercent < 1.0 then
     -- clamp pull progress so that the bar won't exceed 100%
     local pullPercent = self.forcesState.pullPercent
@@ -690,12 +691,13 @@ end
 function WarpDeplete:UpdateObjectivesDisplay()
   local completionColor = self.db.profile.completedObjectivesColor
   local alignStart = self.db.profile.alignBossClear == "start"
-  local timingsDisplayStyle = self.db.profile.timingsDisplayStyle
 
   -- Clear existing objective list
   for i = 1, 5 do
     self.frames.root.objectiveTexts[i]:SetText("")
   end
+
+  local timings = self:GetTimingsForCurrentInstance()
 
   for i, boss in ipairs(self.objectivesState) do
     local objectiveStr = boss.name
@@ -714,38 +716,16 @@ function WarpDeplete:UpdateObjectivesDisplay()
         objectiveStr = objectiveStr .. " " .. completionTimeStr
       end
 
-      -- TODO(happens): This is temporarily disabled, due to some
-      -- bugs with the current implementation. We basically need
-      -- to find out time differences for the current run at the
-      -- time when the boss is cleared and then update them in the
-      -- database, and from that point on only display the values
-      -- saved for the current run.
-      -- Otherwise, on each consecutive update we find the new
-      -- best/last times for the current run and the difference
-      -- will always be 0.
-      --
-      -- if timingsDisplayStyle ~= "hidden" then
-      --   local bestDiffStr = ""
+      if self.db.profile.timingsEnabled then
+        local diff = self:GetCurrentDiff(i)
+        local diffColor = diff <= 0 and
+          self.db.profile.timingsImprovedTimeColor or
+          self.db.profile.timingsWorseTimeColor
 
-      --   local diff = nil
-      --   if timingsDisplayStyle == "bestDiff" then
-      --     local bestTime = self:GetBestTime(i)
-      --     if bestTime ~= nil then diff = boss.time - bestTime end
-      --   elseif timingsDisplayStyle == "lastDiff" then
-      --     local lastTime = self:GetLastTime(i)
-      --     if lastTime ~= nil then diff = boss.time - lastTime end
-      --   end
+        diffStr = "|c" .. diffColor ..  Util.formatTime(diff, true) .. "|r"
 
-      --   if diff ~= nil then
-      --     local color = diff <= 0 and
-      --       self.db.profile.timingsImprovedTimeColor or
-      --       self.db.profile.timingsWorseTimeColor
-
-      --     bestDiffStr = "[|c" .. color ..
-      --       Util.formatTime(diff, true) .. "|r|c" ..
-      --       completionColor .. "]"
-      --   end
-      -- end
+        objectiveStr = diffStr .. " " .. objectiveStr
+      end
     end
 
     -- TODO allow users to provide a custom format string for the objectiveStr
