@@ -60,7 +60,8 @@ WarpDeplete.defaultKeyDetailsState = {
   level = 0,
   deathPenalty = 0,
   affixes = {},
-  affixIds = {}
+  affixIds = {},
+  mapId
 }
 
 -- Check if Kaliel's Tracker is loaded, since it creates a

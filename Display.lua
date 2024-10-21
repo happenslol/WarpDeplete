@@ -559,6 +559,7 @@ function WarpDeplete:SetForcesCurrent(currentCount)
 end
 
 function WarpDeplete:SetForcesCompletionTime(completionTime)
+  self:PrintDebug("Setting forces completion time")
   self.forcesState.completed = true
   self.forcesState.completedTime = completionTime
 
@@ -612,7 +613,12 @@ function WarpDeplete:UpdateForcesDisplay()
       self.forcesState.pullCount,
       self.forcesState.currentCount,
       self.forcesState.totalCount,
-      self.forcesState.completed and self.forcesState.completedTime or nil
+      self.forcesState.completed and self.forcesState.completedTime or nil,
+      self.db.profile.timingsEnabled,
+      self:GetCurrentDiff("forces"),
+      self.db.profile.timingsImprovedTimeColor,
+      self.db.profile.timingsWorseTimeColor,
+      self.db.profile.alignBarTexts
     )
   )
   self:UpdateGlow()
@@ -718,13 +724,20 @@ function WarpDeplete:UpdateObjectivesDisplay()
 
       if self.db.profile.timingsEnabled then
         local diff = self:GetCurrentDiff(i)
-        local diffColor = diff <= 0 and
-          self.db.profile.timingsImprovedTimeColor or
-          self.db.profile.timingsWorseTimeColor
 
-        diffStr = "|c" .. diffColor ..  Util.formatTime(diff, true) .. "|r"
+        if diff ~= nil then
+          local diffColor = diff <= 0 and
+            self.db.profile.timingsImprovedTimeColor or
+            self.db.profile.timingsWorseTimeColor
 
-        objectiveStr = diffStr .. " " .. objectiveStr
+          diffStr = "|c" .. diffColor ..  Util.formatTime(diff, true) .. "|r"
+
+          if alignStart then
+            objectiveStr = diffStr .. " " .. objectiveStr
+          else
+            objectiveStr = objectiveStr .. " " .. diffStr
+          end
+        end
       end
     end
 
@@ -734,11 +747,12 @@ function WarpDeplete:UpdateObjectivesDisplay()
 end
 
 -- Expects level as number and affixes as string array, e.g. {"Tyrannical", "Bolstering"}
-function WarpDeplete:SetKeyDetails(level, deathPenalty, affixes, affixIds)
+function WarpDeplete:SetKeyDetails(level, deathPenalty, affixes, affixIds, mapId)
   self.keyDetailsState.level = level
   self.keyDetailsState.deathPenalty = deathPenalty
   self.keyDetailsState.affixes = affixes
   self.keyDetailsState.affixIds = affixIds
+  self.keyDetailsState.mapId = mapId
 
   self:UpdateKeyDetailsDisplay()
 end

@@ -8,8 +8,23 @@ function Util.formatForcesText(
   completedColor,
   forcesFormat, customForcesFormat, unclampForcesPercent,
   currentPullFormat, customCurrentPullFormat,
-  pullCount, currentCount, totalCount, completedTime
+  pullCount, currentCount, totalCount, completedTime,
+  timingsEnabled, diff,
+  timingsImprovedTimeColor, timingsWorseTimeColor,
+  align
 )
+  -- This is what we get when the countdown is running. We attempt
+  -- to get the total count from MDT so we can already show it, but
+  -- we don't want any of this in our actual key details, so it's just
+  -- in the display code.
+  if currentCount == 0 and totalCount == 1 then
+    local mdtTotalCount = Util.GetMDTTotalCountInfo()
+    -- Nothing we can do if we don't get this
+    if mdtTotalCount == nil then return nil end
+
+    totalCount = mdtTotalCount
+  end
+
   local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100, unclampForcesPercent)
 
   local percentText = ("%.2f"):format(currentPercent)
@@ -70,8 +85,26 @@ function Util.formatForcesText(
   end
 
   if completedTime and result then
-    local completedText = ("[%s] "):format(Util.formatTime(completedTime))
-    result = "|c" .. completedColor .. completedText .. result .. "|r"
+    local completedText = ("[%s]"):format(Util.formatTime(completedTime))
+    if align == "right" then
+      result = "|c" .. completedColor .. completedText .. " " .. result .. "|r"
+    else
+      result = "|c" .. completedColor .. result .. " " .. completedText .. "|r"
+    end
+
+    if timingsEnabled and diff ~= nil then
+      local diffColor = diff <= 0 and
+        timingsImprovedTimeColor or
+        timingsWorseTimeColor
+
+      diffStr = "|c" .. diffColor ..  Util.formatTime(diff, true) .. "|r"
+
+      if align == "right" then
+        result = diffStr .. " " .. result
+      else
+        result = result .. " " .. diffStr
+      end
+    end
   end
 
   return result or ""
@@ -243,4 +276,25 @@ end
 
 function WarpDeplete:PrintDebugEvent(ev)
   self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
+end
+
+function Util.GetMDTTotalCountInfo()
+  if not MDT then return nil end
+  WarpDeplete:PrintDebug("Getting MDT total count fallback")
+
+  local zoneId = C_Map.GetBestMapForUnit("player")
+  local mdtDungeonIdx = MDT.zoneIdToDungeonIdx[zoneId]
+  if not mdtDungeonIdx then
+    WarpDeplete:PrintDebug("No MDT dungeon index found for zoneId " .. zoneId)
+    return nil
+  end
+
+  local mdtDungeonCountInfo = MDT.dungeonTotalCount[mdtDungeonIdx]
+  if not mdtDungeonCountInfo then
+    WarpDeplete:PrintDebug("No MDT dungeon count found for dungeon index " .. mdtDungeonIdx)
+    return nil
+  end
+
+  WarpDeplete:PrintDebug("Got MDT total count: " .. mdtDungeonCountInfo.normal)
+  return mdtDungeonCountInfo.normal or nil
 end

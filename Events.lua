@@ -57,11 +57,18 @@ function WarpDeplete:OnWorldStateTimerStart()
   if self.timerState.running then return end
 
   if not self.challengeState.inChallenge then
+    -- We didn't receive the challenge start event for some
+    -- reason, so we need to do everything here
     self:StartChallengeMode()
   else
+    -- UI is already shown, just refresh timer and forces
+    -- since they can be incorrect during the countdown
+    -- (Forces will be 0/1 always)
     self:GetTimerInfo()
-    self:StartChallengeTimer()
+    self:GetForcesInfo()
   end
+
+  self:StartChallengeTimer()
 end
 
 function WarpDeplete:OnChallengeModeStart(ev)
@@ -180,6 +187,8 @@ function WarpDeplete:GetKeyInfo()
   self:PrintDebug("Getting key info")
 
   local level, affixes = C_ChallengeMode.GetActiveKeystoneInfo()
+  local mapId = C_ChallengeMode.GetActiveChallengeMapID()
+  self:PrintDebug("KeyInfo: Got active challenge map id " .. tostring(mapId))
 
   local affixNames = {}
   local affixIds = {}
@@ -198,40 +207,46 @@ function WarpDeplete:GetKeyInfo()
     return false
   end
 
-  self:SetKeyDetails(level or 0, deathPenalty, affixNames, affixIds)
+  if not mapId then
+    self:PrintDebug("No mapId received")
+    return false
+  end
+
+  self:SetKeyDetails(level or 0, deathPenalty, affixNames, affixIds, mapId)
   return true
 end
 
-function WarpDeplete:GetObjectivesInfo()
-  self:PrintDebug("Getting objectives info")
-
+function WarpDeplete:GetForcesInfo()
   -- The last step is forces, all previous steps are bosses
   local stepCount = select(3, C_Scenario.GetStepInfo())
   if stepCount <= 0 then
     self:PrintDebug("No steps received, can't update objective info")
-    return false
+    return false, 0
   end
 
   local currentCount, totalCount, completionTime = self:GetEnemyForcesCount()
   self:PrintDebug("Got forces info: " .. tonumber(currentCount) .. "/" .. tonumber(totalCount))
 
   if currentCount == nil or totalCount == nil then
-    self:PrintDebug("No mob count received")
-
-    -- Make sure we still set completion time if we got it
-    if completionTime ~= nil then
-      self:SetForcesCompletionTime(completionTime)
-    end
-
-    return false
+    self:PrintDebug("No mob count received in GetObjectivesInfo")
+    return false, 0
   end
 
   self:SetForcesTotal(totalCount)
   self:SetForcesCurrent(currentCount)
 
   if completionTime ~= nil then
+    self:PrintDebug("Setting forces completion in GetObjectivesInfo")
     self:SetForcesCompletionTime(completionTime)
   end
+
+  return true, stepCount
+end
+
+function WarpDeplete:GetObjectivesInfo()
+  self:PrintDebug("Getting objectives info")
+  local gotForcesInfo, stepCount = self:GetForcesInfo()
+  if not gotForcesInfo then return false end
 
   local objectives = {}
   for i = 1, stepCount - 1 do
@@ -258,9 +273,13 @@ function WarpDeplete:GetObjectivesInfo()
 end
 
 function WarpDeplete:GetEnemyForcesCount()
+  self:PrintDebug("Getting enemy forces count")
   local stepCount = select(3, C_Scenario.GetStepInfo())
   local info = C_ScenarioInfo.GetCriteriaInfo(stepCount)
-  if not info then return nil, nil, nil end
+  if not info then
+    self:PrintDebug("Got no criteria info in GetEnemyForcesCount")
+    return nil, nil, nil
+  end
 
   local totalCount = info.totalQuantity
   local currentCountStr = info.quantityString
@@ -270,8 +289,13 @@ function WarpDeplete:GetEnemyForcesCount()
   local currentCount = currentCountStr and tonumber(currentCountStr:match("%d+")) or 0
 
   local completionTime = nil
+  self:PrintDebug("Checking enemy forces count:"
+    .. " currentCount=" .. tostring(currentCount)
+    .. " totalCount=" .. tostring(totalCount)
+    .. " completed=" .. tostring(info.completed))
   if currentCount >= totalCount then
     completionTime = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
+    self:PrintDebug("Returning completion time: " .. tostring(completionTime))
   end
 
   return currentCount, totalCount, completionTime
@@ -282,14 +306,8 @@ function WarpDeplete:UpdateForces()
 
   local currentCount, totalCount, completionTime = self:GetEnemyForcesCount()
   -- This mostly happens when we have already completed the dungeon
-  if not currentCount or not totalCount then
+  if currentCount == nil or totalCount == nil then
     self:PrintDebug("Got no forces total or current on UpdateForces")
-
-    -- Make sure we still set forces completion in this case
-    if completionTime ~= nil then
-      self:SetForcesCompletionTime(completionTime)
-    end
-
     return
   end
 
@@ -298,6 +316,7 @@ function WarpDeplete:UpdateForces()
   self:SetForcesCurrent(currentCount)
 
   if completionTime ~= nil then
+    self:PrintDebug("Setting forces completion in UpdateForces")
     self:SetForcesCompletionTime(completionTime)
   end
 end
@@ -311,16 +330,11 @@ function WarpDeplete:UpdateObjectives()
   local stepCount = select(3, C_Scenario.GetStepInfo())
   for i = 1, stepCount - 1 do
     if not objectives[i] or not objectives[i].time then
-      -- If it wasn't completed before and it is now, we've just completed
-      -- it and can set the completion time
       local info = C_ScenarioInfo.GetCriteriaInfo(i)
-      if info ~= nil then
-        local completed = info.completed
-
-        if completed then
-          objectives[i].time = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
-          changed = true
-        end
+      if info ~= nil and info.completed then
+        objectives[i] = objectives[i] or {}
+        objectives[i].time = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
+        changed = true
       end
     end
   end
@@ -354,6 +368,7 @@ function WarpDeplete:RegisterGlobalEvents()
   self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnCheckChallengeMode")
   self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnCheckChallengeMode")
   self:RegisterEvent("CHALLENGE_MODE_START", "OnChallengeModeStart")
+  self:RegisterEvent("CHALLENGE_MODE_RESET", "OnChallengeModeStart")
 
   -- Fired when the countdown hits 0 (and for some reason when we die?)
   self:RegisterEvent("WORLD_STATE_TIMER_START", "OnWorldStateTimerStart")
@@ -464,15 +479,17 @@ function WarpDeplete:RegisterChallengeEvents()
 end
 
 function WarpDeplete:UnregisterChallengeEvents()
-  self:UnregisterEvent("CHALLENGE_MODE_START")
-  self:UnregisterEvent("CHALLENGE_MODE_RESET")
   self:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
+
   self:UnregisterEvent("SCENARIO_POI_UPDATE")
   self:UnregisterEvent("SCENARIO_CRITERIA_UPDATE")
+
   self:UnregisterEvent("PLAYER_DEAD")
+  self:UnregisterEvent("ENCOUNTER_END")
   self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-  self:UnregisterEvent("UNIT_THREAT_LIST_UPDATE")
+
   self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+  self:UnregisterEvent("UNIT_THREAT_LIST_UPDATE")
 end
 
 function WarpDeplete:OnTimerTick(elapsed)
@@ -604,7 +621,7 @@ function WarpDeplete:OnThreatListUpdate(ev, unit)
   local count = MDT:GetEnemyForces(tonumber(npcID))
   if not count or count <= 0 then return end
 
-  self:PrintDebug("Adding unit " .. guid .. " to current pull: " .. count)
+  -- DEBUG self:PrintDebug("Adding unit " .. guid .. " to current pull: " .. count)
   self.forcesState.currentPull[guid] = count
   local pullCount = Util.calcPullCount(self.forcesState.currentPull, self.forcesState.totalCount)
   self:SetForcesPull(pullCount)

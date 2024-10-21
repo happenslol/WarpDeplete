@@ -95,7 +95,7 @@ end
 
 function WarpDeplete:GetTimingsForCurrentInstance()
   local level = self.keyDetailsState.level
-  local mapId = C_ChallengeMode.GetActiveChallengeMapID()
+  local mapId = self.keyDetailsState.mapId
   if mapId == nil or level == nil then return nil end
 
   return self:GetTimings(mapId, level)

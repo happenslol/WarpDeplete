@@ -678,7 +678,25 @@ function WarpDeplete:InitOptions()
       step = 1,
       get = function(info) return WarpDeplete.forcesState.currentCount end,
       set = function(info, value) WarpDeplete:SetForcesCurrent(value) end
-    }
+    },
+
+    {
+      type = "toggle",
+      name = L["Forces complete"],
+      get = function(info) return WarpDeplete.forcesState.completed end,
+      set = function(info, value)
+        WarpDeplete.forcesState.completed = value
+
+        if value then
+          WarpDeplete.forcesState.completedTime = 3000
+        else
+          WarpDeplete.forcesState.completedTime = nil
+        end
+
+        self:UpdateForcesDisplay()
+      end,
+      width = 3 / 2,
+    },
   })
 
   options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
