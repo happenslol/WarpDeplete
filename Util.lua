@@ -6,7 +6,7 @@ local L = WarpDeplete.L
 
 function Util.formatForcesText(
   completedColor,
-  forcesFormat, customForcesFormat, unclampForcesPercent,
+  forcesFormat, customForcesFormat,
   currentPullFormat, customCurrentPullFormat,
   pullCount, currentCount, totalCount, completedTime,
   timingsEnabled, diff,
@@ -25,7 +25,7 @@ function Util.formatForcesText(
     totalCount = mdtTotalCount
   end
 
-  local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100, unclampForcesPercent)
+  local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100)
 
   local percentText = ("%.2f"):format(currentPercent)
   local countText = ("%d"):format(currentCount)
@@ -58,7 +58,7 @@ function Util.formatForcesText(
     if remainingPercentAfterPull < 0 then remainingPercentAfterPull = 0 end
     local remainingPercentAfterPullText = ("%.2f"):format(remainingPercentAfterPull)
 
-    local percentAfterPull = Util.calcForcesPercent(pullPercent + currentPercent, unclampForcesPercent)
+    local percentAfterPull = Util.calcForcesPercent(pullPercent + currentPercent)
     local pulledPercentText = ("%.2f"):format(percentAfterPull)
 
     pullText = gsub(pullText, ":count:", pullCountText)
@@ -234,12 +234,8 @@ function Util.calcPullCount(pull, total)
   return totalPull, percent
 end
 
-function Util.calcForcesPercent(forcesPercent, unclampForcesPercent)
-  -- Returned forces percent will be floored to 100 if unclampForcesPercent is falsy
-  if unclampForcesPercent then
-    return forcesPercent
-  end
-  return math.min(forcesPercent, 100.0)  
+function Util.calcForcesPercent(forcesPercent)
+  return math.min(forcesPercent, 100.0)
 end
 
 function Util.joinStrings(strings, delim)
@@ -297,4 +293,35 @@ function Util.GetMDTTotalCountInfo()
 
   WarpDeplete:PrintDebug("Got MDT total count: " .. mdtDungeonCountInfo.normal)
   return mdtDungeonCountInfo.normal or nil
+end
+
+-- TODO(happens): Add missing locales
+local affixNameFilters = {
+	["enUS"] = { "Xal'atath's", "Challenger's", "Bargain:" },
+	["deDE"] = { "Xal'ataths", "des Herausforderers", "Handel:" },
+	["frFR"] = {},
+	["itIT"] = {},
+	["koKR"] = {},
+	["zhCN"] = {},
+	["zhTW"] = {},
+	["ruRU"] = {},
+	["esES"] = { "Xal'atath", "contendiente", "Trato", "de", ":" },
+	["esMX"] = {},
+	["ptBR"] = {},
+}
+
+local locale = GetLocale()
+-- These should have the same names
+if locale == "enGB" then
+	locale = "enUS"
+end
+
+function Util.formatAffixName(name)
+	local result = name
+	local filters = affixNameFilters[locale] or {}
+	for _, filter in ipairs(filters) do
+		result = result:gsub(filter, "")
+	end
+
+	return result:match("^%s*(.-)%s*$")
 end

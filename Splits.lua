@@ -1,9 +1,9 @@
 local Util = WarpDeplete.Util
 
-function WarpDeplete:UpdateTimings()
+function WarpDeplete:UpdateSplits()
   self:PrintDebug("Updating splits")
-  local objectives = Util.copy(self.objectivesState)
-  local timings = self:GetTimingsForCurrentInstance()
+  local objectives = Util.copy(self.state.objectives)
+  local timings = self:GetSplitsForCurrentInstance()
 
   if timings == nil then
     self:PrintDebug("Could not get timings for current instance")
@@ -31,12 +31,12 @@ function WarpDeplete:UpdateTimings()
   for i = 1, #objectives do
     local boss = objectives[i]
     if boss.time ~= nil and not current[i] then
-      self:PrintDebug("Setting current time for " .. boss.name .. " (" .. i .. ")")
+      self:PrintDebug("Setting current time for " .. tostring(i) .. ": " .. tostring(boss.time))
       current[i] = boss.time
 
       if best[i] ~= nil then
-        currentDiff[i] = best[i] - boss.time
-        self:PrintDebug("Setting diff for " .. boss.name .. " to " .. tostring(currentDiff[i]))
+        currentDiff[i] = boss.time - best[i]
+        self:PrintDebug("Setting diff for " .. tostring(i) .. " to " .. tostring(currentDiff[i]))
       else
         self:PrintDebug("No best time found, not setting diff")
       end
@@ -48,7 +48,7 @@ function WarpDeplete:UpdateTimings()
     current["forces"] = self.forcesState.completedTime
 
     if best["forces"] ~= nil then
-      currentDiff["forces"] = best["forces"] - self.forcesState.completedTime
+      currentDiff["forces"] = self.forcesState.completedTime - best["forces"]
       self:PrintDebug("Setting diff for forces to " .. tostring(currentDiff[i]))
     end
   end
@@ -59,7 +59,7 @@ function WarpDeplete:UpdateTimings()
     current["challenge"] = blizzardCompletionTime
 
     if best["challenge"] ~= nil then
-      currentDiff["challenge"] = best["challenge"] - blizzardCompletionTime
+      currentDiff["challenge"] = blizzardCompletionTime - best["challenge"]
       self:PrintDebug("Setting diff for challenge to " .. tostring(currentDiff[i]))
     end
   end
@@ -84,7 +84,7 @@ function WarpDeplete:GetCurrentDiff(objectiveIndex)
     return 0
   end
 
-  local timings = self:GetTimingsForCurrentInstance()
+  local timings = self:GetSplitsForCurrentInstance()
   if timings == nil then return nil end
 
   local currentDiff = timings.currentDiff
@@ -93,40 +93,40 @@ function WarpDeplete:GetCurrentDiff(objectiveIndex)
   return currentDiff[objectiveIndex]
 end
 
-function WarpDeplete:GetTimingsForCurrentInstance()
+function WarpDeplete:GetSplitsForCurrentInstance()
   local level = self.keyDetailsState.level
   local mapId = self.keyDetailsState.mapId
   if mapId == nil or level == nil then return nil end
 
-  return self:GetTimings(mapId, level)
+  return self:GetSplits(mapId, level)
 end
 
-function WarpDeplete:GetTimings(mapId, keystoneLevel)
-  local mapTimings = self.db.global.timings[mapId]
-  if mapTimings == nil then
-    mapTimings = {}
-    self.db.global.timings[mapId] = mapTimings
+function WarpDeplete:GetSplits(mapId, keystoneLevel)
+  local mapSplits = self.db.global.timings[mapId]
+  if mapSplits == nil then
+    mapSplits = {}
+    self.db.global.timings[mapId] = mapSplits
   end
 
-  local keystoneTimings = mapTimings[keystoneLevel]
-  if keystoneTimings == nil then
-    keystoneTimings = {}
-    mapTimings[keystoneLevel] = keystoneTimings
+  local keystoneSplits = mapSplits[keystoneLevel]
+  if keystoneSplits == nil then
+    keystoneSplits = {}
+    mapSplits[keystoneLevel] = keystoneSplits
   end
 
-  return keystoneTimings
+  return keystoneSplits
 end
 
-function WarpDeplete:ResetTimingsCurrent()
-  local timings = self:GetTimingsForCurrentInstance()
+function WarpDeplete:ResetSplitsCurrent()
+  local timings = self:GetSplitsForCurrentInstance()
   if timings == nil then return end
 
   timings.current = {}
   timings.currentDiff = {}
 end
 
-function WarpDeplete:UpdateBestTimings()
-  local timings = self:GetTimingsForCurrentInstance()
+function WarpDeplete:UpdateBestSplits()
+  local timings = self:GetSplitsForCurrentInstance()
   if timings == nil or timings.current == nil then return end
 
   if timings.best == nil then

@@ -2,6 +2,26 @@ local defaults = {
   global = {
     DEBUG = false,
     mdtAlertShown = false,
+
+    timings = {
+      --[[ Structure of the timings table
+        splits = { 
+          dungeonId = { 
+            keystoneLevel = { 
+              best = { objectiveIndex = <time> }, 
+              current = { objectiveIndex = <time> },
+              currentDiff = { objectiveIndex = <time> },
+            } 
+          }
+        }
+      --]]
+    },
+  },
+
+  char = {
+    currentChallenge = {
+      mapId = nil,
+    },
   },
 
   profile = {
@@ -17,7 +37,6 @@ local defaults = {
     -- Element display options
     forcesFormat = ":percent:",
     customForcesFormat = ":percent:",
-    unclampForcesPercent = false,
     currentPullFormat = "(+:percent:)",
     customCurrentPullFormat = "(+:percent:)",
 
@@ -83,7 +102,7 @@ local defaults = {
     bar3TextureColor = "FF979797",
     forcesTextureColor = "FFBB9E22",
     forcesOverlayTextureColor = "FFFF5515",
-    
+
     -- Font sizes for text parts
     deathsFontSize = 16,
     timerFontSize = 34,
@@ -122,26 +141,10 @@ local defaults = {
     insertKeystoneAutomatically = true,
     showMillisecondsWhenDungeonCompleted = true,
 
-    -- Timings
-    timingsEnabled = true,
-    timingsImprovedTimeColor = "FF00D200",
-    timingsWorseTimeColor = "FFF50000"
-  },
-
-  global = {
-    timings = {
-      --[[ Structure of the timings table
-        timings = { 
-          dungeonId = { 
-            keystoneLevel = { 
-              best = { objectiveIndex = <time> }, 
-              current = { objectiveIndex = <time> },
-              currentDiff = { objectiveIndex = <time> },
-            } 
-          }
-        }
-      --]]
-    },
+    -- Splits
+    splitsEnabled = true,
+    splitsImprovedTimeColor = "FF00D200",
+    splitsWorseTimeColor = "FFF50000"
   },
 }
 

@@ -1,664 +1,265 @@
 local Util = WarpDeplete.Util
 local L = WarpDeplete.L
 
-local UPDATE_INTERVAL = 0.1
-local sinceLastUpdate = 0
-
-function WarpDeplete:CheckForChallengeMode()
-  local difficulty = select(3, GetInstanceInfo())
-
-  self:PrintDebug("Checking for challenge mode, difficulty: " .. difficulty)
-
-  local inChallenge = difficulty == 8
-
-  self:PrintDebug("Current challenge state: "
-    .. tostring(self.challengeState.inChallenge)
-    .. ", new value:" .. tostring(inChallenge))
-
-  if self.challengeState.inChallenge == inChallenge then return end
-
-  if inChallenge then self:StartChallengeMode()
-  else self:StopChallengeMode() end
+function WarpDeplete:RegisterGlobalEvent(event)
+	self:RegisterEvent(event, event)
 end
 
-function WarpDeplete:StartChallengeMode()
-  if self.challengeState.inChallenge then
-    self:PrintDebug("Already in challenge mode, not starting again")
-    return
-  end
-
-  if self.challengeState.demoModeActive then
-    self:Print(L["Disabling demo mode because a challenge has started."])
-    self:DisableDemoMode()
-  end
-
-  self:PrintDebug("Starting challenge mode")
-  self:ResetState()
-  self:RegisterChallengeEvents()
-
-  local gotTimerInfo, timerRunning = self:GetTimerInfo()
-  local gotKeyInfo = self:GetKeyInfo()
-  local gotObjectivesInfo = self:GetObjectivesInfo()
-  self:SetDeaths(C_ChallengeMode.GetDeathCount() or 0)
-
-  if not gotKeyInfo or not gotObjectivesInfo or not gotTimerInfo then return end
-
-  self:ResetTimingsCurrent()
-
-  self.challengeState.inChallenge = true
-  self:Show()
-
-  if timerRunning then
-    self:StartChallengeTimer()
-  end
+function WarpDeplete:RegisterChallengeEvent(event)
+	self:RegisterEvent(event, event)
+	self.registeredChallengeEvents[event] = true
 end
 
-function WarpDeplete:OnWorldStateTimerStart()
-  if self.timerState.running then return end
+function WarpDeplete:UnregisterChallengeEvents()
+	for event, _ in pairs(self.registeredChallengeEvents) do
+		self:UnregisterEvent(event)
+	end
 
-  if not self.challengeState.inChallenge then
-    -- We didn't receive the challenge start event for some
-    -- reason, so we need to do everything here
-    self:StartChallengeMode()
-  else
-    -- UI is already shown, just refresh timer and forces
-    -- since they can be incorrect during the countdown
-    -- (Forces will be 0/1 always)
-    self:GetTimerInfo()
-    self:GetForcesInfo()
-  end
-
-  self:StartChallengeTimer()
-end
-
-function WarpDeplete:OnChallengeModeStart(ev)
-  self:PrintDebugEvent(ev)
-  self:ResetTimingsCurrent()
-  self:CheckForChallengeMode()
-end
-
-function WarpDeplete:StartChallengeTimer()
-  self:PrintDebug("Challenge timer started")
-
-  self.timerState.startTime = GetTime()
-  self.timerState.running = true
-
-  sinceLastUpdate = 0
-  self.frames.root:SetScript("OnUpdate", function(self, elapsed)
-    WarpDeplete:OnTimerTick(elapsed)
-  end)
-end
-
-function WarpDeplete:StopChallengeTimer()
-  sinceLastUpdate = 0
-  self.frames.root:SetScript("OnUpdate", nil)
-end
-
-function WarpDeplete:StopChallengeMode()
-  self:Hide()
-
-  self:ResetState()
-  self:UnregisterChallengeEvents()
-end
-
-function WarpDeplete:CompleteChallengeMode()
-  self.challengeState.challengeCompleted = true
-
-  self:UpdateTimings()
-  self:UpdateTimerDisplay()
-  self:UpdateObjectivesDisplay()
-  self:UpdateForcesDisplay()
-  self:UpdateBestTimings()
-end
-
--- Returns:
--- - gotTimerInfo
--- - timerRunning
-function WarpDeplete:GetTimerInfo()
-  local mapID = C_ChallengeMode.GetActiveChallengeMapID()
-  if not mapID then
-    self:PrintDebug("No map id for timer received")
-    return false
-  end
-
-  local limit = select(3, C_ChallengeMode.GetMapUIInfo(mapID))
-  if not limit then
-    self:PrintDebug("No time limit received")
-    return false
-  end
-
-  self:SetTimerLimit(limit)
-
-  local timerRunning = false
-  local current = select(2, GetWorldElapsedTime(1))
-
-  -- If there already is time elapsed, we're loading into a running key.
-  if current > 2 then --TODO(happens): The WA is using 2 here, is that fine?
-    timerRunning = true
-
-    -- If we call this without any delay, the timer will be off by 10
-    -- seconds. The blizzard timer also has this bug and corrects it
-    -- after the first death. Lmao
-    C_Timer.After(0.5, function() 
-      local current = select(2, GetWorldElapsedTime(1))
-      local deaths = C_ChallengeMode.GetDeathCount()
-      local trueTime = current - deaths * self.keyDetailsState.deathPenalty
-      self.timerState.startOffset = trueTime
-      self.timerState.startTime = GetTime()
-    end)
-  end
-
-  self:SetTimerCurrent(current)
-  return true, timerRunning
-end
-
--- TODO(happens): Add missing locales
-local affixNameFilters = {
-  ["enUS"] = {"Xal'atath's", "Challenger's", "Bargain:"},
-  ["deDE"] = {"Xal'ataths", "des Herausforderers", "Handel:"},
-  ["frFR"] = {},
-  ["itIT"] = {},
-  ["koKR"] = {},
-  ["zhCN"] = {},
-  ["zhTW"] = {},
-  ["ruRU"] = {},
-  ["esES"] = {"Xal'atath", "contendiente", "Trato", "de", ":"},
-  ["esMX"] = {},
-  ["ptBR"] = {},
-}
-
-local locale = GetLocale()
--- These should have the same names
-if locale == "enGB" then
-  locale = "enUS"
-end
-
-local function formatAffixName(name)
-  local result = name
-  local filters = affixNameFilters[locale] or {}
-  for _, filter in ipairs(filters) do
-    result = result:gsub(filter, "")
-  end
-
-  return result:match("^%s*(.-)%s*$")
-end
-
-function WarpDeplete:GetKeyInfo()
-  self:PrintDebug("Getting key info")
-
-  local level, affixes = C_ChallengeMode.GetActiveKeystoneInfo()
-  local mapId = C_ChallengeMode.GetActiveChallengeMapID()
-  self:PrintDebug("KeyInfo: Got active challenge map id " .. tostring(mapId))
-
-  local affixNames = {}
-  local affixIds = {}
-  local deathPenalty = 5
-  for i, affixID in ipairs(affixes) do
-    local name = C_ChallengeMode.GetAffixInfo(affixID)
-    affixNames[i] = formatAffixName(name)
-    affixIds[i] = affixID
-    if affixID == 152 then
-      deathPenalty = 15
-    end
-  end
-
-  if level <= 0 or #affixNames <= 0 then
-    self:PrintDebug("No affixes or key level received")
-    return false
-  end
-
-  if not mapId then
-    self:PrintDebug("No mapId received")
-    return false
-  end
-
-  self:SetKeyDetails(level or 0, deathPenalty, affixNames, affixIds, mapId)
-  return true
-end
-
-function WarpDeplete:GetForcesInfo()
-  -- The last step is forces, all previous steps are bosses
-  local stepCount = select(3, C_Scenario.GetStepInfo())
-  if stepCount <= 0 then
-    self:PrintDebug("No steps received, can't update objective info")
-    return false, 0
-  end
-
-  local currentCount, totalCount, completionTime = self:GetEnemyForcesCount()
-  self:PrintDebug("Got forces info: " .. tonumber(currentCount) .. "/" .. tonumber(totalCount))
-
-  if currentCount == nil or totalCount == nil then
-    self:PrintDebug("No mob count received in GetObjectivesInfo")
-    return false, 0
-  end
-
-  self:SetForcesTotal(totalCount)
-  self:SetForcesCurrent(currentCount)
-
-  if completionTime ~= nil then
-    self:PrintDebug("Setting forces completion in GetObjectivesInfo")
-    self:SetForcesCompletionTime(completionTime)
-  end
-
-  return true, stepCount
-end
-
-function WarpDeplete:GetObjectivesInfo()
-  self:PrintDebug("Getting objectives info")
-  local gotForcesInfo, stepCount = self:GetForcesInfo()
-  if not gotForcesInfo then return false end
-
-  local objectives = {}
-  for i = 1, stepCount - 1 do
-    local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(i)
-    if CriteriaInfo == nil then return false end
-
-    local name = CriteriaInfo.description
-    local completed = CriteriaInfo.completed
-    if not name then break end
-
-    name = name:gsub(" defeated", "")
-    name = name:gsub(" Defeated", "")
-    self:PrintDebug("Got boss name for index " .. i .. ": " .. tostring(name))
-    objectives[i] = { name = name, time = completed and 0 or nil }
-  end
-
-  if #objectives <= 0 then
-    self:PrintDebug("No objectives received")
-    return false
-  end
-
-  self:SetObjectives(objectives)
-  return true
-end
-
-function WarpDeplete:GetEnemyForcesCount()
-  self:PrintDebug("Getting enemy forces count")
-  local stepCount = select(3, C_Scenario.GetStepInfo())
-  local info = C_ScenarioInfo.GetCriteriaInfo(stepCount)
-  if not info then
-    self:PrintDebug("Got no criteria info in GetEnemyForcesCount")
-    return nil, nil, nil
-  end
-
-  local totalCount = info.totalQuantity
-  local currentCountStr = info.quantityString
-
-  -- NOTE(happens): The current count contains a percentage sign
-  -- even though it's an absolute value.
-  local currentCount = currentCountStr and tonumber(currentCountStr:match("%d+")) or 0
-
-  local completionTime = nil
-  self:PrintDebug("Checking enemy forces count:"
-    .. " currentCount=" .. tostring(currentCount)
-    .. " totalCount=" .. tostring(totalCount)
-    .. " completed=" .. tostring(info.completed))
-  if currentCount >= totalCount then
-    completionTime = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
-    self:PrintDebug("Returning completion time: " .. tostring(completionTime))
-  end
-
-  return currentCount, totalCount, completionTime
-end
-
-function WarpDeplete:UpdateForces()
-  if not self.challengeState.inChallenge then return end
-
-  local currentCount, totalCount, completionTime = self:GetEnemyForcesCount()
-  -- This mostly happens when we have already completed the dungeon
-  if currentCount == nil or totalCount == nil then
-    self:PrintDebug("Got no forces total or current on UpdateForces")
-    return
-  end
-
-  self:PrintDebug("Count: " .. tostring(currentCount) .. "/" .. tostring(totalCount))
-
-  self:SetForcesCurrent(currentCount)
-
-  if completionTime ~= nil then
-    self:PrintDebug("Setting forces completion in UpdateForces")
-    self:SetForcesCompletionTime(completionTime)
-  end
-end
-
-function WarpDeplete:UpdateObjectives()
-  if not self.challengeState.inChallenge then return end
-
-  local objectives = Util.copy(self.objectivesState)
-  local changed = false
-
-  local stepCount = select(3, C_Scenario.GetStepInfo())
-  for i = 1, stepCount - 1 do
-    if not objectives[i] or not objectives[i].time then
-      local info = C_ScenarioInfo.GetCriteriaInfo(i)
-      if info ~= nil and info.completed then
-        objectives[i] = objectives[i] or {}
-        objectives[i].time = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
-        changed = true
-      end
-    end
-  end
-
-  if changed then
-    self:UpdateTimings()
-    self:SetObjectives(objectives)
-  end
-end
-
-function WarpDeplete:ResetCurrentPull()
-  for k, _ in pairs(self.forcesState.currentPull) do
-    self.forcesState.currentPull[k] = nil
-  end
-
-  self:SetForcesPull(0)
-end
-
-function WarpDeplete:AddDeathDetails(time, name, class)
-  local len = #self.timerState.deathDetails
-  self.timerState.deathDetails[len + 1] = {
-    time = time,
-    name = name,
-    class = class
-  }
+	self.registeredChallengeEvents = {}
 end
 
 -- These events are used to detect whether we are in challenge mode
 -- or whether we should put a key in the socket, and will always stay registered.
 function WarpDeplete:RegisterGlobalEvents()
-  self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnCheckChallengeMode")
-  self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnCheckChallengeMode")
-  self:RegisterEvent("CHALLENGE_MODE_START", "OnChallengeModeStart")
-  self:RegisterEvent("CHALLENGE_MODE_RESET", "OnChallengeModeStart")
+	-- Events where we could theoretically need to check for an active challenge mode
+	self:RegisterGlobalEvent("PLAYER_ENTERING_WORLD")
+	self:RegisterGlobalEvent("ZONE_CHANGED_NEW_AREA")
+	self:RegisterGlobalEvent("CHALLENGE_MODE_START")
 
-  -- Fired when the countdown hits 0 (and for some reason when we die?)
-  self:RegisterEvent("WORLD_STATE_TIMER_START", "OnWorldStateTimerStart")
+	-- Fired when we open the keystone socket
+	self:RegisterGlobalEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN")
 
-  -- Fired when we open the keystone socket
-  self:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN", "OnKeystoneOpen")
+	-- Register tooltip count display
+	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, WarpDeplete.DisplayCountInTooltip)
 
-  -- Register tooltip count display
-  TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, WarpDeplete.DisplayCountInTooltip)
-
-  -- Tooltip events
-  self.frames.deathsTooltip:SetScript("OnEnter", WarpDeplete.TooltipOnEnter)
-  self.frames.deathsTooltip:SetScript("OnLeave", WarpDeplete.TooltipOnLeave)
-end
-
-function WarpDeplete.TooltipOnEnter()
-  local self = WarpDeplete
-  if not self.db.profile.showDeathsTooltip then return end
-
-  GameTooltip:SetOwner(self.frames.deathsTooltip, "ANCHOR_BOTTOMLEFT",
-    self.frames.deathsTooltip.offsetWidth)
-
-  GameTooltip:ClearLines()
-
-  local count = #self.timerState.deathDetails
-  if count == 0 then
-    GameTooltip:AddLine(L["No Recorded Player Deaths"], 1, 1, 1)
-    GameTooltip:Show()
-    return
-  end
-
-  GameTooltip:AddLine(L["Player Deaths"], 1, 1, 1)
-  if self.db.profile.deathLogStyle == "time" then
-    local showFrom = 0
-    if count > 20 then
-      showFrom = count - 20
-    end
-
-    for i, d in ipairs(self.timerState.deathDetails) do
-      if i >= showFrom then
-        local color = select(4, GetClassColor(d.class))
-        local time = Util.formatTime(d.time)
-        GameTooltip:AddLine(time .. " - |c" .. color .. d.name .. "|r")
-      end
-    end
-  elseif self.db.profile.deathLogStyle == "count" then
-    local countTable = {}
-    for i, d in ipairs(self.timerState.deathDetails) do
-      if not countTable[d.name] then
-        countTable[d.name] = {
-          color = select(4, GetClassColor(d.class)),
-          count = 0
-        }
-      end
-
-      countTable[d.name].count = countTable[d.name].count + 1
-    end
-
-    for name, deaths in pairs(countTable) do
-      GameTooltip:AddLine("|c" .. deaths.color .. name .. "|r|cFFFFFFFF: " .. tostring(deaths.count) .. "|r")
-    end
-  end
-
-  GameTooltip:Show()
-end
-
-function WarpDeplete.TooltipOnLeave()
-  GameTooltip_Hide()
-end
-
-function WarpDeplete.DisplayCountInTooltip(tt, data)
-  if not tt or tt ~= GameTooltip or not data or not data.guid then return end
-  if not WarpDeplete.timerState.running then return end
-  if not MDT or not WarpDeplete.db.profile.showTooltipCount then return end
-
-  local npcID = select(6, strsplit("-", data.guid))
-  local count, max = MDT:GetEnemyForces(tonumber(npcID))
-
-  if count and max and count ~= 0 and max ~= 0 then
-    local percentText = ("%.2f"):format(count / max * 100)
-    local countText = ("%d"):format(count)
-    local result = WarpDeplete.db.profile.tooltipCountFormat ~= ":custom:" and
-      WarpDeplete.db.profile.tooltipCountFormat or
-      WarpDeplete.db.profile.customTooltipCountFormat
-
-    result = gsub(result, ":percent:", percentText .. "%%")
-    result = gsub(result, ":count:", countText)
-    GameTooltip:AddLine("Count: |cFFFFFFFF" .. result .. "|r")
-    GameTooltip:Show()
-  end
+	-- Tooltip events
+	self.frames.deathsTooltip:SetScript("OnEnter", WarpDeplete.TooltipOnEnter)
+	self.frames.deathsTooltip:SetScript("OnLeave", WarpDeplete.TooltipOnLeave)
 end
 
 function WarpDeplete:RegisterChallengeEvents()
-  -- Challenge mode triggers
-  self:RegisterEvent("CHALLENGE_MODE_COMPLETED", "OnChallengeModeCompleted")
+	-- Challenge mode triggers
+	self:RegisterChallengeEvent("CHALLENGE_MODE_COMPLETED")
 
-  -- Scenario Triggers
-  self:RegisterEvent("SCENARIO_POI_UPDATE", "OnScenarioPOIUpdate")
-  self:RegisterEvent("SCENARIO_CRITERIA_UPDATE", "OnScenarioCriteriaUpdate")
+	-- Scenario Triggers
+	self:RegisterChallengeEvent("SCENARIO_POI_UPDATE")
+	self:RegisterChallengeEvent("SCENARIO_CRITERIA_UPDATE")
 
-  -- Combat triggers
-  self:RegisterEvent("PLAYER_DEAD", "OnPlayerDead")
-  self:RegisterEvent("ENCOUNTER_END", "OnResetCurrentPull")
-  self:RegisterEvent("PLAYER_REGEN_ENABLED", "OnResetCurrentPull")
+	-- Combat triggers
+	self:RegisterChallengeEvent("ENCOUNTER_END")
+	self:RegisterChallengeEvent("PLAYER_REGEN_ENABLED")
 
-  self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", "OnCombatLogEvent")
-  self:RegisterEvent("UNIT_THREAT_LIST_UPDATE", "OnThreatListUpdate")
+	self:RegisterChallengeEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	self:RegisterChallengeEvent("UNIT_THREAT_LIST_UPDATE")
 end
 
-function WarpDeplete:UnregisterChallengeEvents()
-  self:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
-
-  self:UnregisterEvent("SCENARIO_POI_UPDATE")
-  self:UnregisterEvent("SCENARIO_CRITERIA_UPDATE")
-
-  self:UnregisterEvent("PLAYER_DEAD")
-  self:UnregisterEvent("ENCOUNTER_END")
-  self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-
-  self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-  self:UnregisterEvent("UNIT_THREAT_LIST_UPDATE")
+function WarpDeplete:PLAYER_ENTERING_WORLD(ev)
+	self:CheckForChallengeMode()
 end
 
-function WarpDeplete:OnTimerTick(elapsed)
-  if not self.challengeState.inChallenge or
-    self.challengeState.challengeCompleted or
-    not self.timerState.running then
-    self:StopChallengeTimer()
-    return
-  end
-
-  sinceLastUpdate = sinceLastUpdate + elapsed
-  if sinceLastUpdate <= UPDATE_INTERVAL then return end
-  sinceLastUpdate = 0
-
-  --TODO(happens): We update this a lot, can we do this
-  -- in a better way so it's not called 10 times a second?
-  local newDeaths = C_ChallengeMode.GetDeathCount()
-  if newDeaths ~= self.timerState.deaths then
-    self:SetDeaths(newDeaths)
-  end
-
-  local deathPenalty = self.timerState.deaths * self.keyDetailsState.deathPenalty
-  local current = GetTime() + self.timerState.startOffset - self.timerState.startTime + deathPenalty
-
-  self:SetTimerCurrent(current)
+function WarpDeplete:ZONE_CHANGED_NEW_AREA(ev)
+	self:CheckForChallengeMode()
 end
 
-function WarpDeplete:OnCheckChallengeMode(ev)
-  self:PrintDebugEvent(ev)
-  self:CheckForChallengeMode()
+-- We receive this when the 10s countdown after key insertion starts
+function WarpDeplete:CHALLENGE_MODE_START(ev)
+	self:ResetSplitsCurrent()
+	self:EnableChallengeMode()
 end
 
-function WarpDeplete:OnChallengeModeStart(ev)
-  self:PrintDebugEvent(ev)
-  if self.challengeState.inChallenge then
-    self:PrintDebug("Ignoring challenge mode start event while in challenge")
-    return
-  end
+function WarpDeplete:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(ev)
+	if not self.db.profile.insertKeystoneAutomatically then
+		return
+	end
+	local difficulty = select(3, GetInstanceInfo())
 
-  self:StartChallengeMode()
+	if difficulty ~= 8 and difficulty ~= 23 then
+		return
+	end
+
+	local found = nil
+	for bagIndex = 0, NUM_BAG_SLOTS do
+		for invIndex = 1, C_Container.GetContainerNumSlots(bagIndex) do
+			local itemID = C_Container.GetContainerItemID(bagIndex, invIndex)
+
+			if itemID and C_Item.IsItemKeystoneByID(itemID) then
+				found = { bagIndex = bagIndex, invIndex = invIndex }
+				break
+			end
+		end
+
+		if found ~= nil then
+			break
+		end
+	end
+
+	if found ~= nil then
+		C_Container.UseContainerItem(found.bagIndex, found.invIndex)
+	end
 end
 
-function WarpDeplete:OnPlayerDead(ev)
-  self:PrintDebugEvent(ev)
-  --TODO(happens): It would be better to also broadcast the death
-  -- and then deduplicate deaths, since we can also catch deaths
-  -- that weren't logged for us that way. We need to figure out a
-  -- good method for deduping though.
-  -- self:BroadcastDeath()
-  self:ResetCurrentPull()
+function WarpDeplete:CHALLENGE_MODE_COMPLETED(ev)
+	self.state.challengeCompleted = true
+
+	self:UpdateSplits()
+	self:UpdateBestSplits()
+
+	self:RenderTimer()
+	self:RenderObjectives()
+	self:RenderForces()
 end
 
-function WarpDeplete:OnChallengeModeCompleted(ev)
-  self:PrintDebugEvent(ev)
-  self:CompleteChallengeMode()
+function WarpDeplete:SCENARIO_POI_UPDATE(ev)
+	self:UpdateObjectives()
 end
 
-function WarpDeplete:OnKeystoneOpen(ev)
-  self:PrintDebugEvent(ev)
-
-  if not self.db.profile.insertKeystoneAutomatically then
-    return
-  end
-
-  local difficulty = select(3, GetInstanceInfo())
-  if difficulty ~= 8 and difficulty ~= 23 then
-    return
-  end
-
-  local found = nil
-  for bagIndex = 0, NUM_BAG_SLOTS do
-    for invIndex = 1, C_Container.GetContainerNumSlots(bagIndex) do
-      local itemID = C_Container.GetContainerItemID(bagIndex, invIndex)
-
-      if itemID and C_Item.IsItemKeystoneByID(itemID) then
-        self:PrintDebug("Key found at ("
-          .. bagIndex .. "," .. invIndex .. ")")
-
-        found = {
-          bagIndex = bagIndex,
-          invIndex = invIndex
-        }
-
-        break
-      end
-    end
-
-    if found ~= nil then break end
-  end
-
-  if found ~= nil then
-    self:PrintDebug("Slotting keystone from ("
-      .. found.bagIndex .. "," .. found.invIndex .. ")")
-
-    C_Container.UseContainerItem(found.bagIndex, found.invIndex)
-  end
+function WarpDeplete:SCENARIO_CRITERIA_UPDATE(ev)
+	self:UpdateObjectives()
 end
 
-function WarpDeplete:OnScenarioPOIUpdate(ev)
-  -- DEBUG self:PrintDebugEvent(ev)
-  self:UpdateForces()
-  self:UpdateObjectives()
+function WarpDeplete:ENCOUNTER_END(ev)
+	self:ResetCurrentPull()
 end
 
-function WarpDeplete:OnScenarioCriteriaUpdate(ev)
-  -- DEBUG self:PrintDebugEvent(ev)
-  self:UpdateForces()
-  self:UpdateObjectives()
+function WarpDeplete:PLAYER_REGEN_ENABLED(ev)
+	self:ResetCurrentPull()
 end
 
-function WarpDeplete:OnResetCurrentPull(ev)
-  -- DEBUG self:PrintDebugEvent(ev)
-  self:ResetCurrentPull()
+function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED(ev)
+	local _, subEv, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo()
+	if subEv ~= "UNIT_DIED" then
+		return
+	end
+	if not guid then
+		return
+	end
+
+	-- NOTE(happens): We have to check health since we'd count feign death otherwise
+	if UnitInParty(name) and UnitHealth(name) <= 1 then
+		local unitName = UnitName(name)
+		local class = select(2, UnitClass(name))
+		self:AddDeathDetails(self.state.timer, unitName, class)
+		return
+	end
+
+	if not self.state.currentPull[guid] then
+		return
+	end
+	self.state.currentPull[guid] = "DEAD"
+	local pullCount = Util.calcPullCount(self.state.currentPull, self.state.totalCount)
+	self:SetForcesPull(pullCount)
 end
 
-function WarpDeplete:OnThreatListUpdate(ev, unit)
-  -- DEBUG self:PrintDebugEvent(ev)
-  if not MDT then return end
-  if not InCombatLockdown() or not unit or not UnitExists(unit) then return end
+function WarpDeplete:UNIT_THREAT_LIST_UPDATE(ev)
+	if not MDT then
+		return
+	end
+	if not InCombatLockdown() or not unit or not UnitExists(unit) then
+		return
+	end
 
-  --NOTE(happens): There seem to be cases where a Unit will throw a threat list update
-  -- after it has died, which falsely re-adds it to the current pull. We set that units'
-  -- count value to "DEAD" when it dies, and due to the check if the guid already exists
-  -- in the table, it won't be overwritten after the unit has died.
-  local guid = UnitGUID(unit)
-  if not guid or self.forcesState.currentPull[guid] then return end
+	-- NOTE: There seem to be cases where a Unit will throw a threat list update
+	-- after it has died, which falsely re-adds it to the current pull. We set that units'
+	-- count value to "DEAD" when it dies, and due to the check if the guid already exists
+	-- in the table, it won't be overwritten after the unit has died.
+	local guid = UnitGUID(unit)
+	if not guid or self.state.currentPull[guid] then
+		return
+	end
 
-  local npcID = select(6, strsplit("-", guid))
-  local count = MDT:GetEnemyForces(tonumber(npcID))
-  if not count or count <= 0 then return end
+	local npcID = select(6, strsplit("-", guid))
+	local count = MDT:GetEnemyForces(tonumber(npcID))
+	if not count or count <= 0 then
+		return
+	end
 
-  -- DEBUG self:PrintDebug("Adding unit " .. guid .. " to current pull: " .. count)
-  self.forcesState.currentPull[guid] = count
-  local pullCount = Util.calcPullCount(self.forcesState.currentPull, self.forcesState.totalCount)
-  self:SetForcesPull(pullCount)
+	self.state.currentPull[guid] = count
+	local pullCount = Util.calcPullCount(self.state.currentPull, self.state.totalCount)
+	self:SetForcesPull(pullCount)
 end
 
-function WarpDeplete:OnCombatLogEvent(ev)
-  local _, subEv, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo()
-  if subEv ~= "UNIT_DIED" then return end
-  -- DEBUG self:PrintDebugEvent(ev)
-  if not guid then return end
+function WarpDeplete.TooltipOnEnter()
+	local self = WarpDeplete
+	if not self.db.profile.showDeathsTooltip then
+		return
+	end
 
-  --NOTE(happens): We have to check health since we'd count feign death otherwise
-  if UnitInParty(name) and UnitHealth(name) <= 1 then
-    local name = UnitName(name)
-    local class = select(2, UnitClass(name))
-    local time = self.timerState.current
+	GameTooltip:SetOwner(self.frames.deathsTooltip, "ANCHOR_BOTTOMLEFT", self.frames.deathsTooltip.offsetWidth)
 
-    self:PrintDebug("Player died: " .. name .. " class: " .. class .. " time: " .. time)
-    self:AddDeathDetails(time, name, class)
-    return
-  end
+	GameTooltip:ClearLines()
 
-  if not self.forcesState.currentPull[guid] then return end
-  self:PrintDebug("removing unit " .. guid .. " from current pull")
-  -- See comment above (OnThreadListUpdate)
-  self.forcesState.currentPull[guid] = "DEAD"
-  local pullCount = Util.calcPullCount(self.forcesState.currentPull, self.forcesState.totalCount)
-  self:SetForcesPull(pullCount)
+	local count = #self.state.deathDetails
+	if count == 0 then
+		GameTooltip:AddLine(L["No Recorded Player Deaths"], 1, 1, 1)
+		GameTooltip:Show()
+		return
+	end
+
+	GameTooltip:AddLine(L["Player Deaths"], 1, 1, 1)
+	if self.db.profile.deathLogStyle == "time" then
+		local showFrom = 0
+		if count > 20 then
+			showFrom = count - 20
+		end
+
+		for i, d in ipairs(self.state.deathDetails) do
+			if i >= showFrom then
+				local color = select(4, GetClassColor(d.class))
+				local time = Util.formatTime(d.time)
+				GameTooltip:AddLine(time .. " - |c" .. color .. d.name .. "|r")
+			end
+		end
+	elseif self.db.profile.deathLogStyle == "count" then
+		local countTable = {}
+		for _, d in ipairs(self.state.deathDetails) do
+			if not countTable[d.name] then
+				countTable[d.name] = {
+					color = select(4, GetClassColor(d.class)),
+					count = 0,
+				}
+			end
+
+			countTable[d.name].count = countTable[d.name].count + 1
+		end
+
+		for name, deaths in pairs(countTable) do
+			GameTooltip:AddLine("|c" .. deaths.color .. name .. "|r|cFFFFFFFF: " .. tostring(deaths.count) .. "|r")
+		end
+	end
+
+	GameTooltip:Show()
 end
 
-function WarpDeplete:GetForcesCompletionTime()
-  self:PrintDebug("Getting forces completion time")
-  local stepCount = select(3, C_Scenario.GetStepInfo())
-  local info = C_Scenario.GetCriteriaInfo(stepCount)
-  local completionTime = info and info.elapsed or nil
+function WarpDeplete.TooltipOnLeave()
+	GameTooltip_Hide()
+end
 
-  if not completionTime then return nil end
+function WarpDeplete.DisplayCountInTooltip(tt, data)
+	if not tt or tt ~= GameTooltip or not data or not data.guid then
+		return
+	end
 
-  return select(2, GetWorldElapsedTime(1)) - completionTime
+	if not WarpDeplete.state.inChallenge then
+		return
+	end
+
+	if not MDT or not WarpDeplete.db.profile.showTooltipCount then
+		return
+	end
+
+	local npcID = select(6, strsplit("-", data.guid))
+	local count, max = MDT:GetEnemyForces(tonumber(npcID))
+
+	if count and max and count ~= 0 and max ~= 0 then
+		local percentText = ("%.2f"):format(count / max * 100)
+		local countText = ("%d"):format(count)
+		local result = WarpDeplete.db.profile.tooltipCountFormat ~= ":custom:"
+				and WarpDeplete.db.profile.tooltipCountFormat
+			or WarpDeplete.db.profile.customTooltipCountFormat
+
+		result = gsub(result, ":percent:", percentText .. "%%")
+		result = gsub(result, ":count:", countText)
+		GameTooltip:AddLine("Count: |cFFFFFFFF" .. result .. "|r")
+		GameTooltip:Show()
+	end
 end

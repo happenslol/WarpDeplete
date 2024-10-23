@@ -18,4 +18,4 @@ Options.lua
 Display.lua
 Events.lua
 Comms.lua
-Timings.lua
+Splits.lua

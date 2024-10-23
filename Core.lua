@@ -18,50 +18,41 @@ local Util = WarpDeplete.Util
 WarpDeplete.LSM = LibStub("LibSharedMedia-3.0")
 WarpDeplete.Glow = LibStub("LibCustomGlow-1.0")
 
-WarpDeplete.defaultChallengeState = {
-  demoModeActive = false,
-  inChallenge = false,
-  challengeCompleted = false
-}
+WarpDeplete.registeredChallengeEvents = {}
 
-WarpDeplete.defaultForcesState = {
+WarpDeplete.defaultState = {
+  isShown = false,
+  demoModeActive = false,
+
+  inChallenge = false,
+  challengeCompleted = false,
+
+  timerRunning = false,
+  timer = nil,
+  timeLimit = nil,
+
+  deathCount = 0,
+  deathDetails = {},
+
   pullCount = 0,
   currentCount = 0,
   totalCount = 100,
 
   pullPercent = 0,
   currentPercent = 0,
-  glowActive = false,
+  pullGlowActive = false,
   currentPull = {},
 
-  completed = false,
-  completedTime = 0,
-}
+  objectives = {},
 
-WarpDeplete.defaultTimerState = {
-  startTime = nil,
-  running = false,
-  deaths = 0,
-  deathDetails = {},
+  forcesCompleted = false,
+  forcesCompletionTime = 0,
 
-  current = 0,
-  remaining = 0,
-  limit = 0,
-  startOffset = 0,
-  limits = {0, 0, 0},
-
-  plusTwo = 0,
-  plusThree = 0
-}
-
-WarpDeplete.defaultObjectivesState = {}
-
-WarpDeplete.defaultKeyDetailsState = {
   level = 0,
   deathPenalty = 0,
   affixes = {},
   affixIds = {},
-  mapId
+  mapId = nil
 }
 
 -- Check if Kaliel's Tracker is loaded, since it creates a
@@ -86,16 +77,12 @@ function WarpDeplete:OnInitialize()
 end
 
 function WarpDeplete:OnEnable()
-  self.forcesState = Util.copy(self.defaultForcesState)
-  self.timerState = Util.copy(self.defaultTimerState)
-  self.challengeState = Util.copy(self.defaultChallengeState)
-  self.objectivesState = Util.copy(self.defaultObjectivesState)
-  self.keyDetailsState = Util.copy(self.defaultKeyDetailsState)
+  self.state = Util.copy(self.defaultState)
 
   self:InitDb()
   self:InitOptions()
   self:InitChatCommands()
-  self:InitDisplay()
+  self:InitRender()
 
   self:RegisterGlobalEvents()
   self:RegisterComms()
@@ -122,31 +109,16 @@ end
 function WarpDeplete:OnDisable()
 end
 
-function WarpDeplete:UpdateDemoModeForces()
-  if not self.challengeState.demoModeActive then return end
-
-  if self.db.profile.showForcesGlow and self.db.profile.demoForcesGlow then
-    self:SetForcesCurrent(92)
-    self:SetForcesPull(8)
-  elseif self.db.profile.unclampForcesPercent then
-    self:SetForcesCurrent(101)
-    self:SetForcesPull(3.4)
-  else
-    self:SetForcesCurrent(34)
-    self:SetForcesPull(7)
-  end
-end
-
 function WarpDeplete:EnableDemoMode()
-  if self.challengeState.inChallenge then
+  if self.state.inChallenge then
     self:Print(L["Can't enable demo mode while in an active challenge!"])
     return
   end
 
-  if self.challengeState.demoModeActive then return end
+  if self.state.demoModeActive then return end
 
   self:ResetState()
-  self.challengeState.demoModeActive = true
+  self.state.demoModeActive = true
 
   local objectives = {}
   for i = 1, 5 do
@@ -160,11 +132,9 @@ function WarpDeplete:EnableDemoMode()
   self:SetObjectives(objectives)
   self:SetKeyDetails(30, 15, {L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Peril"]}, {9, 7, 123, 152})
 
-  self:SetTimerLimit(35 * 60)
-  self:SetTimerRemaining(20 * 60)
-  self:SetDeaths(3)
-
-  self:UpdateDemoModeForces()
+  self:SetTimeLimit(35 * 60)
+  self:SetTimer(20 * 60)
+  self:SetDeathCount(3)
 
   local classTable = {
     "SHAMAN",
@@ -194,8 +164,8 @@ function WarpDeplete:EnableDemoMode()
 end
 
 function WarpDeplete:DisableDemoMode()
-  if not self.challengeState.demoModeActive then return end
-  self.challengeState.demoModeActive = false
+  if not self.state.demoModeActive then return end
+  self.state.demoModeActive = false
 
   self:Hide()
   self:ResetState()
@@ -256,13 +226,59 @@ function WarpDeplete:Hide()
   self:ShowExternals()
 end
 
-
 function WarpDeplete:ResetState()
   self:PrintDebug("Resetting state")
+  self.state = Util.copy(self.defaultState)
+end
 
-  self.forcesState = Util.copy(self.defaultForcesState)
-  self.timerState = Util.copy(self.defaultTimerState)
-  self.challengeState = Util.copy(self.defaultChallengeState)
-  self.objectivesState = Util.copy(self.defaultObjectivesState)
-  self.keyDetailsState = Util.copy(self.defaultKeyDetailsState)
+function WarpDeplete:CheckForChallengeMode()
+	local inChallenge = select(3, GetInstanceInfo()) == 8
+	if self.state.inChallenge == inChallenge then
+		return
+	end
+
+	if inChallenge then
+		self:EnableChallengeMode()
+	else
+		self:DisableChallengeMode()
+	end
+end
+
+function WarpDeplete:EnableChallengeMode()
+	if self.state.inChallenge then
+		self:PrintDebug("Already in challenge mode, not starting again")
+		return
+	end
+
+	if self.state.demoModeActive then
+		self:Print(L["Disabling demo mode because a challenge has started."])
+		self:DisableDemoMode()
+	end
+
+	self:PrintDebug("Starting challenge mode")
+	self:ResetState()
+	self:RegisterChallengeEvents()
+
+	self:LoadKeyDetails()
+	self:LoadObjectives()
+	self:LoadDeathCount()
+
+  -- TODO: When do we reset current splits?
+	-- self:ResetSplitsCurrent()
+
+	self.state.inChallenge = true
+
+	self:Show()
+	self:StartTimerLoop()
+end
+
+
+function WarpDeplete:DisableChallengeMode()
+  if not self.state.inChallenge then
+    return
+  end
+
+	self:Hide()
+	self:ResetState()
+	self:UnregisterChallengeEvents()
 end
