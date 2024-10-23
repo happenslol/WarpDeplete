@@ -31,12 +31,12 @@ function WarpDeplete:UpdateTimings()
   for i = 1, #objectives do
     local boss = objectives[i]
     if boss.time ~= nil and not current[i] then
-      self:PrintDebug("Setting current time for " .. boss.name .. " (" .. i .. ")")
+      self:PrintDebug("Setting current time for " .. tostring(i) .. ": " .. tostring(boss.time))
       current[i] = boss.time
 
       if best[i] ~= nil then
-        currentDiff[i] = best[i] - boss.time
-        self:PrintDebug("Setting diff for " .. boss.name .. " to " .. tostring(currentDiff[i]))
+        currentDiff[i] = boss.time - best[i]
+        self:PrintDebug("Setting diff for " .. tostring(i) .. " to " .. tostring(currentDiff[i]))
       else
         self:PrintDebug("No best time found, not setting diff")
       end
@@ -48,7 +48,7 @@ function WarpDeplete:UpdateTimings()
     current["forces"] = self.forcesState.completedTime
 
     if best["forces"] ~= nil then
-      currentDiff["forces"] = best["forces"] - self.forcesState.completedTime
+      currentDiff["forces"] = self.forcesState.completedTime - best["forces"]
       self:PrintDebug("Setting diff for forces to " .. tostring(currentDiff[i]))
     end
   end
@@ -59,7 +59,7 @@ function WarpDeplete:UpdateTimings()
     current["challenge"] = blizzardCompletionTime
 
     if best["challenge"] ~= nil then
-      currentDiff["challenge"] = best["challenge"] - blizzardCompletionTime
+      currentDiff["challenge"] = blizzardCompletionTime - best["challenge"]
       self:PrintDebug("Setting diff for challenge to " .. tostring(currentDiff[i]))
     end
   end

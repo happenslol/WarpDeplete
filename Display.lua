@@ -709,7 +709,7 @@ function WarpDeplete:UpdateObjectivesDisplay()
     local objectiveStr = boss.name
 
     if boss.time ~= nil then
-      objectiveStr = Util.colorText(boss.name, completionColor)
+      objectiveStr = Util.colorText(objectiveStr, completionColor)
     end
 
     if boss.time ~= nil and boss.time > 0 then

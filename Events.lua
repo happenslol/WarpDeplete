@@ -327,10 +327,20 @@ function WarpDeplete:UpdateObjectives()
   local objectives = Util.copy(self.objectivesState)
   local changed = false
 
+  self:PrintDebug("Updating objectives")
   local stepCount = select(3, C_Scenario.GetStepInfo())
   for i = 1, stepCount - 1 do
     if not objectives[i] or not objectives[i].time then
       local info = C_ScenarioInfo.GetCriteriaInfo(i)
+
+      -- DEBUG
+      local dbg = "Objective " .. tostring(i) .. ":"
+      for k, v in pairs(info) do
+        dbg = dbg .. " " .. tostring(k) .. "=" .. tostring(v)
+      end
+
+      self:PrintDebug(dbg)
+
       if info ~= nil and info.completed then
         objectives[i] = objectives[i] or {}
         objectives[i].time = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
