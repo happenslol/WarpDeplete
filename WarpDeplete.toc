@@ -12,10 +12,12 @@ embeds.xml
 Locales\Load_Locales.xml
 
 Core.lua
-Util.lua
+Timer.lua
 DB.lua
+Util.lua
+State.lua
 Options.lua
-Display.lua
-Events.lua
-Comms.lua
 Splits.lua
+Comms.lua
+Events.lua
+Render.lua

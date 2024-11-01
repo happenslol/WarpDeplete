@@ -124,7 +124,8 @@ function WarpDeplete:CreateProgressBar(frame)
 
 		bar:SetPoint("CENTER", 0, 0)
 		bar:SetSize(width - 2, height - 2)
-		bar:SetStatusBarTexture(WarpDeplete.LSM:Fetch("statusbar", barTexture))
+
+		bar:SetStatusBarTexture(WarpDeplete.LSM:Fetch("statusbar", barTexture)--[[@as string]])
 		bar:SetStatusBarColor(r, g, b)
 	end
 
@@ -318,7 +319,7 @@ function WarpDeplete:RenderLayout()
 		0,
 		barPadding + barHeight / 2
 	)
-	self.bar3.text:SetFont(self.LSM:Fetch("font", bar3Font), bar3FontSize, bar3FontFlags)
+	self.bar3.text:SetFont(self.LSM:Fetch("font", bar3Font)--[[@as string]], bar3FontSize, bar3FontFlags)
 	self.bar3.text:SetNonSpaceWrap(false)
 	self.bar3.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
 	self.bar3.text:SetTextColor(r, g, b, 1)
@@ -340,7 +341,7 @@ function WarpDeplete:RenderLayout()
 		bar3Width + timerBarOffsetX,
 		barPadding + barHeight / 2
 	)
-	self.bar2.text:SetFont(self.LSM:Fetch("font", bar2Font), bar2FontSize, bar2FontFlags)
+	self.bar2.text:SetFont(self.LSM:Fetch("font", bar2Font)--[[@as string]], bar2FontSize, bar2FontFlags)
 	self.bar2.text:SetNonSpaceWrap(false)
 	self.bar2.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
 	self.bar2.text:SetTextColor(r, g, b, 1)
@@ -362,7 +363,7 @@ function WarpDeplete:RenderLayout()
 		bar3Width + bar2Width + timerBarOffsetX * 2,
 		barPadding + barHeight / 2
 	)
-	self.bar1.text:SetFont(self.LSM:Fetch("font", bar1Font), bar1FontSize, bar1FontFlags)
+	self.bar1.text:SetFont(self.LSM:Fetch("font", bar1Font)--[[@as string]], bar1FontSize, bar1FontFlags)
 	self.bar1.text:SetNonSpaceWrap(false)
 	self.bar1.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
 	self.bar1.text:SetTextColor(r, g, b, 1)
@@ -387,7 +388,7 @@ function WarpDeplete:RenderLayout()
 		0,
 		-barPadding - barHeight / 2
 	)
-	self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont), forcesFontSize, forcesFontFlags)
+	self.forces.text:SetFont(self.LSM:Fetch("font", forcesFont)--[[@as string]], forcesFontSize, forcesFontFlags)
 	self.forces.text:SetNonSpaceWrap(false)
 	self.forces.text:SetJustifyH(alignBarTextRight and "RIGHT" or "LEFT")
 	self.forces.text:SetTextColor(r, g, b, 1)
@@ -404,7 +405,9 @@ function WarpDeplete:RenderLayout()
 	self.forces.overlayBar:SetValue(0)
 	self.forces.overlayBar:SetPoint("LEFT", 0, 0)
 	self.forces.overlayBar:SetSize(barWidth - 2, barHeight - 2)
-	self.forces.overlayBar:SetStatusBarTexture(self.LSM:Fetch("statusbar", self.db.profile.forcesOverlayTexture))
+	self.forces.overlayBar:SetStatusBarTexture(
+		self.LSM:Fetch("statusbar", self.db.profile.forcesOverlayTexture) --[[@as string]]
+	)
 	self.forces.overlayBar:SetStatusBarColor(r, g, b, 0.7)
 
 	local barFrameHeight = timerBarsHeight + forcesBarHeight + barPadding * 2
@@ -450,21 +453,19 @@ function WarpDeplete:RenderTimer()
 
 	timerState.timerText = Util.formatTime_OnUpdate(self.state.timer)
 		.. " / "
-		.. Util.formatTime_OnUpdate(self.state.limit)
+		.. Util.formatTime_OnUpdate(self.state.timeLimit)
 
 	if self.state.challengeCompleted then
-    -- TODO: Pull this out of render logic
-		local _, _, blizzardTime, onTime = C_ChallengeMode.GetCompletionInfo()
-
-		local blizzardTimeText = ""
+		local timerText = ""
 		if self.db.profile.showMillisecondsWhenDungeonCompleted then
-			blizzardTimeText = Util.formatTimeMilliseconds(blizzardTime)
+			timerText = Util.formatTimeMilliseconds(self.state.completionTimeMs)
 		else
-			blizzardTimeText = Util.formatTime(blizzardTime / 1000)
+			timerText = Util.formatTime(self.state.completionTimeMs / 1000)
 		end
 
-		timerState.timerText = blizzardTimeText .. " / " .. Util.formatTime_OnUpdate(self.state.timeLimit)
-		timerState.color = onTime and self.db.profile.timerSuccessColor or self.db.profile.timerExpiredColor
+		timerState.timerText = timerText .. " / " .. Util.formatTime_OnUpdate(self.state.timeLimit)
+		timerState.color = self.state.completedOnTime and self.db.profile.timerSuccessColor
+			or self.db.profile.timerExpiredColor
 		timerState.timerText = "|c" .. timerState.color .. timerState.timerText .. "|r"
 	end
 
@@ -515,40 +516,23 @@ function WarpDeplete:RenderForces()
 	self.forces.overlayBar:SetPoint("LEFT", 1 + self.db.profile.barWidth * self.state.currentPercent, 0)
 	self.forces.bar:SetValue(self.state.currentPercent)
 
-	self.forces.text:SetText(
-		Util.formatForcesText(
-			self.db.profile.completedForcesColor,
-			self.db.profile.forcesFormat,
-			self.db.profile.customForcesFormat,
-			self.db.profile.currentPullFormat,
-			self.db.profile.customCurrentPullFormat,
-			self.state.pullCount,
-			self.state.currentCount,
-			self.state.totalCount,
-			self.state.completed and self.state.completedTime or nil,
-			self.db.profile.timingsEnabled,
-			self:GetCurrentDiff("forces"),
-			self.db.profile.timingsImprovedTimeColor,
-			self.db.profile.timingsWorseTimeColor,
-			self.db.profile.alignBarTexts
-		)
-	)
+	self.forces.text:SetText(Util.formatForcesText())
 
 	-- Update glow state
 	if self.state.pullGlowActive and (self.state.challengeCompleted or self.state.forcesCompleted) then
 		self:HideGlow()
 	else
-	  local percentBeforePull = self.state.currentPercent
-	  local percentAfterPull = percentBeforePull + self.state.pullPercent
-	  local shouldGlow = percentBeforePull < 1 and percentAfterPull >= 1.0
+		local percentBeforePull = self.state.currentPercent
+		local percentAfterPull = percentBeforePull + self.state.pullPercent
+		local shouldGlow = percentBeforePull < 1 and percentAfterPull >= 1.0
 
-	  if shouldGlow ~= self.state.pullGlowActive then
-	    if shouldGlow then
-		    self:ShowGlow()
-	    else
-		    self:HideGlow()
-	    end
-	  end
+		if shouldGlow ~= self.state.pullGlowActive then
+			if shouldGlow then
+				self:ShowGlow()
+			else
+				self:HideGlow()
+			end
+		end
 	end
 end
 

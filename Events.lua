@@ -1,6 +1,9 @@
 local Util = WarpDeplete.Util
 local L = WarpDeplete.L
 
+---@type table<string, boolean>
+WarpDeplete.registeredChallengeEvents = {}
+
 function WarpDeplete:RegisterGlobalEvent(event)
 	self:RegisterEvent(event, event)
 end
@@ -40,6 +43,7 @@ end
 function WarpDeplete:RegisterChallengeEvents()
 	-- Challenge mode triggers
 	self:RegisterChallengeEvent("CHALLENGE_MODE_COMPLETED")
+	self:RegisterChallengeEvent("CHALLENGE_MODE_DEATH_COUNT_UPDATED")
 
 	-- Scenario Triggers
 	self:RegisterChallengeEvent("SCENARIO_POI_UPDATE")
@@ -53,21 +57,21 @@ function WarpDeplete:RegisterChallengeEvents()
 	self:RegisterChallengeEvent("UNIT_THREAT_LIST_UPDATE")
 end
 
-function WarpDeplete:PLAYER_ENTERING_WORLD(ev)
+function WarpDeplete:PLAYER_ENTERING_WORLD(_)
 	self:CheckForChallengeMode()
 end
 
-function WarpDeplete:ZONE_CHANGED_NEW_AREA(ev)
+function WarpDeplete:ZONE_CHANGED_NEW_AREA(_)
 	self:CheckForChallengeMode()
 end
 
 -- We receive this when the 10s countdown after key insertion starts
-function WarpDeplete:CHALLENGE_MODE_START(ev)
-	self:ResetSplitsCurrent()
+function WarpDeplete:CHALLENGE_MODE_START(_)
+	self:ResetCurrentSplits()
 	self:EnableChallengeMode()
 end
 
-function WarpDeplete:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(ev)
+function WarpDeplete:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(_)
 	if not self.db.profile.insertKeystoneAutomatically then
 		return
 	end
@@ -98,34 +102,31 @@ function WarpDeplete:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(ev)
 	end
 end
 
-function WarpDeplete:CHALLENGE_MODE_COMPLETED(ev)
-	self.state.challengeCompleted = true
-
-	self:UpdateSplits()
-	self:UpdateBestSplits()
-
-	self:RenderTimer()
-	self:RenderObjectives()
-	self:RenderForces()
+function WarpDeplete:CHALLENGE_MODE_COMPLETED(_)
+	self:CompleteChallenge()
 end
 
-function WarpDeplete:SCENARIO_POI_UPDATE(ev)
+function WarpDeplete:CHALLENGE_MODE_DEATH_COUNT_UPDATED(_)
+	self:SetDeathCount(C_ChallengeMode.GetDeathCount() or 0)
+end
+
+function WarpDeplete:SCENARIO_POI_UPDATE(_)
 	self:UpdateObjectives()
 end
 
-function WarpDeplete:SCENARIO_CRITERIA_UPDATE(ev)
+function WarpDeplete:SCENARIO_CRITERIA_UPDATE(_)
 	self:UpdateObjectives()
 end
 
-function WarpDeplete:ENCOUNTER_END(ev)
+function WarpDeplete:ENCOUNTER_END(_)
 	self:ResetCurrentPull()
 end
 
-function WarpDeplete:PLAYER_REGEN_ENABLED(ev)
+function WarpDeplete:PLAYER_REGEN_ENABLED(_)
 	self:ResetCurrentPull()
 end
 
-function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED(ev)
+function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED(_)
 	local _, subEv, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo()
 	if subEv ~= "UNIT_DIED" then
 		return
@@ -150,10 +151,11 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED(ev)
 	self:SetForcesPull(pullCount)
 end
 
-function WarpDeplete:UNIT_THREAT_LIST_UPDATE(ev)
+function WarpDeplete:UNIT_THREAT_LIST_UPDATE(_, unit)
 	if not MDT then
 		return
 	end
+
 	if not InCombatLockdown() or not unit or not UnitExists(unit) then
 		return
 	end

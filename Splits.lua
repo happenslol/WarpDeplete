@@ -1,146 +1,150 @@
-local Util = WarpDeplete.Util
-
 function WarpDeplete:UpdateSplits()
-  self:PrintDebug("Updating splits")
-  local objectives = Util.copy(self.state.objectives)
-  local timings = self:GetSplitsForCurrentInstance()
+	local splits = self:GetSplitsForCurrentInstance()
 
-  if timings == nil then
-    self:PrintDebug("Could not get timings for current instance")
-    return
-  end
+	if not splits then
+		self:PrintDebug("Could not get splits for current instance")
+		return
+	end
 
-  local best = timings.best
-  if best == nil then
-    best = {}
-    timings.best = best
-  end
+	local best = splits.best
+	if not best then
+		best = {}
+		splits.best = best
+	end
 
-  local current = timings.current
-  if current == nil then
-    current = {}
-    timings.current = current
-  end
+	local current = splits.current
+	if not current then
+		current = {}
+		splits.current = current
+	end
 
-  local currentDiff = timings.currentDiff
-  if currentDiff == nil then
-    currentDiff = {}
-    timings.currentDiff = currentDiff
-  end
+	local currentDiff = splits.currentDiff
+	if not currentDiff then
+		currentDiff = {}
+		splits.currentDiff = currentDiff
+	end
 
-  for i = 1, #objectives do
-    local boss = objectives[i]
-    if boss.time ~= nil and not current[i] then
-      self:PrintDebug("Setting current time for " .. tostring(i) .. ": " .. tostring(boss.time))
-      current[i] = boss.time
+	for i, boss in ipairs(self.state.objectives) do
+		if boss.time and not current[i] then
+			self:PrintDebug("Setting current time for " .. tostring(i) .. ": " .. tostring(boss.time))
+			current[i] = boss.time
 
-      if best[i] ~= nil then
-        currentDiff[i] = boss.time - best[i]
-        self:PrintDebug("Setting diff for " .. tostring(i) .. " to " .. tostring(currentDiff[i]))
-      else
-        self:PrintDebug("No best time found, not setting diff")
-      end
-    end
-  end
+			if best[i] then
+				currentDiff[i] = boss.time - best[i]
+				self:PrintDebug("Setting diff for " .. tostring(i) .. " to " .. tostring(currentDiff[i]))
+			end
+		end
+	end
 
-  if self.forcesState.completed and not current["forces"] then
-    self:PrintDebug("Setting current time for forces")
-    current["forces"] = self.forcesState.completedTime
+	if self.state.forcesCompleted and not current.forces then
+		self:PrintDebug("Setting current time for forces")
+		current.forces = self.state.forcesCompletionTime
 
-    if best["forces"] ~= nil then
-      currentDiff["forces"] = self.forcesState.completedTime - best["forces"]
-      self:PrintDebug("Setting diff for forces to " .. tostring(currentDiff[i]))
-    end
-  end
+		if best.forces then
+			currentDiff.forces = self.state.forcesCompletionTime - best.forces
+			self:PrintDebug("Setting diff for forces to " .. tostring(currentDiff.forces))
+		end
+	end
 
-  if self.challengeCompleted and not current["challenge"] then
-    self:PrintDebug("Setting current time for challenge")
-    local blizzardCompletionTime = select(3, C_ChallengeMode.GetCompletionInfo())
-    current["challenge"] = blizzardCompletionTime
+	if self.state.challengeCompleted and not current.challenge then
+		self:PrintDebug("Setting current time for challenge")
+		current.challenge = self.state.completionTimeMs
 
-    if best["challenge"] ~= nil then
-      currentDiff["challenge"] = blizzardCompletionTime - best["challenge"]
-      self:PrintDebug("Setting diff for challenge to " .. tostring(currentDiff[i]))
-    end
-  end
+		if best.challenge then
+			currentDiff.challenge = self.state.completionTimeMs - best.challenge
+			self:PrintDebug("Setting diff for challenge to " .. tostring(currentDiff.challenge))
+		end
+	end
 
-  self:PrintDebug("Splits updated")
+	self:PrintDebug("Splits updated")
 end
 
-function WarpDeplete:GetCurrentDiff(objectiveIndex)
-  if self.challengeState.demoModeActive then
-    if type(objectiveIndex) == "number" then
-      return -60 + (objectiveIndex * 30)
-    end
+-- Expects:
+-- - integer for boss index
+-- - "forces" for forces
+-- - "challenge" for entire dungeon timer
+function WarpDeplete:GetCurrentDiff(objective)
+	if self.state.demoModeActive then
+		if type(objective) == "number" then
+			return -60 + (objective * 30)
+		end
 
-    if objectiveIndex == "forces" then
-      return -40
-    end
+		if objective == "forces" then
+			return -40
+		end
 
-    if objectiveIndex == "challenge" then
-      return 100
-    end
+		if objective == "challenge" then
+			return 100
+		end
 
-    return 0
-  end
+		return 0
+	end
 
-  local timings = self:GetSplitsForCurrentInstance()
-  if timings == nil then return nil end
+	local splits = self:GetSplitsForCurrentInstance()
+	if not splits then
+		return nil
+	end
 
-  local currentDiff = timings.currentDiff
-  if currentDiff == nil then return nil end
+	local currentDiff = splits.currentDiff
+	if not currentDiff then
+		return nil
+	end
 
-  return currentDiff[objectiveIndex]
+	return currentDiff[objective]
 end
 
 function WarpDeplete:GetSplitsForCurrentInstance()
-  local level = self.keyDetailsState.level
-  local mapId = self.keyDetailsState.mapId
-  if mapId == nil or level == nil then return nil end
+	if not self.state.mapId or not self.state.level then
+		return nil
+	end
 
-  return self:GetSplits(mapId, level)
+	return self:GetSplits(self.state.mapId, self.state.level)
 end
 
 function WarpDeplete:GetSplits(mapId, keystoneLevel)
-  local mapSplits = self.db.global.timings[mapId]
-  if mapSplits == nil then
-    mapSplits = {}
-    self.db.global.timings[mapId] = mapSplits
-  end
+	local mapSplits = self.db.global.splits[mapId]
+	if not mapSplits then
+		mapSplits = {}
+		self.db.global.splits[mapId] = mapSplits
+	end
 
-  local keystoneSplits = mapSplits[keystoneLevel]
-  if keystoneSplits == nil then
-    keystoneSplits = {}
-    mapSplits[keystoneLevel] = keystoneSplits
-  end
+	local keystoneSplits = mapSplits[keystoneLevel]
+	if not keystoneSplits then
+		keystoneSplits = {}
+		mapSplits[keystoneLevel] = keystoneSplits
+	end
 
-  return keystoneSplits
+	return keystoneSplits
 end
 
-function WarpDeplete:ResetSplitsCurrent()
-  local timings = self:GetSplitsForCurrentInstance()
-  if timings == nil then return end
+function WarpDeplete:ResetCurrentSplits()
+	local splits = self:GetSplitsForCurrentInstance()
+	if not splits then
+		return
+	end
 
-  timings.current = {}
-  timings.currentDiff = {}
+	splits.current = {}
+	splits.currentDiff = {}
 end
 
 function WarpDeplete:UpdateBestSplits()
-  local timings = self:GetSplitsForCurrentInstance()
-  if timings == nil or timings.current == nil then return end
+	local splits = self:GetSplitsForCurrentInstance()
+	if not splits or not splits.current then
+		return
+	end
 
-  if timings.best == nil then
-    timings.best = {}
-  end
+	if not splits.best then
+		splits.best = {}
+	end
 
-  for k, v in pairs(timings.current) do
-    self:PrintDebug("Updating best timings for objective " .. tostring(k))
-    if not timings.best[k] then
-      self:PrintDebug("No best time found, setting " .. tostring(v))
-      timings.best[k] = v
-    elseif timings.best[k] > v then
-      self:PrintDebug("Better time found, setting " .. tostring(v))
-      timings.best[k] = v
-    end
-  end
+	for k, v in pairs(splits.current) do
+		self:PrintDebug("Updating best timings for objective " .. tostring(k))
+		if not splits.best[k] then
+			self:PrintDebug("No best time found, setting " .. tostring(v))
+			splits.best[k] = v
+		elseif splits.best[k] > v then
+			self:PrintDebug("Better time found, setting " .. tostring(v))
+			splits.best[k] = v
+		end
+	end
 end

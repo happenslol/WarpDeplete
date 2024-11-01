@@ -1,5 +1,49 @@
 local Util = WarpDeplete.Util
 
+---@class WarpDepleteObjective
+---@field name string
+---@field time integer|nil
+
+---@class WarpDepleteState
+WarpDeplete.defaultState = {
+	isShown = false,
+	demoModeActive = false,
+
+	inChallenge = false,
+	challengeCompleted = false,
+
+	completedOnTime = nil, ---@type boolean|nil
+	completionTimeMs = nil, ---@type integer|nil
+
+	timerRunning = false,
+	timer = nil,
+	timeLimit = nil,
+
+	deathCount = 0,
+	deathDetails = {},
+
+	pullCount = 0,
+	currentCount = 0,
+	totalCount = 100,
+
+	pullPercent = 0,
+	currentPercent = 0,
+	pullGlowActive = false,
+	currentPull = {}, ---@type table<integer, string|nil|"DEAD">
+
+	objectives = {}, ---@type WarpDepleteObjective[]
+	objectiveNames = nil, ---@type string[]|nil
+
+	forcesCompleted = false,
+	forcesCompletionTime = 0,
+
+	level = 0,
+	deathPenalty = 0,
+	affixes = {}, ---@type string[]
+	affixIds = {}, ---@type integer[]
+	mapId = nil, ---@type integer|nil
+}
+
 -- Expects absolute forces value
 function WarpDeplete:SetForcesTotal(totalCount)
 	self.state.totalCount = totalCount
@@ -45,7 +89,6 @@ function WarpDeplete:SetForcesPull(pullCount)
 end
 
 function WarpDeplete:SetForcesCompletionTime(completionTime)
-	self:PrintDebug("Setting forces completion time")
 	self.state.forcesCompleted = true
 	self.state.forcesCompletionTime = completionTime
 
@@ -58,7 +101,6 @@ function WarpDeplete:SetForcesCompletionTime(completionTime)
 		end
 	end
 
-	self:UpdateSplits()
 	self:RenderForces()
 end
 
@@ -96,65 +138,76 @@ function WarpDeplete:SetKeyDetails(level, deathPenalty, affixes, affixIds, mapId
 	self:RenderKeyDetails()
 end
 
-function WarpDeplete:LoadObjectives()
-	-- GetObjectivesInfo
-	-- local gotForcesInfo, stepCount = self:GetForcesInfo()
-	-- if not gotForcesInfo then
-	-- 	return false
-	-- end
-	--
-	-- local objectives = {}
-	-- for i = 1, stepCount - 1 do
-	-- 	local CriteriaInfo = C_ScenarioInfo.GetCriteriaInfo(i)
-	-- 	if CriteriaInfo == nil then
-	-- 		return false
-	-- 	end
-	--
-	-- 	local name = CriteriaInfo.description
-	-- 	local completed = CriteriaInfo.completed
-	-- 	if not name then
-	-- 		break
-	-- 	end
-	--
-	-- 	name = name:gsub(" defeated", "")
-	-- 	name = name:gsub(" Defeated", "")
-	-- 	self:PrintDebug("Got boss name for index " .. i .. ": " .. tostring(name))
-	-- 	objectives[i] = { name = name, time = completed and 0 or nil }
-	-- end
-	--
-	-- if #objectives <= 0 then
-	-- 	self:PrintDebug("No objectives received")
-	-- 	return false
-	-- end
-	--
-	-- self:SetObjectives(objectives)
-	-- return true
+local function parseForcesInfo(info)
+	if not info then
+		return nil, nil, nil
+	end
 
-	-- GetForcesInfo
-	-- -- The last step is forces, all previous steps are bosses
-	-- local stepCount = select(3, C_Scenario.GetStepInfo())
-	-- if stepCount <= 0 then
-	-- 	self:PrintDebug("No steps received, can't update objective info")
-	-- 	return false, 0
-	-- end
-	--
-	-- local currentCount, totalCount, completionTime = self:GetEnemyForcesCount()
-	-- self:PrintDebug("Got forces info: " .. tonumber(currentCount) .. "/" .. tonumber(totalCount))
-	--
-	-- if currentCount == nil or totalCount == nil then
-	-- 	self:PrintDebug("No mob count received in GetObjectivesInfo")
-	-- 	return false, 0
-	-- end
-	--
-	-- self:SetForcesTotal(totalCount)
-	-- self:SetForcesCurrent(currentCount)
-	--
-	-- if completionTime ~= nil then
-	-- 	self:PrintDebug("Setting forces completion in GetObjectivesInfo")
-	-- 	self:SetForcesCompletionTime(completionTime)
-	-- end
-	--
-	-- return true, stepCount
+	local totalCount = info.totalQuantity
+	local currentCountStr = info.quantityString
+
+	-- NOTE(happens): The current count contains a percentage sign
+	-- even though it's an absolute value.
+	local currentCount = currentCountStr and tonumber(currentCountStr:match("%d+")) or 0
+
+	local completionTime = nil
+	if currentCount >= totalCount then
+		completionTime = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
+	end
+
+	return currentCount, totalCount, completionTime
+end
+
+function WarpDeplete:LoadObjectives()
+	local stepCount = select(3, C_Scenario.GetStepInfo())
+	if not stepCount or stepCount <= 0 then
+		return
+	end
+
+	local anythingCompleted = false
+
+	local objectives = {}
+	for i = 1, stepCount - 1 do
+		local info = C_ScenarioInfo.GetCriteriaInfo(i)
+		local name = info.description
+
+		for j = 1, #self.state.objectiveNames do
+			if string.find(info.description, self.state.objectiveNames[j]) then
+				name = self.state.objectiveNames[j]
+				break
+			end
+		end
+
+		name = Util.utf8Sub(name, 20)
+		local objective = { name = name, time = nil }
+
+		if info.completed and info.elapsed and info.elapsed ~= 0 then
+			-- TODO: Why do we need to subtract the elapsed time here?
+			local time = select(2, GetWorldElapsedTime(1)) - info.elapsed
+			objective.time = time
+
+			anythingCompleted = true
+		end
+
+		objectives[i] = objective
+	end
+
+	self:SetObjectives(objectives)
+
+	local forcesInfo = C_ScenarioInfo.GetCriteriaInfo(stepCount)
+	local currentCount, totalCount, completionTime = parseForcesInfo(forcesInfo)
+
+	self:SetForcesTotal(totalCount)
+	self:SetForcesCurrent(currentCount)
+
+	if completionTime then
+		self:SetForcesCompletionTime(completionTime)
+		anythingCompleted = true
+	end
+
+	if anythingCompleted then
+		self:UpdateSplits()
+	end
 end
 
 function WarpDeplete:LoadDeathCount()
@@ -185,6 +238,35 @@ function WarpDeplete:LoadKeyDetails()
 	return true
 end
 
+function WarpDeplete:LoadEJBossNames()
+	local instanceID = Util.getEJInstanceID()
+	if not instanceID then
+		self:PrintDebug("No EJ instance ID found")
+		return
+	end
+
+	-- The encounter journal needs to be opened once
+	-- before we can get anything from it
+	if not self.encounterJournalOpened then
+		C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
+		EncounterJournal_OpenJournal(8, instanceID)
+		self.encounterJournalOpened = true
+		HideUIPanel(EncounterJournal)
+	end
+
+	local result = {}
+
+	-- There are never more than 20 objectives
+	-- (probably way less, but let's be safe here)
+	for i = 1, 20 do
+		local name = EJ_GetEncounterInfoByIndex(i, instanceID)
+
+		if name then
+			result[#result + 1] = name
+		end
+	end
+end
+
 function WarpDeplete:ResetCurrentPull()
 	for k, _ in pairs(self.state.currentPull) do
 		self.state.currentPull[k] = nil
@@ -202,97 +284,76 @@ function WarpDeplete:AddDeathDetails(time, name, class)
 end
 
 function WarpDeplete:UpdateObjectives()
-	-- UpdateObjectives
-	-- if not self.challengeState.inChallenge then
-	-- 	return
-	-- end
-	--
-	-- local objectives = Util.copy(self.objectivesState)
-	-- local changed = false
-	--
-	-- self:PrintDebug("Updating objectives")
-	-- local stepCount = select(3, C_Scenario.GetStepInfo())
-	-- for i = 1, stepCount - 1 do
-	-- 	if not objectives[i] or not objectives[i].time then
-	-- 		local info = C_ScenarioInfo.GetCriteriaInfo(i)
-	--
-	-- 		-- DEBUG
-	-- 		local dbg = "Objective " .. tostring(i) .. ":"
-	-- 		for k, v in pairs(info) do
-	-- 			dbg = dbg .. " " .. tostring(k) .. "=" .. tostring(v)
-	-- 		end
-	--
-	-- 		self:PrintDebug(dbg)
-	--
-	-- 		if info ~= nil and info.completed then
-	-- 			objectives[i] = objectives[i] or {}
-	-- 			objectives[i].time = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
-	-- 			changed = true
-	-- 		end
-	-- 	end
-	-- end
-	--
-	-- if changed then
-	-- 	self:UpdateSplits()
-	-- 	self:SetObjectives(objectives)
-	-- end
+	local stepCount = select(3, C_Scenario.GetStepInfo())
+	if not stepCount or stepCount <= 0 then
+		return
+	end
 
-	-- UpdateForces
-	-- if not self.state.inChallenge then
-	-- 	return
-	-- end
-	--
-	-- local currentCount, totalCount, completionTime = self:GetEnemyForcesCount()
-	-- -- This mostly happens when we have already completed the dungeon
-	-- if currentCount == nil or totalCount == nil then
-	-- 	self:PrintDebug("Got no forces total or current on UpdateForces")
-	-- 	return
-	-- end
-	--
-	-- self:PrintDebug("Count: " .. tostring(currentCount) .. "/" .. tostring(totalCount))
-	--
-	-- self:SetForcesCurrent(currentCount)
-	--
-	-- if completionTime ~= nil then
-	-- 	self:PrintDebug("Setting forces completion in UpdateForces")
-	-- 	self:SetForcesCompletionTime(completionTime)
-	-- end
+	local bossesChanged = false
+	for i = 1, stepCount - 1 do
+		local objective = self.state.objectives[i]
+
+		-- Only update the objective if it's not completed yet
+		if objective and not objective.time then
+			local info = C_ScenarioInfo.GetCriteriaInfo(i)
+
+			if info.completed and info.elapsed and info.elapsed ~= 0 then
+				-- TODO: Why do we need to subtract the elapsed time here?
+				local time = select(2, GetWorldElapsedTime(1)) - info.elapsed
+				objective.time = time
+				bossesChanged = true
+			end
+		end
+	end
+
+	if bossesChanged then
+		self:RenderObjectives()
+	end
+
+	local forcesChanged = false
+	local forcesInfo = C_ScenarioInfo.GetCriteriaInfo(stepCount)
+	local currentCount, totalCount, completionTime = parseForcesInfo(forcesInfo)
+	if currentCount and totalCount then
+		self:SetForcesCurrent(currentCount)
+	end
+
+	if completionTime and not self.state.forcesCompletionTime then
+		self:SetForcesCompletionTime(completionTime)
+		forcesChanged = true
+	end
+
+	if forcesChanged or bossesChanged then
+		self:UpdateSplits()
+	end
 end
 
-function WarpDeplete:GetForcesCompletionTime()
-	self:PrintDebug("Getting forces completion time")
-	local stepCount = select(3, C_Scenario.GetStepInfo())
-	local info = C_Scenario.GetCriteriaInfo(stepCount)
-	local completionTime = info and info.elapsed or nil
+function WarpDeplete:CompleteChallenge()
+	self:StopTimerLoop()
 
-	if not completionTime then
-		return nil
+	self.state.challengeCompleted = true
+	local _, _, timeMs, onTime = C_ChallengeMode.GetCompletionInfo()
+	local time = timeMs / 1000
+
+	self.state.completedOnTime = onTime
+	self.state.completionTimeMs = timeMs
+	self.state.timer = time
+
+	-- We have to complete all objectives that are not completed yet,
+	-- since we might not have gotten the final completion time
+	-- if the final objective completed the run.
+	for _, objective in pairs(self.state.objectives) do
+		if not objective.time then
+			objective.time = time
+		end
 	end
 
-	return select(2, GetWorldElapsedTime(1)) - completionTime
-end
-
-function WarpDeplete:GetEnemyForcesCount()
-	self:PrintDebug("Getting enemy forces count")
-	local stepCount = select(3, C_Scenario.GetStepInfo())
-	local info = C_ScenarioInfo.GetCriteriaInfo(stepCount)
-	if not info then
-		self:PrintDebug("Got no criteria info in GetEnemyForcesCount")
-		return nil, nil, nil
+	if not self.state.forcesCompletionTime then
+		self:SetForcesCompletionTime(time)
 	end
 
-	local totalCount = info.totalQuantity
-	local currentCountStr = info.quantityString
+	self:UpdateBestSplits()
 
-	-- NOTE(happens): The current count contains a percentage sign
-	-- even though it's an absolute value.
-	local currentCount = currentCountStr and tonumber(currentCountStr:match("%d+")) or 0
-
-	local completionTime = nil
-	if currentCount >= totalCount then
-		completionTime = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
-		self:PrintDebug("Returning completion time: " .. tostring(completionTime))
-	end
-
-	return currentCount, totalCount, completionTime
+	self:RenderTimer()
+	self:RenderObjectives()
+	self:RenderForces()
 end
