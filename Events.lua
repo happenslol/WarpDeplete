@@ -68,7 +68,6 @@ end
 
 -- We receive this when the 10s countdown after key insertion starts
 function WarpDeplete:CHALLENGE_MODE_START(_)
-	self:ResetCurrentSplits()
 	self:EnableChallengeMode()
 
 	local splits = self:GetSplitsForCurrentInstance()
@@ -101,12 +100,12 @@ function WarpDeplete:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(_)
 			end
 		end
 
-		if found ~= nil then
+		if found then
 			break
 		end
 	end
 
-	if found ~= nil then
+	if found then
 		C_Container.UseContainerItem(found.bagIndex, found.invIndex)
 	end
 end
@@ -117,6 +116,8 @@ end
 
 function WarpDeplete:WORLD_STATE_TIMER_START(_)
 	-- Rerender everything once in case we were displaying PBs
+	self.state.timerStarted = true
+
 	self:RenderTimer()
 	self:RenderForces()
 	self:RenderObjectives()

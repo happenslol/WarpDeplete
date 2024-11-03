@@ -19,7 +19,7 @@ function Util.formatForcesText()
 	local align = WarpDeplete.db.profile.alignBarTexts
 
 	local best = WarpDeplete:GetBestSplit("forces")
-	local isStart = WarpDeplete.state.timer == 0
+	local isStart = not WarpDeplete.state.timerStarted
 	local showPbsDuringCountdown = WarpDeplete.db.profile.showPbsDuringCountdown
 
 	local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100)

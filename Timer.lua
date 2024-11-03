@@ -16,6 +16,15 @@ function WarpDeplete:OnTimerTick(elapsed)
 	end
 
 	self.state.timer = select(2, GetWorldElapsedTime(1))
+
+	-- These might change after the timer has started, so rerender
+	-- them once here
+	if self.state.timer > 0 and not self.state.timerStarted then
+		self.state.timerStarted = true
+		self:RenderForces()
+		self:RenderObjectives()
+	end
+
 	self:RenderTimer()
 end
 

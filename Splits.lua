@@ -26,7 +26,7 @@ function WarpDeplete:UpdateSplits()
 	end
 
 	for i, boss in ipairs(self.state.objectives) do
-		if boss.time and not current[i] then
+		if boss.time and boss.time ~= current[i] then
 			self:PrintDebug("Setting current time for " .. tostring(i) .. ": " .. tostring(boss.time))
 			current[i] = boss.time
 
@@ -34,10 +34,13 @@ function WarpDeplete:UpdateSplits()
 				currentDiff[i] = boss.time - best[i]
 				self:PrintDebug("Setting diff for " .. tostring(i) .. " to " .. tostring(currentDiff[i]))
 			end
+		elseif not boss.time then
+			current[i] = nil
+			currentDiff[i] = nil
 		end
 	end
 
-	if self.state.forcesCompleted and not current.forces then
+	if self.state.forcesCompleted and self.state.forcesCompletionTime ~= current.forces then
 		self:PrintDebug("Setting current time for forces")
 		current.forces = self.state.forcesCompletionTime
 
@@ -45,9 +48,12 @@ function WarpDeplete:UpdateSplits()
 			currentDiff.forces = self.state.forcesCompletionTime - best.forces
 			self:PrintDebug("Setting diff for forces to " .. tostring(currentDiff.forces))
 		end
+	elseif not self.state.forcesCompleted then
+		current.forces = nil
+		currentDiff.forces = nil
 	end
 
-	if self.state.challengeCompleted and not current.challenge then
+	if self.state.challengeCompleted and self.state.completionTimeMs ~= current.challenge then
 		self:PrintDebug("Setting current time for challenge")
 		current.challenge = self.state.completionTimeMs
 
@@ -55,6 +61,9 @@ function WarpDeplete:UpdateSplits()
 			currentDiff.challenge = self.state.completionTimeMs - best.challenge
 			self:PrintDebug("Setting diff for challenge to " .. tostring(currentDiff.challenge))
 		end
+	elseif not self.state.challengeCompleted then
+		current.challenge = nil
+		currentDiff.challenge = nil
 	end
 
 	self:PrintDebug("Splits updated")

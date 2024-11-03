@@ -162,13 +162,13 @@ function WarpDeplete:HideBlizzardObjectiveTracker()
 end
 
 function WarpDeplete:ShowExternals()
-	if KT ~= nil then
+	if KT then
 		KT.frame:Show()
 	end
 end
 
 function WarpDeplete:HideExternals()
-	if KT ~= nil then
+	if KT then
 		KT.frame:Hide()
 	end
 end
@@ -196,12 +196,8 @@ function WarpDeplete:ResetState()
 end
 
 function WarpDeplete:CheckForChallengeMode()
-	local inChallenge = select(3, GetInstanceInfo()) == 8
-	self:PrintDebug("Checking for challenge mode: "
-		.. tostring(self.state.inChallenge)
-		.. " -> "
-		.. tostring(inChallenge))
-
+	local _, type, difficulty = GetInstanceInfo()
+	local inChallenge = difficulty == 8 and type == "party"
 	if self.state.inChallenge == inChallenge then
 		return
 	end

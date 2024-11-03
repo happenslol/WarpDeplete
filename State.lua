@@ -16,6 +16,7 @@ WarpDeplete.defaultState = {
 	completionTimeMs = nil, ---@type integer|nil
 
 	timerLoopRunning = false,
+	timerStarted = false,
 	timer = 0,
 	timeLimit = 0,
 
@@ -272,10 +273,11 @@ end
 
 function WarpDeplete:CompleteChallenge()
 	self:StopTimerLoop()
+	self:ResetCurrentPull()
 
 	self.state.challengeCompleted = true
 	local _, _, timeMs, onTime = C_ChallengeMode.GetCompletionInfo()
-	local time = math.floor(timeMs / 1000)
+	local time = math.ceil(timeMs / 1000)
 
 	self.state.completedOnTime = onTime
 	self.state.completionTimeMs = timeMs

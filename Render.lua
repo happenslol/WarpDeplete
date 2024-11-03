@@ -521,16 +521,13 @@ function WarpDeplete:RenderTimer()
 	self.frames.root.timerSplitText:SetText("")
 	if self.db.profile.splitsEnabled then
 		-- Show PBs during countdown
-		if self.db.profile.showPbsDuringCountdown and self.state.timer == 0 then
-			if not timerState.bestSplit and not timerState.bestSplitChecked then
-				timerState.bestSplit = self:GetBestSplit("challenge")
-				timerState.bestSplitChecked = true
-			end
+		if self.db.profile.showPbsDuringCountdown and not self.state.timerStarted then
+			local best = self:GetBestSplit("challenge")
 
-			if timerState.bestSplit then
+			if best then
 				self.frames.root.timerSplitText:SetText("|c"
 					.. self.db.profile.splitFasterTimeColor
-					.. Util.formatTime(timerState.bestSplit / 1000)
+					.. Util.formatTime(best / 1000)
 					.. "|r"
 				)
 			end
@@ -538,6 +535,7 @@ function WarpDeplete:RenderTimer()
 
 		-- The timer loop isn't running at this point, so we use locals
 		if self.state.challengeCompleted or self.state.demoModeActive then
+			self:PrintDebug("Rendering timer pb for completed challenge")
 			local diff = self:GetCurrentDiff("challenge")
 			if diff then
 				local diffColor = diff <= 0 and self.db.profile.splitFasterTimeColor
@@ -634,7 +632,7 @@ function WarpDeplete:RenderObjectives()
 			if self.db.profile.splitsEnabled then
 				local diff = self:GetCurrentDiff(i)
 
-				if diff ~= nil then
+				if diff then
 					local diffColor = diff <= 0 and self.db.profile.splitFasterTimeColor
 						or self.db.profile.splitSlowerTimeColor
 
@@ -647,7 +645,7 @@ function WarpDeplete:RenderObjectives()
 					end
 				end
 			end
-		elseif self.db.profile.splitsEnabled and self.db.profile.showPbsDuringCountdown and self.state.timer == 0 then
+		elseif self.db.profile.splitsEnabled and self.db.profile.showPbsDuringCountdown and not self.state.timerStarted then
 			local best = self:GetBestSplit(i)
 			if best then
 				local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"
