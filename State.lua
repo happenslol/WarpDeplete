@@ -15,7 +15,7 @@ WarpDeplete.defaultState = {
 	completedOnTime = nil, ---@type boolean|nil
 	completionTimeMs = nil, ---@type integer|nil
 
-	timerRunning = false,
+	timerLoopRunning = false,
 	timer = 0,
 	timeLimit = 0,
 

@@ -519,17 +519,18 @@ function WarpDeplete:RenderTimer()
 
 	self.frames.root.timerSplitText:SetText("")
 	if self.db.profile.splitsEnabled then
-		-- Show best time during countdown
+		-- Show PBs during countdown
 		if self.state.timer == 0 then
 			if not timerState.bestSplit and not timerState.bestSplitChecked then
-				timerState.splits = self:GetBestSplit("challenge")
+				timerState.bestSplit = self:GetBestSplit("challenge")
 				timerState.bestSplitChecked = true
 			end
 
 			if timerState.bestSplit then
 				self.frames.root.timerSplitText:SetText("|c"
 					.. self.db.profile.splitFasterTimeColor
-					.. Util.formatTime(timerState.bestSplit / 1000) .. "|r"
+					.. Util.formatTime(timerState.bestSplit / 1000)
+					.. "|r"
 				)
 			end
 		end
@@ -618,11 +619,8 @@ function WarpDeplete:RenderObjectives()
 	for i, boss in ipairs(self.state.objectives) do
 		local objectiveStr = boss.name
 
-		if boss.time ~= nil then
+		if boss.time then
 			objectiveStr = Util.colorText(objectiveStr, completionColor)
-		end
-
-		if boss.time ~= nil and boss.time > 0 then
 			local completionTimeStr = "[" .. Util.formatTime(boss.time) .. "]"
 			completionTimeStr = Util.colorText(completionTimeStr, completionColor)
 
@@ -633,32 +631,30 @@ function WarpDeplete:RenderObjectives()
 			end
 
 			if self.db.profile.splitsEnabled then
-				if self.state.timer == 0 then
-					local best = self:GetBestSplit(i)
-					if best then
-						local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"
+				local diff = self:GetCurrentDiff(i)
 
-						if alignStart then
-							objectiveStr = bestStr .. " " .. objectiveStr
-						else
-							objectiveStr = objectiveStr .. " " .. bestStr
-						end
+				if diff ~= nil then
+					local diffColor = diff <= 0 and self.db.profile.splitFasterTimeColor
+						or self.db.profile.splitSlowerTimeColor
+
+					local diffStr = "|c" .. diffColor .. Util.formatTime(diff, true) .. "|r"
+
+					if alignStart then
+						objectiveStr = diffStr .. " " .. objectiveStr
+					else
+						objectiveStr = objectiveStr .. " " .. diffStr
 					end
+				end
+			end
+		elseif self.db.profile.splitsEnabled and self.state.timer == 0 then
+			local best = self:GetBestSplit(i)
+			if best then
+				local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"
+
+				if alignStart then
+					objectiveStr = bestStr .. " " .. objectiveStr
 				else
-					local diff = self:GetCurrentDiff(i)
-
-					if diff ~= nil then
-						local diffColor = diff <= 0 and self.db.profile.splitFasterTimeColor
-							or self.db.profile.splitSlowerTimeColor
-
-						local diffStr = "|c" .. diffColor .. Util.formatTime(diff, true) .. "|r"
-
-						if alignStart then
-							objectiveStr = diffStr .. " " .. objectiveStr
-						else
-							objectiveStr = objectiveStr .. " " .. diffStr
-						end
-					end
+					objectiveStr = objectiveStr .. " " .. bestStr
 				end
 			end
 		end

@@ -44,6 +44,7 @@ function WarpDeplete:RegisterChallengeEvents()
 	-- Challenge mode triggers
 	self:RegisterChallengeEvent("CHALLENGE_MODE_COMPLETED")
 	self:RegisterChallengeEvent("CHALLENGE_MODE_DEATH_COUNT_UPDATED")
+	self:RegisterChallengeEvent("WORLD_STATE_TIMER_START")
 
 	-- Scenario Triggers
 	self:RegisterChallengeEvent("SCENARIO_POI_UPDATE")
@@ -112,6 +113,13 @@ end
 
 function WarpDeplete:CHALLENGE_MODE_COMPLETED(_)
 	self:CompleteChallenge()
+end
+
+function WarpDeplete:WORLD_STATE_TIMER_START(_)
+	-- Rerender everything once in case we were displaying PBs
+	self:RenderTimer()
+	self:RenderForces()
+	self:RenderObjectives()
 end
 
 function WarpDeplete:CHALLENGE_MODE_DEATH_COUNT_UPDATED(_)

@@ -84,7 +84,7 @@ function Util.formatForcesText()
 		result = result:gsub(":remainingpercentafterpull:", remainingPercentText .. "%%")
 	end
 
-	if completionTime and result then
+	if completionTime then
 		local completedText = ("[%s]"):format(Util.formatTime(completionTime))
 		if align == "right" then
 			result = "|c" .. completedColor .. completedText .. " " .. result .. "|r"
@@ -92,24 +92,22 @@ function Util.formatForcesText()
 			result = "|c" .. completedColor .. result .. " " .. completedText .. "|r"
 		end
 
-		if splitsEnabled then
-			if isStart and best then
-				local bestStr = "|c" .. splitFasterTimeColor .. Util.formatTime(best) .. "|r"
-				if align == "right" then
-					result = bestStr .. " " .. result
-				else
-					result = result .. " " .. bestStr
-				end
-			elseif diff ~= nil then
-				local diffColor = diff <= 0 and splitFasterTimeColor or splitSlowerTimeColor
-				local diffStr = "|c" .. diffColor .. Util.formatTime(diff, true) .. "|r"
+		if splitsEnabled and diff then
+			local diffColor = diff <= 0 and splitFasterTimeColor or splitSlowerTimeColor
+			local diffStr = "|c" .. diffColor .. Util.formatTime(diff, true) .. "|r"
 
-				if align == "right" then
-					result = diffStr .. " " .. result
-				else
-					result = result .. " " .. diffStr
-				end
+			if align == "right" then
+				result = diffStr .. " " .. result
+			else
+				result = result .. " " .. diffStr
 			end
+		end
+	elseif splitsEnabled and isStart and best then
+		local bestStr = "|c" .. splitFasterTimeColor .. Util.formatTime(best) .. "|r"
+		if align == "right" then
+			result = bestStr .. " " .. result
+		else
+			result = result .. " " .. bestStr
 		end
 	end
 

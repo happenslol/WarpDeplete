@@ -20,11 +20,11 @@ function WarpDeplete:OnTimerTick(elapsed)
 end
 
 function WarpDeplete:StartTimerLoop()
-	if self.state.timerRunning then
+	if self.state.timerLoopRunning then
 		return
 	end
 
-	self.state.timerRunning = true
+	self.state.timerLoopRunning = true
 
 	sinceLastUpdate = 0
 	self.frames.root:SetScript("OnUpdate", function(_, elapsed)
@@ -34,6 +34,6 @@ end
 
 function WarpDeplete:StopTimerLoop()
 	sinceLastUpdate = 0
-	self.state.timerRunning = false
+	self.state.timerLoopRunning = false
 	self.frames.root:SetScript("OnUpdate", nil)
 end
