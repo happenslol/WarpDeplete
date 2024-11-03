@@ -12,6 +12,9 @@ function WarpDeplete:InitRender()
 	-- Timer text
 	self.frames.root.timerText = self.frames.root:CreateFontString(nil, "ARTWORK")
 
+	-- Timer PB text
+	self.frames.root.timerSplitText = self.frames.root:CreateFontString(nil, "ARTWORK")
+
 	-- Key details text
 	local keyDetailsText = self.frames.root:CreateFontString(nil, "ARTWORK")
 	self.frames.root.keyDetailsText = keyDetailsText
@@ -229,10 +232,25 @@ function WarpDeplete:RenderLayout()
 	timerText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
 	r, g, b = Util.hexToRGB(self.db.profile.timerRunningColor)
 	timerText:SetTextColor(r, g, b, 1)
+	timerText:ClearAllPoints()
 	timerText:SetPoint(
 		alignRight and "TOPRIGHT" or "TOPLEFT",
 		alignRight and -framePadding or framePadding,
 		-currentOffset
+	)
+
+	-- Timer splits text
+	local timerSplitText = self.frames.root.timerSplitText
+	timerSplitText:SetFont(self.LSM:Fetch("font", timerFont), timerFontSize * 0.6, timerFontFlags)
+	timerSplitText:SetNonSpaceWrap(false)
+	timerSplitText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
+	timerSplitText:ClearAllPoints()
+	timerSplitText:SetPoint(
+		alignRight and "BOTTOMRIGHT" or "BOTTOMLEFT",
+		self.frames.root.timerText,
+		alignRight and "BOTTOMLEFT" or "BOTTOMRIGHT",
+		alignRight and -8 or 8,
+		2
 	)
 
 	currentOffset = currentOffset + timerText:GetStringHeight() + verticalOffset
@@ -449,7 +467,7 @@ local limitMult = { 1.0, 0.8, 0.6 }
 
 function WarpDeplete:RenderTimer()
 	-- Make sure we don't divide by 0
-	timerState.percent = self.state.timeLimit > 0 and self.state.timer / self.state.timeLimit or 0
+	timerState.percent = self.state.timeLimit > 0 and self.state.timer / self.state.timeLimit or 1
 
 	timerState.timerText = Util.formatTime_OnUpdate(self.state.timer)
 		.. " / "
@@ -497,6 +515,35 @@ function WarpDeplete:RenderTimer()
 
 		self.bars[i].bar:SetValue(timerState.barValue)
 		self.bars[i].text:SetText(timerState.timeText)
+	end
+
+	self.frames.root.timerSplitText:SetText("")
+	if self.db.profile.splitsEnabled then
+		-- Show best time during countdown
+		if self.state.timer == 0 then
+			if not timerState.bestSplit and not timerState.bestSplitChecked then
+				timerState.splits = self:GetBestSplit("challenge")
+				timerState.bestSplitChecked = true
+			end
+
+			if timerState.bestSplit then
+				self.frames.root.timerSplitText:SetText("|c"
+					.. self.db.profile.splitFasterTimeColor
+					.. Util.formatTime(timerState.bestSplit / 1000) .. "|r"
+				)
+			end
+		end
+
+		-- The timer loop isn't running at this point, so we use locals
+		if self.state.challengeCompleted or self.state.demoModeActive then
+			local diff = self:GetCurrentDiff("challenge")
+			if diff then
+				local diffColor = diff <= 0 and self.db.profile.splitFasterTimeColor
+					or self.db.profile.splitSlowerTimeColor
+				local diffStr = "|c" .. diffColor .. Util.formatTime(diff / 1000, true) .. "|r"
+				self.frames.root.timerSplitText:SetText(diffStr)
+			end
+		end
 	end
 end
 
@@ -585,19 +632,32 @@ function WarpDeplete:RenderObjectives()
 				objectiveStr = objectiveStr .. " " .. completionTimeStr
 			end
 
-			if self.db.profile.timingsEnabled then
-				local diff = self:GetCurrentDiff(i)
+			if self.db.profile.splitsEnabled then
+				if self.state.timer == 0 then
+					local best = self:GetBestSplit(i)
+					if best then
+						local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"
 
-				if diff ~= nil then
-					local diffColor = diff <= 0 and self.db.profile.timingsImprovedTimeColor
-						or self.db.profile.timingsWorseTimeColor
+						if alignStart then
+							objectiveStr = bestStr .. " " .. objectiveStr
+						else
+							objectiveStr = objectiveStr .. " " .. bestStr
+						end
+					end
+				else
+					local diff = self:GetCurrentDiff(i)
 
-					local diffStr = "|c" .. diffColor .. Util.formatTime(diff, true) .. "|r"
+					if diff ~= nil then
+						local diffColor = diff <= 0 and self.db.profile.splitFasterTimeColor
+							or self.db.profile.splitSlowerTimeColor
 
-					if alignStart then
-						objectiveStr = diffStr .. " " .. objectiveStr
-					else
-						objectiveStr = objectiveStr .. " " .. diffStr
+						local diffStr = "|c" .. diffColor .. Util.formatTime(diff, true) .. "|r"
+
+						if alignStart then
+							objectiveStr = diffStr .. " " .. objectiveStr
+						else
+							objectiveStr = objectiveStr .. " " .. diffStr
+						end
 					end
 				end
 			end

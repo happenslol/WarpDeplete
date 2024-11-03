@@ -1,8 +1,6 @@
 ---@meta
 
 ---@class MDT
----@field zoneIdToDungeonIdx table<integer, integer>
----@field dungeonTotalCount table<integer, table<string, integer>>
 MDT = {}
 
 ---@param npcID integer?

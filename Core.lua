@@ -7,7 +7,9 @@ WarpDeplete.isShown = false
 
 WarpDeplete.L = LibStub("AceLocale-3.0"):GetLocale("WarpDeplete", true)
 local L = WarpDeplete.L
-local Util = WarpDeplete.Util
+
+local Util = {}
+WarpDeplete.Util = Util
 
 WarpDeplete.LSM = LibStub("LibSharedMedia-3.0")
 WarpDeplete.Glow = LibStub("LibCustomGlow-1.0")
@@ -44,16 +46,11 @@ function WarpDeplete:OnEnable()
 	self:InitRender()
 
 	self:RegisterGlobalEvents()
-	self:RegisterComms()
 	self:Hide()
 
 	if not self.db.global.mdtAlertShown and not MDT then
 		self.db.global.mdtAlertShown = true
 		self:ShowMDTAlert()
-	end
-
-	if self.db.global.DEBUG then
-		self:EnableDemoMode()
 	end
 end
 
@@ -92,8 +89,10 @@ function WarpDeplete:EnableDemoMode()
 		end
 	end
 
-	self:SetObjectives(objectives)
-	self:SetKeyDetails(30, 15, { L["Tyrannical"], L["Bolstering"], L["Spiteful"], L["Peril"] }, { 9, 7, 123, 152 })
+	self.state.objectives = objectives
+	self:RenderObjectives()
+
+	self:SetKeyDetails(30, 15, { L["Ascendance"], L["Tyrannical"], L["Fortified"], L["Peril"] }, { 9, 7, 123, 152 })
 
 	self:SetTimeLimit(35 * 60)
 	self:SetTimer(20 * 60)
@@ -198,6 +197,11 @@ end
 
 function WarpDeplete:CheckForChallengeMode()
 	local inChallenge = select(3, GetInstanceInfo()) == 8
+	self:PrintDebug("Checking for challenge mode: "
+		.. tostring(self.state.inChallenge)
+		.. " -> "
+		.. tostring(inChallenge))
+
 	if self.state.inChallenge == inChallenge then
 		return
 	end
@@ -211,7 +215,6 @@ end
 
 function WarpDeplete:EnableChallengeMode()
 	if self.state.inChallenge then
-		self:PrintDebug("Already in challenge mode, not starting again")
 		return
 	end
 
@@ -229,18 +232,21 @@ function WarpDeplete:EnableChallengeMode()
 	self:LoadKeyDetails()
 	self:LoadDeathCount()
 	self:LoadEJBossNames()
-	self:LoadObjectives()
+	self:UpdateObjectives()
 
 	self:Show()
 	self:StartTimerLoop()
 end
 
 function WarpDeplete:DisableChallengeMode()
+	if self.isShown then
+		self:Hide()
+	end
+
 	if not self.state.inChallenge then
 		return
 	end
 
-	self:Hide()
 	self:ResetState()
 	self:UnregisterChallengeEvents()
 end

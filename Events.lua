@@ -69,6 +69,14 @@ end
 function WarpDeplete:CHALLENGE_MODE_START(_)
 	self:ResetCurrentSplits()
 	self:EnableChallengeMode()
+
+	local splits = self:GetSplitsForCurrentInstance()
+	if splits and splits.best then
+		self:PrintDebug("Found splits for current dungeon")
+		for objective, split in pairs(splits.best) do
+			self:PrintDebug(tostring(objective) .. ": " .. tostring(split))
+		end
+	end
 end
 
 function WarpDeplete:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(_)

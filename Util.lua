@@ -1,6 +1,6 @@
 ---@class WarpDepleteUtil
-local Util = {}
 local L = WarpDeplete.L
+local Util = WarpDeplete.Util
 
 function Util.formatForcesText()
 	local completedColor = WarpDeplete.db.profile.completedForcesColor
@@ -12,25 +12,14 @@ function Util.formatForcesText()
 	local currentCount = WarpDeplete.state.currentCount
 	local totalCount = WarpDeplete.state.totalCount
 	local completionTime = WarpDeplete.state.forcesCompleted and WarpDeplete.state.forcesCompletionTime or nil
-	local timingsEnabled = WarpDeplete.db.profile.timingsEnabled
+	local splitsEnabled = WarpDeplete.db.profile.splitsEnabled
 	local diff = WarpDeplete:GetCurrentDiff("forces")
-	local timingsImprovedTimeColor = WarpDeplete.db.profile.timingsImprovedTimeColor
-	local timingsWorseTimeColor = WarpDeplete.db.profile.timingsWorseTimeColor
+	local splitFasterTimeColor = WarpDeplete.db.profile.splitFasterTimeColor
+	local splitSlowerTimeColor = WarpDeplete.db.profile.splitSlowerTimeColor
 	local align = WarpDeplete.db.profile.alignBarTexts
 
-	-- This is what we get when the countdown is running. We attempt
-	-- to get the total count from MDT so we can already show it, but
-	-- we don't want any of this in our actual key details, so it's just
-	-- in the display code.
-	if currentCount == 0 and totalCount == 1 then
-		local mdtTotalCount = Util.GetMDTTotalCountInfo()
-		-- Nothing we can do if we don't get this
-		if not mdtTotalCount then
-			return nil
-		end
-
-		totalCount = mdtTotalCount
-	end
+	local best = WarpDeplete:GetBestSplit("forces")
+	local isStart = WarpDeplete.state.timer == 0
 
 	local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100)
 
@@ -103,14 +92,23 @@ function Util.formatForcesText()
 			result = "|c" .. completedColor .. result .. " " .. completedText .. "|r"
 		end
 
-		if timingsEnabled and diff ~= nil then
-			local diffColor = diff <= 0 and timingsImprovedTimeColor or timingsWorseTimeColor
-			local diffStr = "|c" .. diffColor .. Util.formatTime(diff, true) .. "|r"
+		if splitsEnabled then
+			if isStart and best then
+				local bestStr = "|c" .. splitFasterTimeColor .. Util.formatTime(best) .. "|r"
+				if align == "right" then
+					result = bestStr .. " " .. result
+				else
+					result = result .. " " .. bestStr
+				end
+			elseif diff ~= nil then
+				local diffColor = diff <= 0 and splitFasterTimeColor or splitSlowerTimeColor
+				local diffStr = "|c" .. diffColor .. Util.formatTime(diff, true) .. "|r"
 
-			if align == "right" then
-				result = diffStr .. " " .. result
-			else
-				result = result .. " " .. diffStr
+				if align == "right" then
+					result = diffStr .. " " .. result
+				else
+					result = result .. " " .. diffStr
+				end
 			end
 		end
 	end
@@ -300,29 +298,6 @@ function WarpDeplete:PrintDebugEvent(ev)
 	self:PrintDebug("|cFFA134EBEVENT|r " .. ev)
 end
 
-function Util.GetMDTTotalCountInfo()
-	if not MDT then
-		return nil
-	end
-	WarpDeplete:PrintDebug("Getting MDT total count fallback")
-
-	local zoneId = C_Map.GetBestMapForUnit("player")
-	local mdtDungeonIdx = MDT.zoneIdToDungeonIdx[zoneId]
-	if not mdtDungeonIdx then
-		WarpDeplete:PrintDebug("No MDT dungeon index found for zoneId " .. zoneId)
-		return nil
-	end
-
-	local mdtDungeonCountInfo = MDT.dungeonTotalCount[mdtDungeonIdx]
-	if not mdtDungeonCountInfo then
-		WarpDeplete:PrintDebug("No MDT dungeon count found for dungeon index " .. mdtDungeonIdx)
-		return nil
-	end
-
-	WarpDeplete:PrintDebug("Got MDT total count: " .. mdtDungeonCountInfo.normal)
-	return mdtDungeonCountInfo.normal or nil
-end
-
 -- TODO(happens): Add missing locales
 local affixNameFilters = {
 	["enUS"] = { "Xal'atath's", "Challenger's", "Bargain:" },
@@ -449,7 +424,7 @@ local mapIDToEJID = { -- MapChallengeMode = JournalInstance
 function Util.getEJInstanceID()
 	local mapID = C_Map.GetBestMapForUnit("player")
 	local instanceID = mapID and EJ_GetInstanceForMap(mapID) or nil -- find instanceid from encounter journal
-	if instanceID then
+	if instanceID and instanceID ~= 0 then
 		return instanceID
 	end
 
@@ -502,5 +477,3 @@ function Util.utf8Sub(input, size)
 
 	return output
 end
-
-WarpDeplete.Util = Util

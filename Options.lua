@@ -551,19 +551,19 @@ function WarpDeplete:InitOptions()
 					},
 				}),
 
-				group(L["Objective Completion Splits"], true, {
+				group(L["Splits"], true, {
 					{
 						type = "toggle",
-						name = L["Enable Personal Best Times for Objectives"],
+						name = L["Enable Splits"],
 						desc = L["Show time difference to best objective completion times"],
 						get = function(_)
-							return WarpDeplete.db.profile.timingsEnabled
+							return WarpDeplete.db.profile.splitsEnabled
 						end,
 						set = function(_, value)
-							WarpDeplete.db.profile.timingsEnabled = value
+							WarpDeplete.db.profile.splitsEnabled = value
 							self:RenderLayout()
 						end,
-						width = 1,
+						width = 3,
 					},
 				}),
 			}, { order = 3 }),
@@ -728,10 +728,10 @@ function WarpDeplete:InitOptions()
 					range(L["Objectives font size"], "objectivesFontSize", "RenderLayout", { width = 3 / 2 }),
 					color(L["Objectives color"], "objectivesColor", "RenderLayout"),
 					color(L["Completed objective color"], "completedObjectivesColor", "RenderLayout"),
-					color(L["New best objective clear time"], "timingsImprovedTimeColor", "RenderLayout", {
+					color(L["New best objective split"], "splitFasterTimeColor", "RenderLayout", {
 						desc = L["The color to use when you've set a new best objective clear time"],
 					}),
-					color(L["Slower objective clear time"], "timingsWorseTimeColor", "RenderLayout", {
+					color(L["Slower objective split"], "splitSlowerTimeColor", "RenderLayout", {
 						desc = L["The color to use for objective clear times slower than your best time"],
 					}),
 				}),
@@ -750,7 +750,7 @@ function WarpDeplete:InitOptions()
 				return math.floor(WarpDeplete.state.timeLimit / 60)
 			end,
 			set = function(_, value)
-				WarpDeplete.state.timeLimit = value
+				WarpDeplete.state.timeLimit = value * 60
 				WarpDeplete:RenderTimer()
 			end,
 		},
@@ -859,6 +859,40 @@ end
 
 function WarpDeplete:HandleChatCommand(input)
 	local cmd = string.lower(input)
+
+	if cmd == "clearallsplits" then
+		self.db.global.splits = {}
+		return
+	end
+
+	if cmd == "splits" then
+		for mapId, mapSplits in pairs(self.db.global.splits) do
+			for level, levelSplits in pairs(mapSplits) do
+				self:Print("Splits for map " .. tostring(mapId) .. " " .. tostring(level))
+				if levelSplits.best then
+					self:Print("Best")
+					for objective, split in pairs(levelSplits.best) do
+						self:Print("  " .. tostring(objective) .. ": " .. tostring(split))
+					end
+				end
+
+				if levelSplits.current then
+					self:Print("Current")
+					for objective, split in pairs(levelSplits.current) do
+						self:Print("  " .. tostring(objective) .. ": " .. tostring(split))
+					end
+				end
+
+				if levelSplits.currentDiff then
+					self:Print("Current Diff")
+					for objective, split in pairs(levelSplits.currentDiff) do
+						self:Print("  " .. tostring(objective) .. ": " .. tostring(split))
+					end
+				end
+			end
+		end
+		return
+	end
 
 	if cmd == "toggle" then
 		self:SetUnlocked(not self.isUnlocked)

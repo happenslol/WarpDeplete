@@ -1,4 +1,5 @@
 function WarpDeplete:UpdateSplits()
+	self:PrintDebug("Updating splits")
 	local splits = self:GetSplitsForCurrentInstance()
 
 	if not splits then
@@ -59,10 +60,7 @@ function WarpDeplete:UpdateSplits()
 	self:PrintDebug("Splits updated")
 end
 
--- Expects:
--- - integer for boss index
--- - "forces" for forces
--- - "challenge" for entire dungeon timer
+---@param objective integer|"forces"|"challenge"
 function WarpDeplete:GetCurrentDiff(objective)
 	if self.state.demoModeActive then
 		if type(objective) == "number" then
@@ -74,7 +72,7 @@ function WarpDeplete:GetCurrentDiff(objective)
 		end
 
 		if objective == "challenge" then
-			return 100
+			return 100 * 1000
 		end
 
 		return 0
@@ -91,6 +89,37 @@ function WarpDeplete:GetCurrentDiff(objective)
 	end
 
 	return currentDiff[objective]
+end
+
+---@param objective integer|"forces"|"challenge"
+function WarpDeplete:GetBestSplit(objective)
+	if self.state.demoModeActive then
+		if type(objective) == "number" then
+			return 60 * 3 * objective
+		end
+
+		if objective == "forces" then
+			return 60 * 30
+		end
+
+		if objective == "challenge" then
+			return 60 * 36 * 1000
+		end
+
+		return 0
+	end
+
+	local splits = self:GetSplitsForCurrentInstance()
+	if not splits then
+		return nil
+	end
+
+	local best = splits.best
+	if not best then
+		return nil
+	end
+
+	return best[objective]
 end
 
 function WarpDeplete:GetSplitsForCurrentInstance()
@@ -138,7 +167,7 @@ function WarpDeplete:UpdateBestSplits()
 	end
 
 	for k, v in pairs(splits.current) do
-		self:PrintDebug("Updating best timings for objective " .. tostring(k))
+		self:PrintDebug("Updating best split for objective " .. tostring(k))
 		if not splits.best[k] then
 			self:PrintDebug("No best time found, setting " .. tostring(v))
 			splits.best[k] = v

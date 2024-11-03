@@ -2,7 +2,6 @@ local UPDATE_INTERVAL = 0.1
 local sinceLastUpdate = 0
 
 local newDeathCount = 0
-local timer = 0
 
 function WarpDeplete:OnTimerTick(elapsed)
 	sinceLastUpdate = sinceLastUpdate + elapsed
@@ -16,17 +15,8 @@ function WarpDeplete:OnTimerTick(elapsed)
 		self:SetDeathCount(newDeathCount)
 	end
 
-	timer = select(2, GetWorldElapsedTime(1))
-
-	-- The timer didn't advance between 2 ticks, so it's probably not
-	-- running and the challenge is already completed.
-  if timer > 0 and timer == self.state.timer then
-    self:StopTimerLoop()
-    return
-  end
-
-  self.state.timer = timer
-  self:RenderTimer()
+	self.state.timer = select(2, GetWorldElapsedTime(1))
+	self:RenderTimer()
 end
 
 function WarpDeplete:StartTimerLoop()

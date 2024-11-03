@@ -16,8 +16,8 @@ WarpDeplete.defaultState = {
 	completionTimeMs = nil, ---@type integer|nil
 
 	timerRunning = false,
-	timer = nil,
-	timeLimit = nil,
+	timer = 0,
+	timeLimit = 0,
 
 	deathCount = 0,
 	deathDetails = {},
@@ -32,10 +32,10 @@ WarpDeplete.defaultState = {
 	currentPull = {}, ---@type table<integer, string|nil|"DEAD">
 
 	objectives = {}, ---@type WarpDepleteObjective[]
-	objectiveNames = nil, ---@type string[]|nil
+	objectiveNames = {}, ---@type string[]
 
 	forcesCompleted = false,
-	forcesCompletionTime = 0,
+	forcesCompletionTime = nil,
 
 	level = 0,
 	deathPenalty = 0,
@@ -51,9 +51,6 @@ function WarpDeplete:SetForcesTotal(totalCount)
 
 	local currentPercent = totalCount > 0 and self.state.currentCount / totalCount or 0
 	self.state.currentPercent = math.min(currentPercent, 1.0)
-
-	self.state.forcesCompleted = false
-	self.state.forcesCompletionTime = 0
 
 	self:RenderForces()
 end
@@ -88,22 +85,6 @@ function WarpDeplete:SetForcesPull(pullCount)
 	self:RenderForces()
 end
 
-function WarpDeplete:SetForcesCompletionTime(completionTime)
-	self.state.forcesCompleted = true
-	self.state.forcesCompletionTime = completionTime
-
-	-- Make sure we always show max forces/100% on completion
-	if self.state.challengeCompleted then
-		self.state.currentPercent = 1.0
-
-		if self.state.currentCount < self.state.totalCount then
-			self.state.currentCount = self.state.totalCount
-		end
-	end
-
-	self:RenderForces()
-end
-
 function WarpDeplete:SetDeathCount(count)
 	self.state.deathCount = count
 	local deathText = Util.formatDeathText(count)
@@ -123,11 +104,6 @@ function WarpDeplete:SetTimeLimit(timeLimit)
 	self:RenderTimer()
 end
 
-function WarpDeplete:SetObjectives(objectives)
-	self.state.objectives = objectives
-	self:RenderObjectives()
-end
-
 function WarpDeplete:SetKeyDetails(level, deathPenalty, affixes, affixIds, mapId)
 	self.state.level = level
 	self.state.deathPenalty = deathPenalty
@@ -138,87 +114,22 @@ function WarpDeplete:SetKeyDetails(level, deathPenalty, affixes, affixIds, mapId
 	self:RenderKeyDetails()
 end
 
-local function parseForcesInfo(info)
-	if not info then
-		return nil, nil, nil
-	end
-
-	local totalCount = info.totalQuantity
-	local currentCountStr = info.quantityString
-
-	-- NOTE(happens): The current count contains a percentage sign
-	-- even though it's an absolute value.
-	local currentCount = currentCountStr and tonumber(currentCountStr:match("%d+")) or 0
-
-	local completionTime = nil
-	if currentCount >= totalCount then
-		completionTime = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
-	end
-
-	return currentCount, totalCount, completionTime
-end
-
-function WarpDeplete:LoadObjectives()
-	local stepCount = select(3, C_Scenario.GetStepInfo())
-	if not stepCount or stepCount <= 0 then
-		return
-	end
-
-	local anythingCompleted = false
-
-	local objectives = {}
-	for i = 1, stepCount - 1 do
-		local info = C_ScenarioInfo.GetCriteriaInfo(i)
-		local name = info.description
-
-		for j = 1, #self.state.objectiveNames do
-			if string.find(info.description, self.state.objectiveNames[j]) then
-				name = self.state.objectiveNames[j]
-				break
-			end
-		end
-
-		name = Util.utf8Sub(name, 20)
-		local objective = { name = name, time = nil }
-
-		if info.completed and info.elapsed and info.elapsed ~= 0 then
-			-- TODO: Why do we need to subtract the elapsed time here?
-			local time = select(2, GetWorldElapsedTime(1)) - info.elapsed
-			objective.time = time
-
-			anythingCompleted = true
-		end
-
-		objectives[i] = objective
-	end
-
-	self:SetObjectives(objectives)
-
-	local forcesInfo = C_ScenarioInfo.GetCriteriaInfo(stepCount)
-	local currentCount, totalCount, completionTime = parseForcesInfo(forcesInfo)
-
-	self:SetForcesTotal(totalCount)
-	self:SetForcesCurrent(currentCount)
-
-	if completionTime then
-		self:SetForcesCompletionTime(completionTime)
-		anythingCompleted = true
-	end
-
-	if anythingCompleted then
-		self:UpdateSplits()
-	end
-end
-
 function WarpDeplete:LoadDeathCount()
 	self:SetDeathCount(C_ChallengeMode.GetDeathCount() or 0)
 end
 
 function WarpDeplete:LoadKeyDetails()
 	local mapId = C_ChallengeMode.GetActiveChallengeMapID()
+	if not mapId then
+		return
+	end
+
+	local timeLimit = select(3, C_ChallengeMode.GetMapUIInfo(mapId))
+	self:SetTimeLimit(timeLimit)
+
 	local level, affixes = C_ChallengeMode.GetActiveKeystoneInfo()
 
-	if level <= 0 or #affixes <= 0 or not mapId then
+	if level <= 0 or #affixes <= 0 then
 		return
 	end
 
@@ -235,7 +146,6 @@ function WarpDeplete:LoadKeyDetails()
 	end
 
 	self:SetKeyDetails(level or 0, deathPenalty, affixNames, affixIds, mapId)
-	return true
 end
 
 function WarpDeplete:LoadEJBossNames()
@@ -265,6 +175,8 @@ function WarpDeplete:LoadEJBossNames()
 			result[#result + 1] = name
 		end
 	end
+
+	self.state.objectiveNames = result
 end
 
 function WarpDeplete:ResetCurrentPull()
@@ -289,41 +201,72 @@ function WarpDeplete:UpdateObjectives()
 		return
 	end
 
-	local bossesChanged = false
-	for i = 1, stepCount - 1 do
-		local objective = self.state.objectives[i]
+	local completionChanged = false
+	local bossesLoaded = false
 
-		-- Only update the objective if it's not completed yet
-		if objective and not objective.time then
-			local info = C_ScenarioInfo.GetCriteriaInfo(i)
+	for i = 1, stepCount do
+		local info = C_ScenarioInfo.GetCriteriaInfo(i)
+		if not info.isWeightedProgress then
+			if not self.state.objectives[i] then
+				local name = info.description
+				for _, objName in ipairs(self.state.objectiveNames) do
+					if string.find(info.description, objName) then
+						name = objName
+						break
+					end
+				end
 
-			if info.completed and info.elapsed and info.elapsed ~= 0 then
-				-- TODO: Why do we need to subtract the elapsed time here?
-				local time = select(2, GetWorldElapsedTime(1)) - info.elapsed
+				name = Util.utf8Sub(name, 40)
+				self.state.objectives[i] = { name = name, time = nil }
+				bossesLoaded = true
+			end
+
+			local objective = self.state.objectives[i]
+			if not objective.time and info.completed then
+				local time = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
 				objective.time = time
-				bossesChanged = true
+				completionChanged = true
+			end
+		elseif info.isWeightedProgress and info.totalQuantity and info.totalQuantity > 0 then
+			-- NOTE(happens): The current count contains a percentage sign
+			-- even though it's an absolute value.
+			local currentCount = info.quantityString and tonumber(info.quantityString:match("%d+")) or 0
+
+			if currentCount ~= self.state.currentCount then
+				self:PrintDebug("Updating current count")
+				self:PrintDebug("Forces: " .. tostring(currentCount) .. "/" .. tostring(info.totalQuantity))
+				self:SetForcesCurrent(currentCount)
+			end
+
+			if info.totalQuantity ~= self.state.totalCount then
+				self:SetForcesTotal(info.totalQuantity)
+			end
+
+			if currentCount >= info.totalQuantity then
+				if not self.state.forcesCompleted then
+					self:PrintDebug("Setting forces to completed")
+					self.state.forcesCompleted = true
+					self:RenderForces()
+				end
+
+				if not self.state.forcesCompletionTime then
+					self:PrintDebug("Setting forces completion time")
+					self.state.forcesCompletionTime = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
+					completionChanged = true
+				end
 			end
 		end
 	end
 
-	if bossesChanged then
+	if bossesLoaded then
 		self:RenderObjectives()
+		self:RenderLayout()
 	end
 
-	local forcesChanged = false
-	local forcesInfo = C_ScenarioInfo.GetCriteriaInfo(stepCount)
-	local currentCount, totalCount, completionTime = parseForcesInfo(forcesInfo)
-	if currentCount and totalCount then
-		self:SetForcesCurrent(currentCount)
-	end
-
-	if completionTime and not self.state.forcesCompletionTime then
-		self:SetForcesCompletionTime(completionTime)
-		forcesChanged = true
-	end
-
-	if forcesChanged or bossesChanged then
+	if completionChanged then
 		self:UpdateSplits()
+		self:RenderForces()
+		self:RenderObjectives()
 	end
 end
 
@@ -332,7 +275,7 @@ function WarpDeplete:CompleteChallenge()
 
 	self.state.challengeCompleted = true
 	local _, _, timeMs, onTime = C_ChallengeMode.GetCompletionInfo()
-	local time = timeMs / 1000
+	local time = math.floor(timeMs / 1000)
 
 	self.state.completedOnTime = onTime
 	self.state.completionTimeMs = timeMs
@@ -348,9 +291,13 @@ function WarpDeplete:CompleteChallenge()
 	end
 
 	if not self.state.forcesCompletionTime then
-		self:SetForcesCompletionTime(time)
+		self.state.forcesCompleted = true
+		self.state.currentCount = self.state.totalCount
+		self.state.currentPercent = 1.0
+		self.state.forcesCompletionTime = time
 	end
 
+	self:UpdateSplits()
 	self:UpdateBestSplits()
 
 	self:RenderTimer()

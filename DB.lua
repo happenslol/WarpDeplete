@@ -3,19 +3,7 @@ local defaults = {
     DEBUG = false,
     mdtAlertShown = false,
 
-    timings = {
-      --[[ Structure of the timings table
-        splits = { 
-          dungeonId = { 
-            keystoneLevel = { 
-              best = { objectiveIndex = <time> }, 
-              current = { objectiveIndex = <time> },
-              currentDiff = { objectiveIndex = <time> },
-            } 
-          }
-        }
-      --]]
-    },
+    splits = {},
   },
 
   char = {
@@ -143,8 +131,8 @@ local defaults = {
 
     -- Splits
     splitsEnabled = true,
-    splitsImprovedTimeColor = "FF00D200",
-    splitsWorseTimeColor = "FFF50000"
+    splitFasterTimeColor = "FF64FF64",
+    splitSlowerTimeColor = "FFFF5656"
   },
 }
 

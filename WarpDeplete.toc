@@ -18,6 +18,5 @@ Util.lua
 State.lua
 Options.lua
 Splits.lua
-Comms.lua
 Events.lua
 Render.lua
