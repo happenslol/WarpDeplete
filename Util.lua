@@ -20,6 +20,7 @@ function Util.formatForcesText()
 
 	local best = WarpDeplete:GetBestSplit("forces")
 	local isStart = WarpDeplete.state.timer == 0
+	local showPbsDuringCountdown = WarpDeplete.db.profile.showPbsDuringCountdown
 
 	local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100)
 
@@ -102,7 +103,7 @@ function Util.formatForcesText()
 				result = result .. " " .. diffStr
 			end
 		end
-	elseif splitsEnabled and isStart and best then
+	elseif splitsEnabled and isStart and showPbsDuringCountdown and best then
 		local bestStr = "|c" .. splitFasterTimeColor .. Util.formatTime(best) .. "|r"
 		if align == "right" then
 			result = bestStr .. " " .. result

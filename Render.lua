@@ -192,6 +192,7 @@ function WarpDeplete:RenderLayout()
 	-- dynamically from the elements
 	self.frames.root:SetWidth(barWidth + framePadding * 2)
 	self.frames.root:SetPoint(self.db.profile.frameAnchor, self.db.profile.frameX, self.db.profile.frameY)
+	self.frames.root:SetScale(self.db.profile.frameScale)
 
 	self.frames.root.texture:SetAllPoints(self.frames.root)
 
@@ -520,7 +521,7 @@ function WarpDeplete:RenderTimer()
 	self.frames.root.timerSplitText:SetText("")
 	if self.db.profile.splitsEnabled then
 		-- Show PBs during countdown
-		if self.state.timer == 0 then
+		if self.db.profile.showPbsDuringCountdown and self.state.timer == 0 then
 			if not timerState.bestSplit and not timerState.bestSplitChecked then
 				timerState.bestSplit = self:GetBestSplit("challenge")
 				timerState.bestSplitChecked = true
@@ -646,7 +647,7 @@ function WarpDeplete:RenderObjectives()
 					end
 				end
 			end
-		elseif self.db.profile.splitsEnabled and self.state.timer == 0 then
+		elseif self.db.profile.splitsEnabled and self.db.profile.showPbsDuringCountdown and self.state.timer == 0 then
 			local best = self:GetBestSplit(i)
 			if best then
 				local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"

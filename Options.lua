@@ -563,13 +563,29 @@ function WarpDeplete:InitOptions()
 							WarpDeplete.db.profile.splitsEnabled = value
 							self:RenderLayout()
 						end,
-						width = 3,
+						width = 3 / 2,
+					},
+					{
+						type = "toggle",
+						name = L["Show split records during countdown"],
+						desc = L["Show your personal best times for splits during the countdown at the start of runs"],
+						hidden = function()
+							return not WarpDeplete.db.profile.splitsEnabled
+						end,
+						get = function(_)
+							return WarpDeplete.db.profile.showPbsDuringCountdown
+						end,
+						set = function(_, value)
+							WarpDeplete.db.profile.showPbsDuringCountdown = value
+						end,
+						width = 3 / 2,
 					},
 				}),
 			}, { order = 3 }),
 
 			texts = group(L["Display"], false, {
 				group(L["General"], true, {
+					range(L["Scale"], "frameScale", "RenderLayout", { min = 0.5, max = 2, step = 0.01, width = 3 }),
 					{
 						type = "select",
 						name = L["Text Alignment"],

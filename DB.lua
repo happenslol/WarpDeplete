@@ -13,6 +13,7 @@ local defaults = {
   },
 
   profile = {
+    frameScale = 1,
     frameAnchor = "RIGHT",
     frameX = -20,
     frameY = 0,
@@ -131,6 +132,7 @@ local defaults = {
 
     -- Splits
     splitsEnabled = true,
+    showPbsDuringCountdown = true,
     splitFasterTimeColor = "FF64FF64",
     splitSlowerTimeColor = "FFFF5656"
   },
