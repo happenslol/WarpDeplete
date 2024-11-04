@@ -26,7 +26,10 @@ end
 function WarpDeplete:RegisterGlobalEvents()
 	-- Events where we could theoretically need to check for an active challenge mode
 	self:RegisterGlobalEvent("PLAYER_ENTERING_WORLD")
+	self:RegisterGlobalEvent("ZONE_CHANGED")
 	self:RegisterGlobalEvent("ZONE_CHANGED_NEW_AREA")
+	self:RegisterGlobalEvent("ZONE_CHANGED_INDOORS")
+	self:RegisterGlobalEvent("PLAYER_DIFFICULTY_CHANGED")
 	self:RegisterGlobalEvent("CHALLENGE_MODE_START")
 
 	-- Fired when we open the keystone socket
@@ -58,20 +61,32 @@ function WarpDeplete:RegisterChallengeEvents()
 	self:RegisterChallengeEvent("UNIT_THREAT_LIST_UPDATE")
 end
 
-function WarpDeplete:PLAYER_ENTERING_WORLD(_)
+function WarpDeplete:PLAYER_ENTERING_WORLD()
 	self:CheckForChallengeMode()
 end
 
-function WarpDeplete:ZONE_CHANGED_NEW_AREA(_)
+function WarpDeplete:ZONE_CHANGED()
+	self:CheckForChallengeMode()
+end
+
+function WarpDeplete:ZONE_CHANGED_NEW_AREA()
+	self:CheckForChallengeMode()
+end
+
+function WarpDeplete:ZONE_CHANGED_INDOORS()
+	self:CheckForChallengeMode()
+end
+
+function WarpDeplete:PLAYER_DIFFICULTY_CHANGED()
 	self:CheckForChallengeMode()
 end
 
 -- We receive this when the 10s countdown after key insertion starts
-function WarpDeplete:CHALLENGE_MODE_START(_)
+function WarpDeplete:CHALLENGE_MODE_START()
 	self:EnableChallengeMode()
 end
 
-function WarpDeplete:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(_)
+function WarpDeplete:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN()
 	if not self.db.profile.insertKeystoneAutomatically then
 		return
 	end
@@ -102,11 +117,11 @@ function WarpDeplete:CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN(_)
 	end
 end
 
-function WarpDeplete:CHALLENGE_MODE_COMPLETED(_)
+function WarpDeplete:CHALLENGE_MODE_COMPLETED()
 	self:CompleteChallenge()
 end
 
-function WarpDeplete:WORLD_STATE_TIMER_START(_)
+function WarpDeplete:WORLD_STATE_TIMER_START()
 	-- Rerender everything once in case we were displaying PBs
 	self.state.timerStarted = true
 
@@ -115,27 +130,27 @@ function WarpDeplete:WORLD_STATE_TIMER_START(_)
 	self:RenderObjectives()
 end
 
-function WarpDeplete:CHALLENGE_MODE_DEATH_COUNT_UPDATED(_)
+function WarpDeplete:CHALLENGE_MODE_DEATH_COUNT_UPDATED()
 	self:SetDeathCount(C_ChallengeMode.GetDeathCount() or 0)
 end
 
-function WarpDeplete:SCENARIO_POI_UPDATE(_)
+function WarpDeplete:SCENARIO_POI_UPDATE()
 	self:UpdateObjectives()
 end
 
-function WarpDeplete:SCENARIO_CRITERIA_UPDATE(_)
+function WarpDeplete:SCENARIO_CRITERIA_UPDATE()
 	self:UpdateObjectives()
 end
 
-function WarpDeplete:ENCOUNTER_END(_)
+function WarpDeplete:ENCOUNTER_END()
 	self:ResetCurrentPull()
 end
 
-function WarpDeplete:PLAYER_REGEN_ENABLED(_)
+function WarpDeplete:PLAYER_REGEN_ENABLED()
 	self:ResetCurrentPull()
 end
 
-function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED(_)
+function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 	local _, subEv, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo()
 	if subEv ~= "UNIT_DIED" then
 		return
@@ -144,7 +159,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED(_)
 		return
 	end
 
-	-- NOTE(happens): We have to check health since we'd count feign death otherwise
+	-- NOTE: We have to check health since we'd count feign death otherwise
 	if UnitInParty(name) and UnitHealth(name) <= 1 then
 		local unitName = UnitName(name)
 		local class = select(2, UnitClass(name))

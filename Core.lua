@@ -210,7 +210,7 @@ end
 
 function WarpDeplete:EnableChallengeMode()
 	if self.state.inChallenge then
-		return
+		self:PrintDebug("Enabling challenge mode while in challenge")
 	end
 
 	if self.state.demoModeActive then

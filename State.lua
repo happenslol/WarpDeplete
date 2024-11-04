@@ -263,7 +263,7 @@ function WarpDeplete:UpdateObjectives()
 				completionChanged = true
 			end
 		elseif info.isWeightedProgress and info.totalQuantity and info.totalQuantity > 0 then
-			-- NOTE(happens): The current count contains a percentage sign
+			-- NOTE: The current count contains a percentage sign
 			-- even though it's an absolute value.
 			local currentCount = info.quantityString and tonumber(info.quantityString:match("%d+")) or 0
 
