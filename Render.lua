@@ -535,7 +535,6 @@ function WarpDeplete:RenderTimer()
 
 		-- The timer loop isn't running at this point, so we use locals
 		if self.state.challengeCompleted or self.state.demoModeActive then
-			self:PrintDebug("Rendering timer pb for completed challenge")
 			local diff = self:GetCurrentDiff("challenge")
 			if diff then
 				local diffColor = diff <= 0 and self.db.profile.splitFasterTimeColor
@@ -563,7 +562,7 @@ function WarpDeplete:RenderForces()
 	self.forces.overlayBar:SetPoint("LEFT", 1 + self.db.profile.barWidth * self.state.currentPercent, 0)
 	self.forces.bar:SetValue(self.state.currentPercent)
 
-	self.forces.text:SetText(Util.formatForcesText())
+	self.forces.text:SetText(self:FormatForcesText())
 
 	-- Update glow state
 	if self.state.pullGlowActive and (self.state.challengeCompleted or self.state.forcesCompleted) then
@@ -669,4 +668,117 @@ function WarpDeplete:RenderKeyDetails()
 	local affixesStr = Util.joinStrings(self.state.affixes or {}, " - ")
 	local keyDetails = ("%s"):format(affixesStr)
 	self.frames.root.keyDetailsText:SetText(keyDetails)
+end
+
+function WarpDeplete:FormatForcesText()
+	local completedColor = self.db.profile.completedForcesColor
+	local forcesFormat = self.db.profile.forcesFormat
+	local customForcesFormat = self.db.profile.customForcesFormat
+	local currentPullFormat = self.db.profile.currentPullFormat
+	local customCurrentPullFormat = self.db.profile.customCurrentPullFormat
+	local pullCount = self.state.pullCount
+	local currentCount = self.state.currentCount
+	local totalCount = self.state.totalCount
+	local completionTime = self.state.forcesCompleted and self.state.forcesCompletionTime or nil
+	local splitsEnabled = self.db.profile.splitsEnabled
+	local diff = self:GetCurrentDiff("forces")
+	local splitFasterTimeColor = self.db.profile.splitFasterTimeColor
+	local splitSlowerTimeColor = self.db.profile.splitSlowerTimeColor
+	local align = self.db.profile.alignBarTexts
+
+	local best = self:GetBestSplit("forces")
+	local isStart = not self.state.timerStarted
+	local showPbsDuringCountdown = self.db.profile.showPbsDuringCountdown
+
+	local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100)
+
+	local percentText = ("%.2f"):format(currentPercent)
+	local countText = ("%d"):format(currentCount)
+	local totalCountText = ("%d"):format(totalCount)
+	local remainingCountText = ("%d"):format(totalCount - currentCount)
+	local remainingPercentText = ("%.2f"):format(100 - currentPercent)
+	local result = forcesFormat ~= ":custom:" and forcesFormat or customForcesFormat
+
+	result = result:gsub(":count:", countText)
+	result = result:gsub(":percent:", percentText .. "%%")
+	result = result:gsub(":totalcount:", totalCountText)
+	result = result:gsub(":remainingcount:", remainingCountText)
+	result = result:gsub(":remainingpercent:", remainingPercentText .. "%%")
+
+	if pullCount > 0 then
+		local pullText = currentPullFormat ~= ":custom:" and currentPullFormat or customCurrentPullFormat
+
+		local pullPercent = (pullCount / totalCount) * 100
+		local pullPercentText = ("%.2f"):format(pullPercent)
+		local pullCountText = ("%d"):format(pullCount)
+
+		local countAfterPull = currentCount + pullCount
+		local countAfterPullText = ("%d"):format(countAfterPull)
+
+		local remainingCountAfterPull = totalCount - countAfterPull
+		if remainingCountAfterPull < 0 then
+			remainingCountAfterPull = 0
+		end
+		local remainingCountAfterPullText = ("%d"):format(remainingCountAfterPull)
+
+		local remainingPercentAfterPull = 100 - currentPercent - pullPercent
+		if remainingPercentAfterPull < 0 then
+			remainingPercentAfterPull = 0
+		end
+		local remainingPercentAfterPullText = ("%.2f"):format(remainingPercentAfterPull)
+
+		local percentAfterPull = Util.calcForcesPercent(pullPercent + currentPercent)
+		local pulledPercentText = ("%.2f"):format(percentAfterPull)
+
+		pullText = result:gsub(":count:", pullCountText)
+		pullText = result:gsub(":percent:", pullPercentText .. "%%")
+
+		pullText = result:gsub(":countafterpull:", countAfterPullText)
+		pullText = result:gsub(":remainingcountafterpull:", remainingCountAfterPullText)
+		pullText = result:gsub(":percentafterpull:", pulledPercentText .. "%%")
+		pullText = result:gsub(":remainingpercentafterpull:", remainingPercentAfterPullText .. "%%")
+
+		result = result:gsub(":countafterpull:", countAfterPullText)
+		result = result:gsub(":remainingcountafterpull:", remainingCountAfterPullText)
+		result = result:gsub(":percentafterpull:", pulledPercentText .. "%%")
+		result = result:gsub(":remainingpercentafterpull:", remainingPercentAfterPullText .. "%%")
+
+		if pullText and #pullText > 0 then
+			result = pullText .. "  " .. result
+		end
+	else
+		result = result:gsub(":countafterpull:", countText)
+		result = result:gsub(":remainingcountafterpull:", remainingCountText)
+		result = result:gsub(":percentafterpull:", percentText .. "%%")
+		result = result:gsub(":remainingpercentafterpull:", remainingPercentText .. "%%")
+	end
+
+	if completionTime then
+		local completedText = ("[%s]"):format(Util.formatTime(completionTime))
+		if align == "right" then
+			result = "|c" .. completedColor .. completedText .. " " .. result .. "|r"
+		else
+			result = "|c" .. completedColor .. result .. " " .. completedText .. "|r"
+		end
+
+		if splitsEnabled and diff then
+			local diffColor = diff <= 0 and splitFasterTimeColor or splitSlowerTimeColor
+			local diffStr = "|c" .. diffColor .. Util.formatTime(diff, true) .. "|r"
+
+			if align == "right" then
+				result = diffStr .. " " .. result
+			else
+				result = result .. " " .. diffStr
+			end
+		end
+	elseif splitsEnabled and isStart and showPbsDuringCountdown and best then
+		local bestStr = "|c" .. splitFasterTimeColor .. Util.formatTime(best) .. "|r"
+		if align == "right" then
+			result = bestStr .. " " .. result
+		else
+			result = result .. " " .. bestStr
+		end
+	end
+
+	return result or ""
 end

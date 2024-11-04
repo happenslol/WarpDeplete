@@ -191,7 +191,6 @@ function WarpDeplete:Hide()
 end
 
 function WarpDeplete:ResetState()
-	self:PrintDebug("Resetting state")
 	self.state = Util.copy(self.defaultState)
 end
 
