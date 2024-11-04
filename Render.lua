@@ -697,7 +697,9 @@ function WarpDeplete:FormatForcesText()
 	local totalCountText = ("%d"):format(totalCount)
 	local remainingCountText = ("%d"):format(totalCount - currentCount)
 	local remainingPercentText = ("%.2f"):format(100 - currentPercent)
-	local result = forcesFormat ~= ":custom:" and forcesFormat or customForcesFormat
+	local result = forcesFormat == ":custom:" and customForcesFormat or forcesFormat
+
+	self:PrintDebug("Printing forces format: " .. result)
 
 	result = result:gsub(":count:", countText)
 	result = result:gsub(":percent:", percentText .. "%%")
@@ -706,7 +708,8 @@ function WarpDeplete:FormatForcesText()
 	result = result:gsub(":remainingpercent:", remainingPercentText .. "%%")
 
 	if pullCount > 0 then
-		local pullText = currentPullFormat ~= ":custom:" and currentPullFormat or customCurrentPullFormat
+		local pullText = currentPullFormat == ":custom:" and customCurrentPullFormat or currentPullFormat
+		self:PrintDebug("Printing current pull text: " .. pullText)
 
 		local pullPercent = (pullCount / totalCount) * 100
 		local pullPercentText = ("%.2f"):format(pullPercent)
@@ -730,13 +733,13 @@ function WarpDeplete:FormatForcesText()
 		local percentAfterPull = Util.calcForcesPercent(pullPercent + currentPercent)
 		local pulledPercentText = ("%.2f"):format(percentAfterPull)
 
-		pullText = result:gsub(":count:", pullCountText)
-		pullText = result:gsub(":percent:", pullPercentText .. "%%")
+		pullText = pullText:gsub(":count:", pullCountText)
+		pullText = pullText:gsub(":percent:", pullPercentText .. "%%")
 
-		pullText = result:gsub(":countafterpull:", countAfterPullText)
-		pullText = result:gsub(":remainingcountafterpull:", remainingCountAfterPullText)
-		pullText = result:gsub(":percentafterpull:", pulledPercentText .. "%%")
-		pullText = result:gsub(":remainingpercentafterpull:", remainingPercentAfterPullText .. "%%")
+		pullText = pullText:gsub(":countafterpull:", countAfterPullText)
+		pullText = pullText:gsub(":remainingcountafterpull:", remainingCountAfterPullText)
+		pullText = pullText:gsub(":percentafterpull:", pulledPercentText .. "%%")
+		pullText = pullText:gsub(":remainingpercentafterpull:", remainingPercentAfterPullText .. "%%")
 
 		result = result:gsub(":countafterpull:", countAfterPullText)
 		result = result:gsub(":remainingcountafterpull:", remainingCountAfterPullText)
@@ -780,5 +783,6 @@ function WarpDeplete:FormatForcesText()
 		end
 	end
 
+	self:PrintDebug("result: " .. result)
 	return result or ""
 end
