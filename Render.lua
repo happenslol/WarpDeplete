@@ -467,6 +467,8 @@ local timerState = {}
 local limitMult = { 1.0, 0.8, 0.6 }
 
 function WarpDeplete:RenderTimer()
+	wipe(timerState)
+
 	-- Make sure we don't divide by 0
 	timerState.percent = self.state.timeLimit > 0 and self.state.timer / self.state.timeLimit or 1
 
@@ -699,8 +701,6 @@ function WarpDeplete:FormatForcesText()
 	local remainingPercentText = ("%.2f"):format(100 - currentPercent)
 	local result = forcesFormat == ":custom:" and customForcesFormat or forcesFormat
 
-	self:PrintDebug("Printing forces format: " .. result)
-
 	result = result:gsub(":count:", countText)
 	result = result:gsub(":percent:", percentText .. "%%")
 	result = result:gsub(":totalcount:", totalCountText)
@@ -709,7 +709,6 @@ function WarpDeplete:FormatForcesText()
 
 	if pullCount > 0 then
 		local pullText = currentPullFormat == ":custom:" and customCurrentPullFormat or currentPullFormat
-		self:PrintDebug("Printing current pull text: " .. pullText)
 
 		local pullPercent = (pullCount / totalCount) * 100
 		local pullPercentText = ("%.2f"):format(pullPercent)
@@ -783,6 +782,5 @@ function WarpDeplete:FormatForcesText()
 		end
 	end
 
-	self:PrintDebug("result: " .. result)
 	return result or ""
 end
