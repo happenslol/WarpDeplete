@@ -2,9 +2,18 @@ local defaults = {
   global = {
     DEBUG = false,
     mdtAlertShown = false,
+
+    splits = {},
+  },
+
+  char = {
+    currentChallenge = {
+      mapId = nil,
+    },
   },
 
   profile = {
+    frameScale = 1,
     frameAnchor = "RIGHT",
     frameX = -20,
     frameY = 0,
@@ -17,7 +26,6 @@ local defaults = {
     -- Element display options
     forcesFormat = ":percent:",
     customForcesFormat = ":percent:",
-    unclampForcesPercent = false,
     currentPullFormat = "(+:percent:)",
     customCurrentPullFormat = "(+:percent:)",
 
@@ -83,7 +91,7 @@ local defaults = {
     bar3TextureColor = "FF979797",
     forcesTextureColor = "FFBB9E22",
     forcesOverlayTextureColor = "FFFF5515",
-    
+
     -- Font sizes for text parts
     deathsFontSize = 16,
     timerFontSize = 34,
@@ -122,33 +130,12 @@ local defaults = {
     insertKeystoneAutomatically = true,
     showMillisecondsWhenDungeonCompleted = true,
 
-    -- Timings
-    timingsEnabled = true,
-    timingsOnlyCompleted = true,
-    timingsDisplayStyle = "bestDiff",
-    timingsImprovedTimeColor = "FF00D200",
-    timingsWorseTimeColor = "FFF50000"
+    -- Splits
+    splitsEnabled = true,
+    showPbsDuringCountdown = true,
+    splitFasterTimeColor = "FF64FF64",
+    splitSlowerTimeColor = "FFFF5656"
   },
-
-  char = {
-    --[[ Structure of the timings table
-       timings = { 
-         dungeonId = { 
-           keystoneLevel = { 
-             1stAffixId = { 
-               best = { 
-                 objectiveIndex = <time> 
-               }, 
-               last = { 
-                 objectiveIndex = <time> 
-               } 
-             } 
-           } 
-         }
-       }
-    --]]
-    timings = {}
-  }
 }
 
 function WarpDeplete:InitDb()
