@@ -195,6 +195,8 @@ function WarpDeplete:ResetState()
 end
 
 function WarpDeplete:CheckForChallengeMode()
+	-- C_ChallengeMode.IsChallengeModeActive returns false after
+	-- the key has been completed, so this is more reliable
 	local _, type, difficulty = GetInstanceInfo()
 	local inChallenge = difficulty == 8 and type == "party"
 	if self.state.inChallenge == inChallenge then
@@ -226,7 +228,8 @@ function WarpDeplete:EnableChallengeMode()
 
 	self:LoadKeyDetails()
 	self:LoadDeathCount()
-	self:LoadEJBossNames()
+
+	self.state.ejObjectiveNames = self:GetEJObjectiveNames()
 	self:UpdateObjectives()
 
 	self:Show()

@@ -1,7 +1,8 @@
 local Util = WarpDeplete.Util
 
 ---@class WarpDepleteObjective
----@field name string
+---@field name? string
+---@field description string
 ---@field time integer|nil
 
 ---@class WarpDepleteState
@@ -33,7 +34,7 @@ WarpDeplete.defaultState = {
 	currentPull = {}, ---@type table<integer, string|nil|"DEAD">
 
 	objectives = {}, ---@type WarpDepleteObjective[]
-	objectiveNames = {}, ---@type string[]
+	ejObjectiveNames = nil, ---@type string[]|nil
 
 	forcesCompleted = false,
 	forcesCompletionTime = nil,
@@ -149,24 +150,24 @@ function WarpDeplete:LoadKeyDetails()
 	self:SetKeyDetails(level or 0, deathPenalty, affixNames, affixIds, mapId)
 end
 
-function WarpDeplete:LoadEJBossNames()
-	self:PrintDebug("Loading EJ boss names")
+function WarpDeplete:GetEJObjectiveNames()
+	self:PrintDebug("Loading EJ objective names")
 	local instanceID = Util.getEJInstanceID()
 	if not instanceID then
 		self:PrintDebug("No EJ instance ID found")
-		return
+		return nil
 	end
 
-	-- The encounter journal needs to be opened once
-	-- before we can get anything from it
-	if not self.encounterJournalOpened then
+	local wasShown = EncounterJournal and EncounterJournal:IsShown()
+	if not wasShown then
 		self:PrintDebug("Opening encounter journal")
 		C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
-		EncounterJournal_OpenJournal(8, instanceID)
-		self.encounterJournalOpened = true
+	end
+
+	EncounterJournal_OpenJournal(8, instanceID)
+
+	if not wasShown then
 		HideUIPanel(EncounterJournal)
-	else
-		self:PrintDebug("Encounter journal already open")
 	end
 
 	local result = {}
@@ -184,7 +185,12 @@ function WarpDeplete:LoadEJBossNames()
 	for i, bossName in ipairs(result) do
 		self:PrintDebug("Found boss name " .. tostring(i) .. ": " .. tostring(bossName))
 	end
-	self.state.objectiveNames = result
+	
+	if #result == 0 then
+		return nil
+	end
+
+	return result
 end
 
 function WarpDeplete:ResetCurrentPull()
@@ -203,29 +209,45 @@ function WarpDeplete:AddDeathDetails(time, name, class)
 	}
 end
 
----@param count integer
+---@param count? integer
 function WarpDeplete:RefreshObjectiveNames(count)
-	local nameFound = false
+	count = count or 6
+	self:PrintDebug("Refreshing boss names (" .. tostring(count) .. ")")
 
-	self:LoadEJBossNames()
-	for _, boss in pairs(self.state.objectives) do
-		for _, objName in ipairs(self.state.objectiveNames) do
-			if string.find(boss.name, objName) then
-				boss.name = objName
-				nameFound = true
-				break
-			end
-		end
-	end
+	self.state.ejObjectiveNames = self:GetEJObjectiveNames()
+	if not self.state.ejObjectiveNames then
+		self:PrintDebug("No EJ objective names received")
 
-	if not nameFound then
-		self:PrintDebug("No names found on try " .. tostring(count))
-		if count <= 5 then
+		if count > 0 then
 			C_Timer.After(2, function()
-				self:RefreshObjectiveNames(count + 1)
+				self:RefreshObjectiveNames(count - 1)
 			end)
 		end
+
+		return
 	end
+
+	for i, boss in ipairs(self.state.objectives) do
+		boss.name = self:FindObjectiveName(boss.description, i)
+	end
+end
+
+---@param description string
+---@param index integer
+---@return string name
+function WarpDeplete:FindObjectiveName(description, index)
+	if self.state.ejObjectiveNames[index] then
+		local name = self.state.ejObjectiveNames[index]
+		self:PrintDebug("Using EJ boss name at index " .. tostring(index)
+			.. ": " .. description .. " -> " .. name)
+		return Util.utf8Sub(name, 40)
+	end
+
+	local filtered = Util.formatObjectiveName(description)
+	self:PrintDebug("No EJ boss name at index " .. tostring(index)
+		.. ", falling back to string filtering: "
+		.. description .. " -> " .. filtered)
+	return Util.utf8Sub(filtered, 40)
 end
 
 function WarpDeplete:UpdateObjectives()
@@ -236,23 +258,13 @@ function WarpDeplete:UpdateObjectives()
 
 	local completionChanged = false
 	local bossesLoaded = false
-	local ejBossNameFound = false
 
 	for i = 1, stepCount do
 		local info = C_ScenarioInfo.GetCriteriaInfo(i)
 		if not info.isWeightedProgress then
 			if not self.state.objectives[i] then
-				local name = info.description
-				for _, objName in ipairs(self.state.objectiveNames) do
-					if string.find(info.description, objName) then
-						name = objName
-						ejBossNameFound = true
-						break
-					end
-				end
-
-				name = Util.utf8Sub(name, 40)
-				self.state.objectives[i] = { name = name, time = nil }
+				local name = self:FindObjectiveName(info.description, i)
+				self.state.objectives[i] = { name = name, description = info.description, time = nil }
 				bossesLoaded = true
 			end
 
@@ -294,23 +306,16 @@ function WarpDeplete:UpdateObjectives()
 	if bossesLoaded then
 		self:RenderObjectives()
 		self:RenderLayout()
+
+		if not self.state.ejObjectiveNames then
+			self:RefreshObjectiveNames()
+		end
 	end
 
 	if completionChanged then
 		self:UpdateSplits()
 		self:RenderForces()
 		self:RenderObjectives()
-	end
-
-	if bossesLoaded then
-		if not ejBossNameFound then
-			self:PrintDebug("No boss names found, starting retry loop")
-			C_Timer.After(2, function()
-				self:RefreshObjectiveNames(1)
-			end)
-		else
-			self:PrintDebug("Boss names found")
-		end
 	end
 end
 
