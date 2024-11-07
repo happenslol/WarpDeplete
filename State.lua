@@ -203,28 +203,33 @@ function WarpDeplete:AddDeathDetails(time, name, class)
 	}
 end
 
+-- TODO: See the comment below in UpdateObjectives.
+-- When do we need to stop retrying here? Maybe we can note
+-- whether the names are stable after a certain amount of retries?
 ---@param count integer
 function WarpDeplete:RefreshObjectiveNames(count)
-	local nameFound = false
+	self:PrintDebug("Refreshing boss names (" .. tostring(count) .. ")")
 
 	self:LoadEJBossNames()
-	for _, boss in pairs(self.state.objectives) do
+	for i, boss in ipairs(self.state.objectives) do
+		boss.name = self.state.objectiveNames[i] or boss.name
 		for _, objName in ipairs(self.state.objectiveNames) do
 			if string.find(boss.name, objName) then
-				boss.name = objName
-				nameFound = true
+				if boss.name ~= objName then
+					self:PrintDebug("Found better match on retry for " .. tostring(i)
+						.. ": " .. boss.name .. " -> " .. objName)
+				end
+
+				boss.name = Util.utf8Sub(objName, 40)
 				break
 			end
 		end
 	end
 
-	if not nameFound then
-		self:PrintDebug("No names found on try " .. tostring(count))
-		if count <= 5 then
-			C_Timer.After(2, function()
-				self:RefreshObjectiveNames(count + 1)
-			end)
-		end
+	if count <= 5 then
+		C_Timer.After(2, function()
+			self:RefreshObjectiveNames(count + 1)
+		end)
 	end
 end
 
@@ -236,17 +241,30 @@ function WarpDeplete:UpdateObjectives()
 
 	local completionChanged = false
 	local bossesLoaded = false
-	local ejBossNameFound = false
 
 	for i = 1, stepCount do
 		local info = C_ScenarioInfo.GetCriteriaInfo(i)
 		if not info.isWeightedProgress then
 			if not self.state.objectives[i] then
-				local name = info.description
+
+				-- TODO: The code getting the names from the encounter journal
+				-- is taken from Reloe's WA. The WA retries retrieving the boss
+				-- names 8 times, which implies that this could be unstable
+				-- sometimes.
+				-- RefreshObjectiveNames does the refresh the WA does in a loop,
+				-- but I'm not sure yet how we can find out whether we need
+				-- to retry or not. For now, we unconditionally retry 5 times
+				-- when the bosses are loaded for the first time (the WA does
+				-- this 8 times).
+				local name = self.state.objectiveNames[i] or info.description
 				for _, objName in ipairs(self.state.objectiveNames) do
 					if string.find(info.description, objName) then
+						if name ~= objName then
+							self:PrintDebug("Found better match for " .. tostring(i)
+								.. ": " .. name .. " -> " .. objName)
+						end
+
 						name = objName
-						ejBossNameFound = true
 						break
 					end
 				end
@@ -300,17 +318,6 @@ function WarpDeplete:UpdateObjectives()
 		self:UpdateSplits()
 		self:RenderForces()
 		self:RenderObjectives()
-	end
-
-	if bossesLoaded then
-		if not ejBossNameFound then
-			self:PrintDebug("No boss names found, starting retry loop")
-			C_Timer.After(2, function()
-				self:RefreshObjectiveNames(1)
-			end)
-		else
-			self:PrintDebug("Boss names found")
-		end
 	end
 end
 
