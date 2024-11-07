@@ -320,7 +320,7 @@ function WarpDeplete:CompleteChallenge()
 
 	self.state.challengeCompleted = true
 	local _, _, timeMs, onTime = C_ChallengeMode.GetCompletionInfo()
-	local time = math.ceil(timeMs / 1000)
+	local time = math.floor((timeMs / 1000) + 0.5)
 
 	self.state.completedOnTime = onTime
 	self.state.completionTimeMs = timeMs

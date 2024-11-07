@@ -507,7 +507,7 @@ function WarpDeplete:RenderTimer()
 				timerState.timeText = ""
 			end
 		else
-			if timerState.timeRemaining <= 0 then
+			if timerState.timeRemaining < 0 then
 				timerState.color = self.db.profile.timerExpiredColor
 				timerState.timeText = "-" .. timerState.timeText
 			else
