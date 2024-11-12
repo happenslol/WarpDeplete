@@ -180,7 +180,19 @@ function WarpDeplete:PrintDebug(str)
 	self:Print("|cFF479AEDDEBUG|r " .. str)
 end
 
--- TODO(happens): Add missing locales
+---@param str string
+---@return string
+function Util.trim(str)
+	return str:match("^%s*(.-)%s*$")
+end
+
+local locale = GetLocale()
+-- These should have the same names
+if locale == "enGB" then
+	locale = "enUS"
+end
+
+-- TODO: Add missing locales
 local affixNameFilters = {
 	["enUS"] = { "Xal'atath's", "Challenger's", "Bargain:" },
 	["deDE"] = { "Xal'ataths", "des Herausforderers", "Handel:" },
@@ -195,12 +207,8 @@ local affixNameFilters = {
 	["ptBR"] = {},
 }
 
-local locale = GetLocale()
--- These should have the same names
-if locale == "enGB" then
-	locale = "enUS"
-end
-
+---@param name string
+---@return string
 function Util.formatAffixName(name)
 	local result = name
 	local filters = affixNameFilters[locale] or {}
@@ -208,7 +216,34 @@ function Util.formatAffixName(name)
 		result = result:gsub(filter, "")
 	end
 
-	return result:match("^%s*(.-)%s*$")
+	return Util.trim(result)
+end
+
+-- TODO: Add missing locales
+local objectiveNameFilters = {
+	["enUS"] = { "Defeated", "defeated" },
+	["deDE"] = {},
+	["frFR"] = {},
+	["itIT"] = {},
+	["koKR"] = {},
+	["zhCN"] = {},
+	["zhTW"] = {},
+	["ruRU"] = {},
+	["esES"] = {},
+	["esMX"] = {},
+	["ptBR"] = {},
+}
+
+---@param name string
+---@return string
+function Util.formatObjectiveName(name)
+	local result = name
+	local filters = objectiveNameFilters[locale] or {}
+	for _, filter in ipairs(filters) do
+		result = result:gsub(filter, "")
+	end
+
+	return Util.trim(result)
 end
 
 -- Taken from Reloe's M+ Timer

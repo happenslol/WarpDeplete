@@ -1,7 +1,8 @@
 local Util = WarpDeplete.Util
 
 ---@class WarpDepleteObjective
----@field name string
+---@field name? string
+---@field description string
 ---@field time integer|nil
 
 ---@class WarpDepleteState
@@ -33,7 +34,6 @@ WarpDeplete.defaultState = {
 	currentPull = {}, ---@type table<integer, string|nil|"DEAD">
 
 	objectives = {}, ---@type WarpDepleteObjective[]
-	objectiveNames = {}, ---@type string[]
 
 	forcesCompleted = false,
 	forcesCompletionTime = nil,
@@ -149,24 +149,24 @@ function WarpDeplete:LoadKeyDetails()
 	self:SetKeyDetails(level or 0, deathPenalty, affixNames, affixIds, mapId)
 end
 
-function WarpDeplete:LoadEJBossNames()
+function WarpDeplete:GetEJBossNames()
 	self:PrintDebug("Loading EJ boss names")
 	local instanceID = Util.getEJInstanceID()
 	if not instanceID then
 		self:PrintDebug("No EJ instance ID found")
-		return
+		return {}
 	end
 
-	-- The encounter journal needs to be opened once
-	-- before we can get anything from it
-	if not self.encounterJournalOpened then
+	local wasShown = EncounterJournal:IsShown()
+	if not wasShown then
 		self:PrintDebug("Opening encounter journal")
 		C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
-		EncounterJournal_OpenJournal(8, instanceID)
-		self.encounterJournalOpened = true
+	end
+
+	EncounterJournal_OpenJournal(8, instanceID)
+
+	if not wasShown then
 		HideUIPanel(EncounterJournal)
-	else
-		self:PrintDebug("Encounter journal already open")
 	end
 
 	local result = {}
@@ -184,7 +184,8 @@ function WarpDeplete:LoadEJBossNames()
 	for i, bossName in ipairs(result) do
 		self:PrintDebug("Found boss name " .. tostring(i) .. ": " .. tostring(bossName))
 	end
-	self.state.objectiveNames = result
+	
+	return result
 end
 
 function WarpDeplete:ResetCurrentPull()
@@ -203,34 +204,49 @@ function WarpDeplete:AddDeathDetails(time, name, class)
 	}
 end
 
--- TODO: See the comment below in UpdateObjectives.
--- When do we need to stop retrying here? Maybe we can note
--- whether the names are stable after a certain amount of retries?
----@param count integer
+---@param count? integer
 function WarpDeplete:RefreshObjectiveNames(count)
+	count = count or 6
 	self:PrintDebug("Refreshing boss names (" .. tostring(count) .. ")")
 
-	self:LoadEJBossNames()
-	for i, boss in ipairs(self.state.objectives) do
-		boss.name = self.state.objectiveNames[i] or boss.name
-		for _, objName in ipairs(self.state.objectiveNames) do
-			if string.find(boss.name, objName) then
-				if boss.name ~= objName then
-					self:PrintDebug("Found better match on retry for " .. tostring(i)
-						.. ": " .. boss.name .. " -> " .. objName)
-				end
+	local ejBossNames = self:GetEJBossNames()
+	local anyEJMatchesFound = false
 
-				boss.name = Util.utf8Sub(objName, 40)
-				break
-			end
+	for i, boss in ipairs(self.state.objectives) do
+		local name, ejMatchFound = self:FindObjectiveName(boss.description, i, ejBossNames)
+		anyEJMatchesFound = anyEJMatchesFound or ejMatchFound
+	end
+
+	if count > 0 and not anyEJMatchesFound then
+		C_Timer.After(2, function()
+			self:RefreshObjectiveNames(count - 1)
+		end)
+	end
+end
+
+---@param description string
+---@param index integer
+---@param ejBossNames string[]
+---@return string name
+---@return boolean ejMatchFound
+function WarpDeplete:FindObjectiveName(description, index, ejBossNames)
+	for _, objName in ipairs(ejBossNames) do
+		if string.find(description, objName) then
+			self:PrintDebug("Found substring match on retry for " .. tostring(i)
+				.. ": " .. description .. " -> " .. objName)
+
+			return Util.utf8Sub(objName, 40), true
 		end
 	end
 
-	if count <= 5 then
-		C_Timer.After(2, function()
-			self:RefreshObjectiveNames(count + 1)
-		end)
+	if ejBossNames[index] then
+		self:PrintDebug("No substring match found, using index for objective " .. tostring(index))
+		return Util.utf8Sub(ejBossNames[index], 40), true
 	end
+
+	self:PrintDebug("No ej boss name at index " .. tostring(index)
+		.. ", falling back to string filtering")
+	return Util.utf8Sub(Util.formatObjectiveName(description), 40), false
 end
 
 function WarpDeplete:UpdateObjectives()
@@ -241,37 +257,21 @@ function WarpDeplete:UpdateObjectives()
 
 	local completionChanged = false
 	local bossesLoaded = false
+	local ejBossNames = nil
+	local anyEJMatchesFound = false
 
 	for i = 1, stepCount do
 		local info = C_ScenarioInfo.GetCriteriaInfo(i)
 		if not info.isWeightedProgress then
 			if not self.state.objectives[i] then
-
-				-- TODO: The code getting the names from the encounter journal
-				-- is taken from Reloe's WA. The WA retries retrieving the boss
-				-- names 8 times, which implies that this could be unstable
-				-- sometimes.
-				-- RefreshObjectiveNames does the refresh the WA does in a loop,
-				-- but I'm not sure yet how we can find out whether we need
-				-- to retry or not. For now, we unconditionally retry 5 times
-				-- when the bosses are loaded for the first time (the WA does
-				-- this 8 times).
-				local name = self.state.objectiveNames[i] or info.description
-				for _, objName in ipairs(self.state.objectiveNames) do
-					if string.find(info.description, objName) then
-						if name ~= objName then
-							self:PrintDebug("Found better match for " .. tostring(i)
-								.. ": " .. name .. " -> " .. objName)
-						end
-
-						name = objName
-						break
-					end
+				if not ejBossNames then
+					ejBossNames = self:GetEJBossNames()
 				end
 
-				name = Util.utf8Sub(name, 40)
-				self.state.objectives[i] = { name = name, time = nil }
+				local name, ejMatchFound = self:FindObjectiveName(info.description, i, ejBossNames)
+				self.state.objectives[i] = { name = name, description = info.description, time = nil }
 				bossesLoaded = true
+				anyEJMatchesFound = anyEJMatchesFound or ejMatchFound
 			end
 
 			local objective = self.state.objectives[i]
@@ -312,6 +312,11 @@ function WarpDeplete:UpdateObjectives()
 	if bossesLoaded then
 		self:RenderObjectives()
 		self:RenderLayout()
+
+		if not anyEJMatchesFound then
+			self:PrintDebug("No EJ matches found on load, retrying after 2s")
+			self:RefreshObjectiveNames()
+		end
 	end
 
 	if completionChanged then
