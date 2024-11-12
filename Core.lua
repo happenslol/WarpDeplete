@@ -195,7 +195,10 @@ function WarpDeplete:ResetState()
 end
 
 function WarpDeplete:CheckForChallengeMode()
-	local inChallenge = C_ChallengeMode.IsChallengeModeActive()
+	-- C_ChallengeMode.IsChallengeModeActive returns false after
+	-- the key has been completed, so this is more reliable
+	local _, type, difficulty = GetInstanceInfo()
+	local inChallenge = difficulty == 8 and type == "party"
 	if self.state.inChallenge == inChallenge then
 		return
 	end
