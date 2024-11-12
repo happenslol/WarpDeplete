@@ -225,6 +225,8 @@ function WarpDeplete:EnableChallengeMode()
 
 	self:LoadKeyDetails()
 	self:LoadDeathCount()
+
+	self.state.ejObjectiveNames = self:GetEJObjectiveNames()
 	self:UpdateObjectives()
 
 	self:Show()
