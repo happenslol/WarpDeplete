@@ -1,4 +1,5 @@
 local Util = WarpDeplete.Util
+local L = WarpDeplete.L
 
 ---@class WarpDepleteObjective
 ---@field name? string
@@ -20,6 +21,10 @@ WarpDeplete.defaultState = {
 	timerStarted = false,
 	timer = 0,
 	timeLimit = 0,
+	-- Time limits for +1, +2 and +3 in order. The first element
+	-- will always be equal to timeLimit and is only in here for
+	-- ease of access.
+	timeLimits = {},
 
 	deathCount = 0,
 	deathDetails = {},
@@ -43,6 +48,7 @@ WarpDeplete.defaultState = {
 	deathPenalty = 0,
 	affixes = {}, ---@type string[]
 	affixIds = {}, ---@type integer[]
+	hasChallengersPeril = false,
 	mapId = nil, ---@type integer|nil
 }
 
@@ -103,17 +109,36 @@ end
 
 function WarpDeplete:SetTimeLimit(timeLimit)
 	self.state.timeLimit = timeLimit
+
+	if self.state.hasChallengersPeril then
+		local limitWithoutPerilBonus = timeLimit - 90
+		self.state.timeLimits = {
+			timeLimit,
+			(limitWithoutPerilBonus * 0.8) + 90,
+			(limitWithoutPerilBonus * 0.6) + 90
+		}
+	else
+		self.state.timeLimits = { timeLimit, timeLimit * 0.8, timeLimit * 0.6 }
+	end
+
 	self:RenderTimer()
 end
 
-function WarpDeplete:SetKeyDetails(level, deathPenalty, affixes, affixIds, mapId)
+---@param level integer
+---@param hasChallengersPeril boolean
+---@param affixes string[]
+---@param affixIds integer[]
+---@param mapId integer
+function WarpDeplete:SetKeyDetails(level, hasChallengersPeril, affixes, affixIds, mapId)
 	self.state.level = level
-	self.state.deathPenalty = deathPenalty
+	self.state.deathPenalty = hasChallengersPeril and 15 or 5
+	self.state.hasChallengersPeril = true
 	self.state.affixes = affixes
 	self.state.affixIds = affixIds
 	self.state.mapId = mapId
 
 	self:RenderKeyDetails()
+	self:RenderLayout()
 end
 
 function WarpDeplete:LoadDeathCount()
@@ -126,28 +151,28 @@ function WarpDeplete:LoadKeyDetails()
 		return
 	end
 
-	local timeLimit = select(3, C_ChallengeMode.GetMapUIInfo(mapId))
-	self:SetTimeLimit(timeLimit)
-
 	local level, affixes = C_ChallengeMode.GetActiveKeystoneInfo()
 
-	if level <= 0 or #affixes <= 0 then
+	if not level or level <= 0 or #affixes <= 0 then
 		return
 	end
 
+	local hasChallengersPeril = false
 	local affixNames = {}
 	local affixIds = {}
-	local deathPenalty = 5
 	for i, affixID in ipairs(affixes) do
 		local name = C_ChallengeMode.GetAffixInfo(affixID)
 		affixNames[i] = Util.formatAffixName(name)
 		affixIds[i] = affixID
 		if affixID == 152 then
-			deathPenalty = 15
+			hasChallengersPeril = true
 		end
 	end
 
-	self:SetKeyDetails(level or 0, deathPenalty, affixNames, affixIds, mapId)
+	self:SetKeyDetails(level, hasChallengersPeril, affixNames, affixIds, mapId)
+
+	local timeLimit = select(3, C_ChallengeMode.GetMapUIInfo(mapId))
+	self:SetTimeLimit(timeLimit)
 end
 
 function WarpDeplete:GetEJObjectiveNames()
@@ -319,24 +344,61 @@ function WarpDeplete:UpdateObjectives()
 	end
 end
 
+function WarpDeplete:EnableChallengeMode()
+	if self.state.inChallenge then
+		self:PrintDebug("Enabling challenge mode while in challenge")
+	end
+
+	if self.state.demoModeActive then
+		self:Print(L["Disabling demo mode because a challenge has started."])
+		self:DisableDemoMode()
+	end
+
+	self:PrintDebug("Starting challenge mode")
+	self:ResetState()
+	self:RegisterChallengeEvents()
+
+	self.state.inChallenge = true
+
+	self:LoadKeyDetails()
+	self:LoadDeathCount()
+
+	self.state.ejObjectiveNames = self:GetEJObjectiveNames()
+	self:UpdateObjectives()
+
+	self:Show()
+	self:StartTimerLoop()
+end
+
+function WarpDeplete:DisableChallengeMode()
+	if self.isShown then
+		self:Hide()
+	end
+
+	if not self.state.inChallenge then
+		return
+	end
+
+	self:ResetState()
+	self:UnregisterChallengeEvents()
+end
+
 function WarpDeplete:CompleteChallenge()
 	self:StopTimerLoop()
 	self:ResetCurrentPull()
 
 	self.state.challengeCompleted = true
 	local _, _, timeMs, onTime = C_ChallengeMode.GetCompletionInfo()
-	local time = math.floor((timeMs / 1000) + 0.5)
 
 	self.state.completedOnTime = onTime
 	self.state.completionTimeMs = timeMs
-	self.state.timer = time
 
 	-- We have to complete all objectives that are not completed yet,
 	-- since we might not have gotten the final completion time
 	-- if the final objective completed the run.
 	for _, objective in pairs(self.state.objectives) do
 		if not objective.time then
-			objective.time = time
+			objective.time = self.state.timer
 		end
 	end
 
@@ -344,7 +406,7 @@ function WarpDeplete:CompleteChallenge()
 		self.state.forcesCompleted = true
 		self.state.currentCount = self.state.totalCount
 		self.state.currentPercent = 1.0
-		self.state.forcesCompletionTime = time
+		self.state.forcesCompletionTime = self.state.timer
 	end
 
 	self:UpdateSplits()

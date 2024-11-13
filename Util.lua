@@ -5,16 +5,6 @@ local Util = WarpDeplete.Util
 -- NOTE: Functions with the _OnUpdate suffix are
 -- called in the frame update loop and should not use any local vars.
 
-function Util.getBarPercent_OnUpdate(bar, percent)
-	if bar == 3 then
-		return (percent >= 0.6 and 1.0) or (percent * (10 / 6))
-	elseif bar == 2 then
-		return (percent >= 0.8 and 1.0) or (percent < 0.6 and 0) or ((percent - 0.6) * 5)
-	elseif bar == 1 then
-		return (percent < 0.8 and 0) or ((percent - 0.8) * 5)
-	end
-end
-
 local formatTime_OnUpdate_state = {}
 function Util.formatTime_OnUpdate(time)
 	formatTime_OnUpdate_state.timeMin = math.floor(time / 60)
@@ -393,4 +383,11 @@ function Util.utf8Sub(input, size)
 	end
 
 	return output
+end
+
+---@param value number
+---@param min number
+---@param max number
+function Util.clamp(value, min, max)
+	return math.min(max, math.max(min, value))
 end

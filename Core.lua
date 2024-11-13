@@ -92,7 +92,7 @@ function WarpDeplete:EnableDemoMode()
 	self.state.objectives = objectives
 	self:RenderObjectives()
 
-	self:SetKeyDetails(30, 15, { L["Ascendance"], L["Tyrannical"], L["Fortified"], L["Peril"] }, { 9, 7, 123, 152 })
+	self:SetKeyDetails(30, true, { L["Ascendance"], L["Tyrannical"], L["Fortified"], L["Peril"] }, { 9, 7, 123, 152 }, 1)
 
 	self:SetTimeLimit(35 * 60)
 	self:SetTimer(20 * 60)
@@ -208,43 +208,4 @@ function WarpDeplete:CheckForChallengeMode()
 	else
 		self:DisableChallengeMode()
 	end
-end
-
-function WarpDeplete:EnableChallengeMode()
-	if self.state.inChallenge then
-		self:PrintDebug("Enabling challenge mode while in challenge")
-	end
-
-	if self.state.demoModeActive then
-		self:Print(L["Disabling demo mode because a challenge has started."])
-		self:DisableDemoMode()
-	end
-
-	self:PrintDebug("Starting challenge mode")
-	self:ResetState()
-	self:RegisterChallengeEvents()
-
-	self.state.inChallenge = true
-
-	self:LoadKeyDetails()
-	self:LoadDeathCount()
-
-	self.state.ejObjectiveNames = self:GetEJObjectiveNames()
-	self:UpdateObjectives()
-
-	self:Show()
-	self:StartTimerLoop()
-end
-
-function WarpDeplete:DisableChallengeMode()
-	if self.isShown then
-		self:Hide()
-	end
-
-	if not self.state.inChallenge then
-		return
-	end
-
-	self:ResetState()
-	self:UnregisterChallengeEvents()
 end
