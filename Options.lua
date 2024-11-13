@@ -847,6 +847,20 @@ function WarpDeplete:InitOptions()
 			end,
 			width = 3 / 2,
 		},
+		{
+			type = "toggle",
+			name = L["Challenger's Peril"],
+			get = function(_)
+				return WarpDeplete.state.hasChallengersPeril
+			end,
+			set = function(_, value)
+				WarpDeplete.state.hasChallengersPeril = value
+				self:SetTimeLimit(self.state.timeLimit)
+				self:RenderLayout()
+				self:RenderTimer()
+			end,
+			width = 3 / 2,
+		},
 	})
 
 	options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)

@@ -100,6 +100,24 @@ function WarpDeplete:InitRender()
 	self.frames.root:EnableMouse(false)
 end
 
+---@return number bar1 The fraction that the +1 bar should take up
+---@return number bar2 The fraction that the +2 bar should take up
+---@return number bar3 The fraction that the +3 bar should take up
+function WarpDeplete:GetTimerBarFractions()
+	if not self.state.hasChallengersPeril then
+		return 0.2, 0.2, 0.6
+	end
+
+	local fractions = {}
+	for i = 1, 3 do
+		local timeLimit = self.state.timeLimits[i] or 0
+		local barMax = timeLimit - (self.state.timeLimits[i + 1] or 0)
+		fractions[i] = barMax / self.state.timeLimit
+	end
+
+	return fractions[1], fractions[2], fractions[3]
+end
+
 function WarpDeplete:CreateProgressBar(frame)
 	local result = {}
 
@@ -328,8 +346,10 @@ function WarpDeplete:RenderLayout()
 	local timerBarPixelAdjust = 0.5
 	r, g, b = Util.hexToRGB(self.db.profile.timerRunningColor)
 
+	local bar1Fraction, bar2Fraction, bar3Fraction = self:GetTimerBarFractions()
+
 	-- +3 bar
-	local bar3Width = barWidth / 100 * 60
+	local bar3Width = barWidth * bar3Fraction
 	self.bar3:SetLayout(
 		self.db.profile.bar3Texture,
 		self.db.profile.bar3TextureColor,
@@ -351,7 +371,7 @@ function WarpDeplete:RenderLayout()
 	local bar3Height = math.max(barHeight, self.bar3.text:GetStringHeight() + barFontOffsetY)
 
 	-- +2 bar
-	local bar2Width = barWidth / 100 * 20 - timerBarOffsetX
+	local bar2Width = barWidth * bar2Fraction - timerBarOffsetX
 	self.bar2:SetLayout(
 		self.db.profile.bar2Texture,
 		self.db.profile.bar2TextureColor,
@@ -373,7 +393,7 @@ function WarpDeplete:RenderLayout()
 	local bar2Height = math.max(barHeight, self.bar2.text:GetStringHeight() + barFontOffsetY)
 
 	-- +1 bar
-	local bar1Width = barWidth / 100 * 20 - timerBarOffsetX
+	local bar1Width = barWidth * bar1Fraction - timerBarOffsetX
 	self.bar1:SetLayout(
 		self.db.profile.bar1Texture,
 		self.db.profile.bar1TextureColor,
@@ -463,9 +483,6 @@ end
 -- new local variables that need to be garbage collected during each call.
 local timerState = {}
 
--- Multipliers for timer bars
-local limitMult = { 1.0, 0.8, 0.6 }
-
 function WarpDeplete:RenderTimer()
 	wipe(timerState)
 
@@ -493,9 +510,15 @@ function WarpDeplete:RenderTimer()
 	self.frames.root.timerText:SetText(timerState.timerText)
 
 	for i = 1, 3 do
-		timerState.timeRemaining = self.state.timeLimit * limitMult[i] - self.state.timer
+		timerState.barLimit = self.state.timeLimits[i] or 1
+		timerState.timeRemaining = timerState.barLimit - self.state.timer
 
-		timerState.barValue = Util.getBarPercent_OnUpdate(i, timerState.percent)
+		-- This is the timespan that the current bar represents
+		timerState.barMax = timerState.barLimit - (self.state.timeLimits[i + 1] or 0)
+		-- This is how far we have progressed into that timespan
+		timerState.barElapsed = timerState.barMax - timerState.timeRemaining
+
+		timerState.barValue = Util.clamp(timerState.barElapsed / timerState.barMax, 0.0, 1.0)
 		timerState.timeText = Util.formatTime_OnUpdate(math.abs(timerState.timeRemaining))
 
 		if not self.state.challengeCompleted then
