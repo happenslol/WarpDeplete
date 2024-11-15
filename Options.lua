@@ -278,7 +278,7 @@ function WarpDeplete:InitOptions()
 							.. "\n- :remainingcount: "
 							.. L["Shows the remaining amount of forces needed to complete"]
 							.. "\n- :countafterpull: "
-							.. L["Shows the current forces count inluding current pull (e.g. 205)"]
+							.. L["Shows the current forces count including current pull (e.g. 205)"]
 							.. "\n- :remainingcountafterpull: "
 							.. L["Shows the remaining amount of forces needed to complete after current pull"]
 							.. "\n- :remainingpercent: "
@@ -339,7 +339,7 @@ function WarpDeplete:InitOptions()
 							.. "\n- :count: "
 							.. L["Shows the current pull count (e.g. 198)"]
 							.. "\n- :countafterpull: "
-							.. L["Shows the current forces count inluding current pull (e.g. 205)"]
+							.. L["Shows the current forces count including current pull (e.g. 205)"]
 							.. "\n- :remainingcountafterpull: "
 							.. L["Shows the remaining amount of forces needed to complete after current pull"]
 							.. "\n- :percentafterpull: "
