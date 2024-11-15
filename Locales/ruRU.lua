@@ -29,6 +29,7 @@ L["Bars"] = "Полосы"
 L["Boss Clear Time Position"] = "Позиция времени победы над боссами"
 L["Boss Name Padding"] = "Отступ между именами боссов"
 L["Can't enable demo mode while in an active challenge!"] = "Невозможно включить демонстрационный режим во время активного испытания!"
+L["Challenger's Peril"] = true
 L["Choose how count will be displayed in the tooltip"] = "Выберите, как счетчик противников будет отображаться во всплывающей подсказке"
 L["Choose how players deaths will be displayed in the tooltip. Hover the deaths text while in demo mode for a preview."] = "Выберите, как смерти игроков будут отображаться во всплывающей подсказке. Наведите курсор на текст смерти в демонстрационном режиме для предварительного просмотра."
 L["Choose how your current pull count will be displayed"] = "Выберите, как будет отображаться Ваш текущий счетчик пулла"

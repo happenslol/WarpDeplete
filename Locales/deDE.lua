@@ -29,6 +29,7 @@ L["Bars"] = "Balken"
 L["Boss Clear Time Position"] = "Boss Clearzeit Position"
 L["Boss Name Padding"] = true
 L["Can't enable demo mode while in an active challenge!"] = "Der Demo-Modus kann während einer aktiven Herausforderung nicht aktiviert werden!"
+L["Challenger's Peril"] = true
 L["Choose how count will be displayed in the tooltip"] = "Wähle aus, wie die Anzahl im Tooltip angezeigt wird"
 L["Choose how players deaths will be displayed in the tooltip. Hover the deaths text while in demo mode for a preview."] = "Wähle aus, wie die Tode von Spielern im Tooltip angezeigt werden. Bewege den Mauszeiger im Demo Modus für eine Vorschau über den Todestext."
 L["Choose how your current pull count will be displayed"] = "Wähle aus, wie Dein aktueller Pull Count angezeigt wird"

@@ -29,6 +29,7 @@ L["Bars"] = "바"
 L["Boss Clear Time Position"] = "넴드 잡은 시간 위치"
 L["Boss Name Padding"] = true
 L["Can't enable demo mode while in an active challenge!"] = "쐐기 진행중엔 시연 모드를 켤 수 없습니다!"
+L["Challenger's Peril"] = true
 L["Choose how count will be displayed in the tooltip"] = "툴팁 내 기여도 표시 방식을 선택합니다"
 L["Choose how players deaths will be displayed in the tooltip. Hover the deaths text while in demo mode for a preview."] = "툴팁에 플레이어 죽음 표시 방식을 선택합니다. 미리보기를 하려면 시연 모드에서 죽음 텍스트에 마우스 커서를 올려보세요."
 L["Choose how your current pull count will be displayed"] = "현재 풀링한 몹의 기여도 표시 방식을 선택합니다"
