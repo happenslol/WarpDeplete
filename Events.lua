@@ -196,7 +196,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 
 		-- hit 100% AND CombatLog didn't execute prior to ScenarioCriteriaUpdate
 		if self.state.forcesCompleted and self.state.currentCount < self.state.totalCount then
-			local rest = self.state.totalCount - self.forcesState.currentCount
+			local rest = self.state.totalCount - self.state.currentCount
 			self.state.extraCount = guidForceCount - rest
 			self:PrintDebug("extraCount: " .. self.state.extraCount)
 			self:SetForcesCurrent(self.state.totalCount)
@@ -213,7 +213,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 		else
 			local newCurrentCount = self.state.currentCount + guidForceCount
 			if newCurrentCount > self.state.totalCount then
-				local rest = self.state.totalCount - self.forcesState.currentCount
+				local rest = self.state.totalCount - self.state.currentCount
 				self.state.extraCount = guidForceCount - rest
 				self:PrintDebug("extraCount: " .. self.state.extraCount)
 				self:SetForcesCurrent(self.state.totalCount)
