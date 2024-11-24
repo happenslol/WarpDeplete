@@ -26,6 +26,7 @@ local defaults = {
     -- Element display options
     forcesFormat = ":percent:",
     customForcesFormat = ":percent:",
+    unClampForcesPercent = true,
     currentPullFormat = "(+:percent:)",
     customCurrentPullFormat = "(+:percent:)",
 

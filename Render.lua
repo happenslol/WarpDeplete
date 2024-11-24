@@ -703,6 +703,7 @@ function WarpDeplete:FormatForcesText()
 	local customCurrentPullFormat = self.db.profile.customCurrentPullFormat
 	local pullCount = self.state.pullCount
 	local currentCount = self.state.currentCount
+	local extraCount = self.state.extraCount
 	local totalCount = self.state.totalCount
 	local completionTime = self.state.forcesCompleted and self.state.forcesCompletionTime or nil
 	local splitsEnabled = self.db.profile.splitsEnabled
@@ -715,10 +716,10 @@ function WarpDeplete:FormatForcesText()
 	local isStart = not self.state.timerStarted
 	local showPbsDuringCountdown = self.db.profile.showPbsDuringCountdown
 
-	local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100)
+	local currentPercent = Util.calcForcesPercent(((currentCount + extraCount) / totalCount) * 100)
 
 	local percentText = ("%.2f"):format(currentPercent)
-	local countText = ("%d"):format(currentCount)
+	local countText = ("%d"):format(currentCount + extraCount)
 	local totalCountText = ("%d"):format(totalCount)
 	local remainingCountText = ("%d"):format(totalCount - currentCount)
 	local remainingPercentText = ("%.2f"):format(100 - currentPercent)
