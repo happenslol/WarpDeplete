@@ -132,7 +132,7 @@ end
 function WarpDeplete:SetKeyDetails(level, hasChallengersPeril, affixes, affixIds, mapId)
 	self.state.level = level
 	self.state.deathPenalty = hasChallengersPeril and 15 or 5
-	self.state.hasChallengersPeril = true
+	self.state.hasChallengersPeril = hasChallengersPeril
 	self.state.affixes = affixes
 	self.state.affixIds = affixIds
 	self.state.mapId = mapId
