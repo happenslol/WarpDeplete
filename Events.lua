@@ -140,7 +140,7 @@ function WarpDeplete:SCENARIO_POI_UPDATE()
 end
 
 function WarpDeplete:SCENARIO_CRITERIA_UPDATE()
-	if self.state.scenarioPOIExecuted (not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted) then
+	if self.state.scenarioPOIExecuted and (not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted) then
 		self:PrintDebug("Resetting sources - ScenarioPOI was false flagged.")
 		self:ResetForceCountFunctions()
 	end
