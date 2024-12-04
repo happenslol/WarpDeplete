@@ -142,7 +142,7 @@ end
 function WarpDeplete:SCENARIO_CRITERIA_UPDATE()
 	if self.state.scenarioPOIExecuted and (not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted) then
 		self:PrintDebug("Resetting sources - ScenarioPOI was false flagged.")
-		self:ResetForceCountFunctions()
+		self:ResetForceCountBooleans()
 	end
 	self.state.scenarioCriteriaExecuted = true
 	self:UpdateObjectives()
@@ -150,10 +150,12 @@ end
 
 function WarpDeplete:ENCOUNTER_END()
 	self:ResetCurrentPull()
+	self:ResetForceCountBooleans()
 end
 
 function WarpDeplete:PLAYER_REGEN_ENABLED()
 	self:ResetCurrentPull()
+	self:ResetForceCountBooleans()
 end
 
 function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
@@ -191,7 +193,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 		-- check to states make sure it's consistent
 		if self.state.scenarioPOIExecuted and not self.state.scenarioCriteriaExecuted then
 			self:PrintDebug("Resetting sources - ScenarioPOI was false flagged.")
-			self:ResetForceCountFunctions()
+			self:ResetForceCountBooleans()
 		end
 
 		-- hit 100% AND CombatLog didn't execute prior to ScenarioCriteriaUpdate

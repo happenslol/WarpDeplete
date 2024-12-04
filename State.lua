@@ -233,7 +233,7 @@ function WarpDeplete:ResetCurrentPull()
 	self:SetForcesPull(0)
 end
 
-function WarpDeplete:ResetForceCountFunctions()
+function WarpDeplete:ResetForceCountBooleans()
 	self:PrintDebug("Resetting source booleans")
 	self.state.combatLogExecuted = false
 	self.state.scenarioPOIExecuted = false
@@ -356,8 +356,8 @@ function WarpDeplete:UpdateObjectives()
 			-- The second condition sometimes happens due to OnScenarioPOIUpdate
 			-- executing after every other event has finished, leaving the values in a weird state.
 			if (self.state.combatLogExecuted and self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) or
-			(not self.state.fromCcombatLogExecutedombatLog and not self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) then
-				self:ResetForceCountFunctions()
+			(not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) then
+				self:ResetForceCountBooleans()
 			end
 		end
 	end
