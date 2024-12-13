@@ -14,13 +14,6 @@ WarpDeplete.Util = Util
 WarpDeplete.LSM = LibStub("LibSharedMedia-3.0")
 WarpDeplete.Glow = LibStub("LibCustomGlow-1.0")
 
--- Check if Kaliel's Tracker is loaded, since it creates a
--- background frame for the objective window that will not be
--- hidden if only the objective window itself is hidden.
----@class KT : AceAddon
----@field frame Frame
-local KT = LibStub("AceAddon-3.0"):GetAddon("!KalielsTracker", true)
-
 function WarpDeplete:OnInitialize()
 	local frames = {}
 
@@ -133,9 +126,6 @@ end
 
 function WarpDeplete:HookObjectiveTracker()
 	local frame
-	if KT then frame = KT.frame
-	else frame = ObjectiveTrackerFrame end
-
 	hooksecurefunc(frame, "Show", function()
 		-- Prevent objective tracker from re-showing
 		-- while WarpDeplete is shown
@@ -150,8 +140,8 @@ function WarpDeplete:ShowObjectiveTracker()
 		return
 	end
 
-	if KT then
-		KT.frame:Show()
+	if KalielsTracker and KalielsTracker.Toggle then
+		KalielsTracker.Toggle(true)
 		return
 	end
 
@@ -162,8 +152,8 @@ function WarpDeplete:ShowObjectiveTracker()
 end
 
 function WarpDeplete:HideObjectiveTracker()
-	if KT then
-		KT.frame:Hide()
+	if KalielsTracker and KalielsTracker.Toggle then
+		KalielsTracker.Toggle(false)
 		return
 	end
 
