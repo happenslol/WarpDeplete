@@ -9,6 +9,8 @@ function MDT:GetEnemyForces(npcID) end
 ---@class ObjectiveTrackerFrame : Frame
 ObjectiveTrackerFrame = {}
 
+function ObjectiveTrackerFrame:Update() end
+
 ---@class TooltipDataProcessor
 TooltipDataProcessor = {}
 

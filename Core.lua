@@ -28,13 +28,9 @@ function WarpDeplete:OnInitialize()
 	frames.bars = CreateFrame("Frame", "WarpDepleteBars", frames.root)
 	frames.deathsTooltip = CreateFrame("Frame", "WarpDepleteDeathsTooltip", frames.root)
 
-	-- We use an empty frame to which we parent the blizzard objective tracker.
-	-- This can then be hidden and not be affected by blizzard unhiding the
-	-- objective tracker itself.
-	frames.hiddenObjectiveTrackerParent = CreateFrame("frame")
-	frames.hiddenObjectiveTrackerParent:Hide()
-
 	self.frames = frames
+
+	self:HookObjectiveTracker()
 end
 
 function WarpDeplete:OnEnable()
@@ -135,42 +131,43 @@ function WarpDeplete:DisableDemoMode()
 	self:ResetState()
 end
 
-function WarpDeplete:ShowBlizzardObjectiveTracker()
-	-- As SylingTracker replaces the blizzard objective tracker in hiding
-	-- it, we prevent WarpDeplete to reshown the tracker.
+function WarpDeplete:HookObjectiveTracker()
+	local frame
+	if KT then frame = KT.frame
+	else frame = ObjectiveTrackerFrame end
+
+	hooksecurefunc(frame, "Show", function()
+		-- Prevent objective tracker from re-showing
+		-- while WarpDeplete is shown
+		if self.isShown then frame:Hide() end
+	end)
+end
+
+function WarpDeplete:ShowObjectiveTracker()
+	-- If SylingTracker is loaded, it will re-show itself
+	-- and we don't need to do anything.
 	if C_AddOns.IsAddOnLoaded("SylingTracker") then
 		return
 	end
 
-	-- FIXME(happens): See HideBlizzardObjectiveTracker
-	ObjectiveTrackerFrame:SetAlpha(1)
-	ObjectiveTrackerFrame:Show()
-
-	if ObjectiveTrackerFrame:GetParent() == self.frames.hiddenObjectiveTrackerParent then
-		ObjectiveTrackerFrame:SetParent(self.originalObjectiveTrackerParent or UIParent)
-	end
-end
-
-function WarpDeplete:HideBlizzardObjectiveTracker()
-	-- FIXME(happens): The reparenting method seems to not work for some people.
-	-- As an additional fallback, we set the alpha to 0.
-	ObjectiveTrackerFrame:SetAlpha(0)
-
-	self.originalObjectiveTrackerParent = ObjectiveTrackerFrame:GetParent()
-	ObjectiveTrackerFrame:SetParent(self.frames.hiddenObjectiveTrackerParent)
-	ObjectiveTrackerFrame:Hide()
-end
-
-function WarpDeplete:ShowExternals()
 	if KT then
 		KT.frame:Show()
+		return
 	end
+
+	-- Just calling Show here is incorrect, since the frame
+	-- might actually be hidden (due to no quests being tracked).
+	-- Calling Update will correctly show/hide the frame.
+	ObjectiveTrackerFrame:Update()
 end
 
-function WarpDeplete:HideExternals()
+function WarpDeplete:HideObjectiveTracker()
 	if KT then
 		KT.frame:Hide()
+		return
 	end
+
+	ObjectiveTrackerFrame:Hide()
 end
 
 function WarpDeplete:Show()
@@ -178,16 +175,14 @@ function WarpDeplete:Show()
 	self.frames.root:Show()
 	self:RenderLayout()
 
-	self:HideBlizzardObjectiveTracker()
-	self:HideExternals()
+	self:HideObjectiveTracker()
 end
 
 function WarpDeplete:Hide()
 	self.isShown = false
 	self.frames.root:Hide()
 
-	self:ShowBlizzardObjectiveTracker()
-	self:ShowExternals()
+	self:ShowObjectiveTracker()
 end
 
 function WarpDeplete:ResetState()
