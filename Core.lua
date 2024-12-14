@@ -125,11 +125,12 @@ function WarpDeplete:DisableDemoMode()
 end
 
 function WarpDeplete:HookObjectiveTracker()
-	local frame
-	hooksecurefunc(frame, "Show", function()
+	if not ObjectiveTrackerFrame then return end
+
+	hooksecurefunc(ObjectiveTrackerFrame, "Show", function()
 		-- Prevent objective tracker from re-showing
 		-- while WarpDeplete is shown
-		if self.isShown then frame:Hide() end
+		if self.isShown then ObjectiveTrackerFrame:Hide() end
 	end)
 end
 
