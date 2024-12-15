@@ -142,7 +142,7 @@ function WarpDeplete:ShowObjectiveTracker()
 	end
 
 	if KalielsTracker and KalielsTracker.Toggle then
-		KalielsTracker.Toggle(true)
+		KalielsTracker:Toggle(true)
 		return
 	end
 
@@ -154,7 +154,7 @@ end
 
 function WarpDeplete:HideObjectiveTracker()
 	if KalielsTracker and KalielsTracker.Toggle then
-		KalielsTracker.Toggle(false)
+		KalielsTracker:Toggle(false)
 		return
 	end
 

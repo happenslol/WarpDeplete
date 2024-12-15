@@ -10,7 +10,7 @@ function MDT:GetEnemyForces(npcID) end
 KalielsTracker = {}
 
 ---@param show boolean
-function KalielsTracker.Toggle(show) end
+function KalielsTracker:Toggle(show) end
 
 ---@class ObjectiveTrackerFrame : Frame
 ObjectiveTrackerFrame = {}
