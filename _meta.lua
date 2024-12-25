@@ -6,8 +6,16 @@ MDT = {}
 ---@param npcID integer?
 function MDT:GetEnemyForces(npcID) end
 
+---@class KalielsTracker
+KalielsTracker = {}
+
+---@param show boolean
+function KalielsTracker:Toggle(show) end
+
 ---@class ObjectiveTrackerFrame : Frame
 ObjectiveTrackerFrame = {}
+
+function ObjectiveTrackerFrame:Update() end
 
 ---@class TooltipDataProcessor
 TooltipDataProcessor = {}

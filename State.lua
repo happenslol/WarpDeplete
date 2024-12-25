@@ -277,7 +277,7 @@ end
 ---@param index integer
 ---@return string name
 function WarpDeplete:FindObjectiveName(description, index)
-	if self.state.ejObjectiveNames[index] then
+	if self.state.ejObjectiveNames and self.state.ejObjectiveNames[index] then
 		local name = self.state.ejObjectiveNames[index]
 		self:PrintDebug("Using EJ boss name at index " .. tostring(index)
 			.. ": " .. description .. " -> " .. name)
