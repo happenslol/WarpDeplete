@@ -82,7 +82,7 @@ function WarpDeplete:SetForcesCurrent(currentCount)
 		self.state.currentCount = currentCount
 	end
 
-	local currentPercent = self.state.totalCount > 0 and self.state.currentCount / self.state.totalCount or 0
+	local currentPercent = self.state.totalCount > 0 and (self.state.currentCount + self.state.extraCount) / self.state.totalCount or 0
 
 	if not self.db.profile.unClampForcesPercent or not MDT then
 		if currentPercent > 1.0 then
