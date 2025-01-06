@@ -718,6 +718,10 @@ function WarpDeplete:FormatForcesText()
 
 	local currentPercent = Util.calcForcesPercent(((currentCount + extraCount) / totalCount) * 100)
 
+	if self.db.profile.unClampForcesPercent and MDT then
+		currentPercent = ((currentCount + extraCount) / totalCount) * 100
+	end
+
 	local percentText = ("%.2f"):format(currentPercent)
 	local countText = ("%d"):format(currentCount + extraCount)
 	local totalCountText = ("%d"):format(totalCount)
