@@ -133,7 +133,11 @@ function Util.calcPullCount(pull, total)
 end
 
 function Util.calcForcesPercent(forcesPercent)
-	return math.min(forcesPercent, 100.0)
+	if not self.db.profile.unClampForcesPercent or not MDT then
+		return math.min(forcesPercent, 100.0)
+	else
+		return forcesPercent
+	end
 end
 
 function Util.joinStrings(strings, delim)
