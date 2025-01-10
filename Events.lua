@@ -214,7 +214,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 			end
 		else
 			local newCurrentCount = self.state.currentCount + guidForceCount
-			if newCurrentCount > self.state.totalCount then
+			if newCurrentCount >= self.state.totalCount then
 				local rest = self.state.totalCount - self.state.currentCount
 				self.state.extraCount = guidForceCount - rest
 				self:PrintDebug("extraCount: " .. self.state.extraCount)
