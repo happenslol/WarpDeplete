@@ -357,8 +357,10 @@ function WarpDeplete:UpdateObjectives()
 
 			-- The second condition sometimes happens due to OnScenarioPOIUpdate
 			-- executing after every other event has finished, leaving the values in a weird state.
+			-- The third condition sometimes happens on random mobs where combatLog doesn't get executed for some reason
 			if (self.state.combatLogExecuted and self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) or
-			(not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) then
+			(not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) or
+			(self.state.scenarioPOIExecuted and self.state.scenarioCriteriaExecuted) then
 				self:ResetForceCountBooleans()
 			end
 		end

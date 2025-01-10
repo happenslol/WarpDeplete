@@ -191,13 +191,14 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 		self:PrintDebug("Mob died worth: " .. guidForceCount)
 
 		-- check to states make sure it's consistent
-		if self.state.scenarioPOIExecuted and not self.state.scenarioCriteriaExecuted then
+		if (self.state.scenarioPOIExecuted and not self.state.scenarioCriteriaExecuted) or
+		(self.state.scenarioPOIExecuted and self.state.scenarioCriteriaExecuted) then
 			self:PrintDebug("Resetting sources - ScenarioPOI was false flagged.")
 			self:ResetForceCountBooleans()
 		end
 
 		-- hit 100% AND CombatLog didn't execute prior to ScenarioCriteriaUpdate
-		if self.state.forcesCompleted and self.state.currentCount < self.state.totalCount then
+		if self.state.forcesCompleted and (self.state.currentCount < self.state.totalCount) then
 			local rest = self.state.totalCount - self.state.currentCount
 			self.state.extraCount = guidForceCount - rest
 			self:PrintDebug("extraCount: " .. self.state.extraCount)
@@ -214,7 +215,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 			end
 		else
 			local newCurrentCount = self.state.currentCount + guidForceCount
-			if newCurrentCount >= self.state.totalCount then
+			if newCurrentCount > self.state.totalCount then
 				local rest = self.state.totalCount - self.state.currentCount
 				self.state.extraCount = guidForceCount - rest
 				self:PrintDebug("extraCount: " .. self.state.extraCount)
@@ -225,7 +226,6 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 		end
 		self.state.combatLogExecuted = true
 	end
-
 end
 
 function WarpDeplete:UNIT_THREAT_LIST_UPDATE(_, unit)
