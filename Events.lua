@@ -197,6 +197,15 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 			self:ResetForceCountBooleans()
 		end
 
+		-- we only care to run this once we've reached 100%
+		if self.state.forcesCompleted and (self.state.currentCount == self.state.totalCount) then
+			self.state.extraCount = self.state.extraCount + guidForceCount
+			self:PrintDebug("extraCount: " .. self.state.extraCount)
+			self.state.combatLogExecuted = true
+			self:RenderForces()
+			return
+		end
+
 		-- hit 100% AND CombatLog didn't execute prior to ScenarioCriteriaUpdate
 		if self.state.forcesCompleted and (self.state.currentCount < self.state.totalCount) then
 			local rest = self.state.totalCount - self.state.currentCount
@@ -208,25 +217,17 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 			return
 		end
 
-		-- extra count logic
-		if self.state.scenarioCriteriaExecuted then
-			if self.state.forcesCompleted then
-				self.state.extraCount = self.state.extraCount + guidForceCount
-				self:RenderForces()
-				self:PrintDebug("extraCount: " .. self.state.extraCount)
-			end
+		local newCurrentCount = self.state.currentCount + guidForceCount
+		-- hit 100% AND CombatLog executed prior to ScenarioCriteriaUpdate
+		if newCurrentCount > self.state.totalCount then
+			local rest = self.state.totalCount - self.state.currentCount
+			self.state.extraCount = guidForceCount - rest
+			self:PrintDebug("extraCount: " .. self.state.extraCount)
+			self:SetForcesCurrent(self.state.totalCount)
+			self:RenderForces()
 		else
-			local newCurrentCount = self.state.currentCount + guidForceCount
-			if newCurrentCount > self.state.totalCount then
-				local rest = self.state.totalCount - self.state.currentCount
-				self.state.extraCount = guidForceCount - rest
-				self:PrintDebug("extraCount: " .. self.state.extraCount)
-				self:SetForcesCurrent(self.state.totalCount)
-				self:RenderForces()
-			else
-				self:SetForcesCurrent(newCurrentCount)
-				self:RenderForces()
-			end
+			self:SetForcesCurrent(newCurrentCount)
+			self:RenderForces()
 		end
 		self.state.combatLogExecuted = true
 	end
