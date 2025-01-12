@@ -758,6 +758,11 @@ function WarpDeplete:FormatForcesText()
 		local remainingPercentAfterPullText = ("%.2f"):format(remainingPercentAfterPull)
 
 		local percentAfterPull = Util.calcForcesPercent(pullPercent + currentPercent)
+
+		if self.db.profile.unClampForcesPercent and MDT then
+			percentAfterPull = pullPercent + currentPercent
+		end
+
 		local pulledPercentText = ("%.2f"):format(percentAfterPull)
 
 		pullText = pullText:gsub(":count:", pullCountText)

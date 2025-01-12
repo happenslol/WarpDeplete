@@ -204,6 +204,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 			self:PrintDebug("extraCount: " .. self.state.extraCount)
 			self:SetForcesCurrent(self.state.totalCount)
 			self.state.combatLogExecuted = true
+			self:RenderForces()
 			return
 		end
 
@@ -211,6 +212,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 		if self.state.scenarioCriteriaExecuted then
 			if self.state.forcesCompleted then
 				self.state.extraCount = self.state.extraCount + guidForceCount
+				self:RenderForces()
 				self:PrintDebug("extraCount: " .. self.state.extraCount)
 			end
 		else
@@ -220,8 +222,10 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 				self.state.extraCount = guidForceCount - rest
 				self:PrintDebug("extraCount: " .. self.state.extraCount)
 				self:SetForcesCurrent(self.state.totalCount)
+				self:RenderForces()
 			else
 				self:SetForcesCurrent(newCurrentCount)
+				self:RenderForces()
 			end
 		end
 		self.state.combatLogExecuted = true
