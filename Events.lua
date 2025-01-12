@@ -219,15 +219,17 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 
 		local newCurrentCount = self.state.currentCount + guidForceCount
 		-- hit 100% AND CombatLog executed prior to ScenarioCriteriaUpdate
-		if newCurrentCount > self.state.totalCount then
+		if (newCurrentCount > self.state.totalCount) and not self.state.forcesCompleted then
 			local rest = self.state.totalCount - self.state.currentCount
 			self.state.extraCount = guidForceCount - rest
 			self:PrintDebug("extraCount: " .. self.state.extraCount)
 			self:SetForcesCurrent(self.state.totalCount)
 			self:RenderForces()
-		else
-			self:SetForcesCurrent(newCurrentCount)
-			self:RenderForces()
+		-- removing for now since there seems to be cases of mobs being detected
+		-- that the official API isn't including, making the count off.
+		-- else
+		-- 	self:SetForcesCurrent(newCurrentCount)
+		-- 	self:RenderForces()
 		end
 		self.state.combatLogExecuted = true
 	end
