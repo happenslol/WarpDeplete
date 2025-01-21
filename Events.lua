@@ -219,7 +219,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 
 		local newCurrentCount = self.state.currentCount + guidForceCount
 		-- hit 100% AND CombatLog executed prior to ScenarioCriteriaUpdate
-		if (newCurrentCount > self.state.totalCount) and not self.state.forcesCompleted and not self.state.scenarioCriteriaExecuted then
+		if (newCurrentCount >= self.state.totalCount) and not self.state.forcesCompleted and not self.state.scenarioCriteriaExecuted then
 			local rest = self.state.totalCount - self.state.currentCount
 			self.state.extraCount = guidForceCount - rest
 			self:PrintDebug("extraCount: " .. self.state.extraCount)
