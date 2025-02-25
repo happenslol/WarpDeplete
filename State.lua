@@ -197,6 +197,9 @@ function WarpDeplete:GetEJObjectiveNames()
 
 	local result = {}
 
+	-- EJ_GetEncounterInfoByIndex requires EJ_SelectInstance to be called at least once during the session when passing a journalInstanceID to not return nil
+	EJ_SelectInstance(1337)
+
 	-- There are never more than 20 objectives
 	-- (probably way less, but let's be safe here)
 	for i = 1, 20 do
