@@ -147,7 +147,7 @@ end
 
 function WarpDeplete:LoadKeyDetails()
 	local mapId = C_ChallengeMode.GetActiveChallengeMapID()
-	if not mapId then
+	if not mapId or mapId == 0 then
 		return
 	end
 
@@ -363,14 +363,20 @@ function WarpDeplete:EnableChallengeMode()
 
 	self.state.inChallenge = true
 
+	RunNextFrame(function()
+		self:RefreshChallengeDetails()
+
+		self:Show()
+		self:StartTimerLoop()
+	end)
+end
+
+function WarpDeplete:RefreshChallengeDetails()
 	self:LoadKeyDetails()
 	self:LoadDeathCount()
 
 	self.state.ejObjectiveNames = self:GetEJObjectiveNames()
 	self:UpdateObjectives()
-
-	self:Show()
-	self:StartTimerLoop()
 end
 
 function WarpDeplete:DisableChallengeMode()

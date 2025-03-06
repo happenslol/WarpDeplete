@@ -4,19 +4,16 @@ local sinceLastUpdate = 0
 local newDeathCount = 0
 
 function WarpDeplete:OnTimerTick(elapsed)
-	if self.state.timeLimit == 0 then
-		local timeLimit = select(3, C_ChallengeMode.GetMapUIInfo(mapId))
-
-		if timeLimit ~= 0 then
-			self:SetTimeLimit(timeLimit)
-		end
-	end
-
 	sinceLastUpdate = sinceLastUpdate + elapsed
 	if sinceLastUpdate <= UPDATE_INTERVAL then
 		return
 	end
 	sinceLastUpdate = 0
+
+	-- Attempt to refresh if we don't have all key details yet
+	if self.state.timeLimit == 0 then
+		self:RefreshChallengeDetails()
+	end
 
 	newDeathCount = C_ChallengeMode.GetDeathCount()
 	if newDeathCount ~= self.state.deathCount then
