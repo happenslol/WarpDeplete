@@ -7,6 +7,17 @@
 ## IconTexture: Interface\AddOns\WarpDeplete\logo
 ## X-Curse-Project-ID: 460155
 ## X-Wago-ID: 5bGoOqG0
+## Category-enUS: Mythic+ Dungeons
+## Category-deDE: Mythic+ Dungeons
+## Category-esES: Mythic+ Dungeons
+## Category-esMX: Mythic+ Dungeons
+## Category-frFR: Donjons Mythique+
+## Category-itIT: Mythic+ Dungeons
+## Category-koKR: Mythic+ Dungeons
+## Category-ptBR: Mythic+ Dungeons
+## Category-ruRU: Подземелья М+
+## Category-zhCN: Mythic+ Dungeons
+## Category-zhTW: Mythic+ Dungeons
 
 embeds.xml
 Locales\Load_Locales.xml
