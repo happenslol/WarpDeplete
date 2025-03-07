@@ -162,7 +162,7 @@ function WarpDeplete:LoadKeyDetails()
 
 	local level, affixes = C_ChallengeMode.GetActiveKeystoneInfo()
 
-	if not level or level <= 0 or #affixes <= 0 then
+	if not level or level <= 0 then
 		return
 	end
 
