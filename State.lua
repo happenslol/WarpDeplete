@@ -27,6 +27,7 @@ WarpDeplete.defaultState = {
 	timeLimits = {},
 
 	deathCount = 0,
+	deathTimeLost = 0,
 	deathDetails = {},
 
 	pullCount = 0,
@@ -45,7 +46,6 @@ WarpDeplete.defaultState = {
 	forcesCompletionTime = nil,
 
 	level = 0,
-	deathPenalty = 0,
 	affixes = {}, ---@type string[]
 	affixIds = {}, ---@type integer[]
 	hasChallengersPeril = false,
@@ -93,8 +93,10 @@ function WarpDeplete:SetForcesPull(pullCount)
 	self:RenderForces()
 end
 
-function WarpDeplete:SetDeathCount(count)
+function WarpDeplete:SetDeathCount(count, timeLost)
 	self.state.deathCount = count
+	self.state.deathTimeLost = timeLost
+
 	local deathText = Util.formatDeathText(count)
 	self.frames.root.deathsText:SetText(deathText)
 
@@ -131,7 +133,6 @@ end
 ---@param mapId integer
 function WarpDeplete:SetKeyDetails(level, hasChallengersPeril, affixes, affixIds, mapId)
 	self.state.level = level
-	self.state.deathPenalty = (level <= 3 and 0) or (hasChallengersPeril and 15) or 5
 	self.state.hasChallengersPeril = hasChallengersPeril
 	self.state.affixes = affixes
 	self.state.affixIds = affixIds
@@ -142,7 +143,8 @@ function WarpDeplete:SetKeyDetails(level, hasChallengersPeril, affixes, affixIds
 end
 
 function WarpDeplete:LoadDeathCount()
-	self:SetDeathCount(C_ChallengeMode.GetDeathCount() or 0)
+	local deathCount, timeLost = C_ChallengeMode.GetDeathCount()
+	self:SetDeathCount(deathCount, timeLost)
 end
 
 function WarpDeplete:LoadKeyDetails()

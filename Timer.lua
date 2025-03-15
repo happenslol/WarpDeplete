@@ -1,19 +1,12 @@
 local UPDATE_INTERVAL = 0.1
 local sinceLastUpdate = 0
 
-local newDeathCount = 0
-
 function WarpDeplete:OnTimerTick(elapsed)
 	sinceLastUpdate = sinceLastUpdate + elapsed
 	if sinceLastUpdate <= UPDATE_INTERVAL then
 		return
 	end
 	sinceLastUpdate = 0
-
-	newDeathCount = C_ChallengeMode.GetDeathCount()
-	if newDeathCount ~= self.state.deathCount then
-		self:SetDeathCount(newDeathCount)
-	end
 
 	self.state.timer = select(2, GetWorldElapsedTime(1))
 
