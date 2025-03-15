@@ -13,7 +13,7 @@ function Util.formatTime_OnUpdate(time)
 end
 
 function Util.formatDeathText(deathCount, timeLost)
-	if not deathCount then
+	if deathCount == 0 then
 		return ""
 	end
 
@@ -25,12 +25,11 @@ function Util.formatDeathText(deathCount, timeLost)
 	end
 
 	if timeLost > 0 then
-		local timeLostText = (
-			(timeLost < 60 and "(+" .. tostring(timeLost) .. "s)")
-			or ("(+" .. Util.formatDeathTimeMinutes(timeLost) .. ")")
-		)
-
-		result = result .. " " .. timeLostText
+		if timeLost < 60 then
+			result = result .. " (+" .. tostring(timeLost) .. "s)"
+		else
+			result = result .. " (+" .. Util.formatDeathTimeMinutes(timeLost) .. ")"
+		end
 	end
 
 	return result

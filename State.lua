@@ -94,10 +94,13 @@ function WarpDeplete:SetForcesPull(pullCount)
 end
 
 function WarpDeplete:SetDeathCount(count, timeLost)
+	count = count or 0
+	timeLost = timeLost or 0
+
 	self.state.deathCount = count
 	self.state.deathTimeLost = timeLost
 
-	local deathText = Util.formatDeathText(count)
+	local deathText = Util.formatDeathText(count, timeLost)
 	self.frames.root.deathsText:SetText(deathText)
 
 	local deathsTooltipFrameWidth = self.frames.root.deathsText:GetStringWidth() + self.db.profile.framePadding
