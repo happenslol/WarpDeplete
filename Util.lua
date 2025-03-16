@@ -14,10 +14,10 @@ end
 
 function Util.formatDeathText(deathCount, timeLost)
 	if deathCount == 0 then
-		return ""
+		return " "
 	end
 
-	local result = "" .. tostring(deathCount)
+	local result = tostring(deathCount)
 	if deathCount == 1 then
 		result = result .. " " .. L["Death"]
 	else
