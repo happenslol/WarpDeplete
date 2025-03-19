@@ -131,7 +131,8 @@ function WarpDeplete:WORLD_STATE_TIMER_START()
 end
 
 function WarpDeplete:CHALLENGE_MODE_DEATH_COUNT_UPDATED()
-	self:SetDeathCount(C_ChallengeMode.GetDeathCount() or 0)
+	local deathCount, timeLost = C_ChallengeMode.GetDeathCount()
+	self:SetDeathCount(deathCount, timeLost)
 end
 
 function WarpDeplete:SCENARIO_POI_UPDATE()

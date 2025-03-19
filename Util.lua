@@ -12,26 +12,27 @@ function Util.formatTime_OnUpdate(time)
 	return ("%d:%02d"):format(formatTime_OnUpdate_state.timeMin, formatTime_OnUpdate_state.timeSec)
 end
 
-function Util.formatDeathText(deaths)
-	if not deaths then
-		return ""
+function Util.formatDeathText(deathCount, timeLost)
+	if deathCount == 0 then
+		return " "
 	end
 
-	local timeAdded = deaths * WarpDeplete.state.deathPenalty
-	local deathText = "" .. deaths
-	if deaths == 1 then
-		deathText = deathText .. " " .. L["Death"] .. " "
+	local result = tostring(deathCount)
+	if deathCount == 1 then
+		result = result .. " " .. L["Death"]
 	else
-		deathText = deathText .. " " .. L["Deaths"] .. " "
+		result = result .. " " .. L["Deaths"]
 	end
 
-	local timeAddedText = (
-		(timeAdded == 0 and "")
-		or (timeAdded < 60 and "(+" .. timeAdded .. "s)")
-		or "(+" .. Util.formatDeathTimeMinutes(timeAdded) .. ")"
-	)
+	if timeLost > 0 then
+		if timeLost < 60 then
+			result = result .. " (+" .. tostring(timeLost) .. "s)"
+		else
+			result = result .. " (+" .. Util.formatDeathTimeMinutes(timeLost) .. ")"
+		end
+	end
 
-	return deathText .. timeAddedText
+	return result
 end
 
 function Util.formatTime(time, sign)

@@ -85,7 +85,7 @@ function WarpDeplete:EnableDemoMode()
 
 	self:SetTimeLimit(35 * 60)
 	self:SetTimer(20 * 60)
-	self:SetDeathCount(3)
+	self:SetDeathCount(3, 45)
 
 	local classTable = {
 		"SHAMAN",
