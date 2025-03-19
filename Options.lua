@@ -187,6 +187,51 @@ local function group(name, inline, args, extraOptions)
 	return result
 end
 
+local LibSerialize = LibStub("LibSerialize")
+local LibDeflate = LibStub("LibDeflate")
+local importString = nil
+local exportString = nil
+function WarpDeplete:ExportProfile(data)
+	local serialized = LibSerialize:Serialize(data) -- serialized the profile db
+
+	local compressed = LibDeflate:CompressDeflate(serialized) -- compress the serialized string
+	local encoded = LibDeflate:EncodeForWoWAddonChannel(compressed) -- encode the compressed string for the wow addon channel
+
+	local profileExport = encoded and format("!WD%s", encoded) or nil -- with the !WD prefix we can identify the string as a WarpDeplete profile
+
+	return profileExport -- return the finished export string
+end
+
+function WarpDeplete:ImportProfile(data)
+	if not data then
+		return L["Import string is corrupted!"]
+	end
+
+	-- check if the import string is a WarpDeplete profile
+	if not strmatch(data, "^" .. "!WD") then
+		return L["This is not a WarpDeplete profile!"]
+	end
+
+	local profileImport = gsub(data, "^" .. "!WD", "") -- remove the !WD prefix
+
+	local decoded = LibDeflate:DecodeForWoWAddonChannel(profileImport)
+	if not decoded then
+		return L["Import string is corrupted!"]
+	end
+
+	local decompressed = LibDeflate:DecompressDeflate(decoded)
+	if not decompressed then
+		return L["Import string is corrupted!"]
+	end
+
+	local success, profileDB = LibSerialize:Deserialize(decompressed)
+	if not success then
+		return
+	end
+
+	return profileDB -- return the deserialized profile db
+end
+
 function WarpDeplete:InitOptions()
 	self.isUnlocked = false
 
@@ -752,6 +797,64 @@ function WarpDeplete:InitOptions()
 					}),
 				}),
 			}, { order = 4 }),
+			export = {
+				order = 5,
+				type = "group",
+				name = L["Export"],
+				args = {
+					export_button = {
+						order = 1,
+						type = "execute",
+						name = L["Export"],
+						func = function()
+							exportString = WarpDeplete:ExportProfile(WarpDeplete.db.profile)
+						end,
+					},
+					export_field = {
+						order = 2,
+						name = L["Output"],
+						type = "input",
+						width = "full",
+						multiline = 10,
+						set = function()
+							-- noop
+						end,
+						get = function()
+							print("EXPORT DATA", exportString)
+							return exportString
+						end,
+					},
+				},
+			},
+			import = {
+				order = 6,
+				type = "group",
+				name = L["Import"],
+				args = {
+					import_button = {
+						order = 1,
+						type = "execute",
+						name = L["Import"],
+						func = function()
+							local db = WarpDeplete:ImportProfile(importString) -- actually we dont do anything with the return value here
+						end,
+					},
+					import_field = {
+						order = 2,
+						name = L["Input"],
+						type = "input",
+						width = "full",
+						multiline = 10,
+						set = function(data)
+							print("IMPORT DATA", data)
+							importString = data
+						end,
+						get = function()
+							-- noop
+						end,
+					},
+				},
+			},
 		},
 	}
 
