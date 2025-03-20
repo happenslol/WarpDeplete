@@ -191,11 +191,12 @@ local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 local importString = nil
 local exportString = nil
+local test = ""
 function WarpDeplete:ExportProfile(data)
 	local serialized = LibSerialize:Serialize(data) -- serialized the profile db
 
 	local compressed = LibDeflate:CompressDeflate(serialized) -- compress the serialized string
-	local encoded = LibDeflate:EncodeForWoWAddonChannel(compressed) -- encode the compressed string for the wow addon channel
+	local encoded = LibDeflate:EncodeForPrint(compressed) -- encode the compressed string for the wow addon channel
 
 	local profileExport = encoded and format("!WD%s", encoded) or nil -- with the !WD prefix we can identify the string as a WarpDeplete profile
 
@@ -204,24 +205,24 @@ end
 
 function WarpDeplete:ImportProfile(data)
 	if not data then
-		return L["Import string is corrupted!"]
+		return L["ERROR 1 - Import string is corrupted!"]
 	end
 
 	-- check if the import string is a WarpDeplete profile
 	if not strmatch(data, "^" .. "!WD") then
-		return L["This is not a WarpDeplete profile!"]
+		return L["ERROR 2 - This is not a WarpDeplete profile!"]
 	end
 
 	local profileImport = gsub(data, "^" .. "!WD", "") -- remove the !WD prefix
 
-	local decoded = LibDeflate:DecodeForWoWAddonChannel(profileImport)
+	local decoded = LibDeflate:DecodeForPrint(profileImport)
 	if not decoded then
-		return L["Import string is corrupted!"]
+		return L["ERROR 3 - Import string is corrupted!"]
 	end
 
 	local decompressed = LibDeflate:DecompressDeflate(decoded)
 	if not decompressed then
-		return L["Import string is corrupted!"]
+		return L["ERROR 4 - Import string is corrupted!"]
 	end
 
 	local success, profileDB = LibSerialize:Deserialize(decompressed)
@@ -235,7 +236,7 @@ end
 function WarpDeplete:InitOptions()
 	self.isUnlocked = false
 
-	local options = {
+	WarpDeplete.options = {
 		name = "WarpDeplete",
 		handler = self,
 		type = "group",
@@ -820,7 +821,6 @@ function WarpDeplete:InitOptions()
 							-- noop
 						end,
 						get = function()
-							print("EXPORT DATA", exportString)
 							return exportString
 						end,
 					},
@@ -837,6 +837,9 @@ function WarpDeplete:InitOptions()
 						name = L["Import"],
 						func = function()
 							local db = WarpDeplete:ImportProfile(importString) -- actually we dont do anything with the return value here
+
+							-- need to add here some checks, does a profile with the same name exists, if yes, ask for overwrite?
+							WarpDeplete.db.profile = db
 						end,
 					},
 					import_field = {
@@ -845,9 +848,8 @@ function WarpDeplete:InitOptions()
 						type = "input",
 						width = "full",
 						multiline = 10,
-						set = function(data)
-							print("IMPORT DATA", data)
-							importString = data
+						set = function(_, text)
+							importString = text
 						end,
 						get = function()
 							-- noop
@@ -966,10 +968,10 @@ function WarpDeplete:InitOptions()
 		},
 	})
 
-	options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
+	WarpDeplete.options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
 
 	if self.db.global.DEBUG then
-		options.args.debug = debugOptions
+		WarpDeplete.options.args.debug = debugOptions
 	end
 
 	self.db.RegisterCallback(self, "OnProfileChanged", "OnProfileChanged")
@@ -977,7 +979,7 @@ function WarpDeplete:InitOptions()
 	self.db.RegisterCallback(self, "OnProfileReset", "OnProfileChanged")
 
 	local AceConfigDialog = LibStub("AceConfigDialog-3.0")
-	LibStub("AceConfig-3.0"):RegisterOptionsTable("WarpDeplete", options)
+	LibStub("AceConfig-3.0"):RegisterOptionsTable("WarpDeplete", WarpDeplete.options)
 	self.optionsGeneralFrame = AceConfigDialog:AddToBlizOptions("WarpDeplete", "WarpDeplete")
 
 	self.configDialog = AceConfigDialog
