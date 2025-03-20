@@ -230,7 +230,7 @@ function WarpDeplete:ImportProfile(data)
 		return
 	end
 
-	return profileDB -- return the deserialized profile db
+	return profileDB, success -- return the deserialized profile db
 end
 
 function WarpDeplete:InitOptions()
@@ -808,6 +808,7 @@ function WarpDeplete:InitOptions()
 						type = "execute",
 						name = L["Export"],
 						func = function()
+							-- set the export string
 							exportString = WarpDeplete:ExportProfile(WarpDeplete.db.profile)
 						end,
 					},
@@ -821,6 +822,7 @@ function WarpDeplete:InitOptions()
 							-- noop
 						end,
 						get = function()
+							-- show export string
 							return exportString
 						end,
 					},
@@ -836,10 +838,12 @@ function WarpDeplete:InitOptions()
 						type = "execute",
 						name = L["Import"],
 						func = function()
-							local db = WarpDeplete:ImportProfile(importString) -- actually we dont do anything with the return value here
+							local db, success = WarpDeplete:ImportProfile(importString) -- actually we dont do anything with the return value here
 
-							-- need to add here some checks, does a profile with the same name exists, if yes, ask for overwrite?
-							WarpDeplete.db.profile = db
+							if success then
+								-- need to add here some checks, does a profile with the same name exists, if yes, ask for overwrite?
+								WarpDeplete.db.profile = db
+							end
 						end,
 					},
 					import_field = {
@@ -849,6 +853,7 @@ function WarpDeplete:InitOptions()
 						width = "full",
 						multiline = 10,
 						set = function(_, text)
+							-- set the input as profile input string
 							importString = text
 						end,
 						get = function()
