@@ -187,6 +187,65 @@ local function group(name, inline, args, extraOptions)
 	return result
 end
 
+local LibSerialize = LibStub("LibSerialize")
+local LibDeflate = LibStub("LibDeflate")
+local importString = nil
+local exportString = nil
+local profileInfos = nil
+function WarpDeplete:ExportProfile()
+	local profileName = WarpDeplete.db:GetCurrentProfile() -- get the current profile name
+print(profileName)
+	-- build the output db
+	local outputDB = {
+		profile = WarpDeplete.db.profile, -- add the profile db
+		info = {
+			name = profileName, -- add the profile name, so we can check if the profile exists
+			version = 1.0, -- add the db or WarpDeplete Version to check for conflicts in future
+		},
+	}
+
+	local serialized = LibSerialize:Serialize(outputDB) -- serialized the profile db
+
+	local compressed = LibDeflate:CompressDeflate(serialized) -- compress the serialized string
+	local encoded = LibDeflate:EncodeForPrint(compressed) -- encode the compressed string for the wow addon channel
+
+	local profileExport = encoded and format("!WD%s", encoded) or nil -- with the !WD prefix we can identify the string as a WarpDeplete profile
+
+	return profileExport -- return the finished export string
+end
+
+function WarpDeplete:ImportProfile(data)
+	if not data then
+		return L["ERROR 1 - Import string is corrupted!"]
+	end
+
+	-- check if the import string is a WarpDeplete profile
+	if not strmatch(data, "^" .. "!WD") then
+		return L["ERROR 2 - This is not a WarpDeplete profile!"]
+	end
+
+	local profileImport = gsub(data, "^" .. "!WD", "") -- remove the !WD prefix
+
+	local decoded = LibDeflate:DecodeForPrint(profileImport)
+	if not decoded then
+		return L["ERROR 3 - Import string is corrupted!"]
+	end
+
+	local decompressed = LibDeflate:DecompressDeflate(decoded)
+	if not decompressed then
+		return L["ERROR 4 - Import string is corrupted!"]
+	end
+
+	local success, outputDB = LibSerialize:Deserialize(decompressed)
+	if not success then
+		return
+	end
+
+	local profileDB = outputDB.profile -- get the profile db
+
+	return profileDB, outputDB.info, success -- return the deserialized profile db and infos
+end
+
 function WarpDeplete:InitOptions()
 	self.isUnlocked = false
 
@@ -752,6 +811,101 @@ function WarpDeplete:InitOptions()
 					}),
 				}),
 			}, { order = 4 }),
+			export = {
+				order = 5,
+				type = "group",
+				name = L["Export"],
+				args = {
+					export_button = {
+						order = 1,
+						type = "execute",
+						name = L["Export"],
+						func = function()
+							-- set the export string
+							exportString = WarpDeplete:ExportProfile()
+						end,
+					},
+					export_field = {
+						order = 2,
+						name = L["Output"],
+						type = "input",
+						width = "full",
+						multiline = 10,
+						set = function()
+							-- noop
+						end,
+						get = function()
+							-- show export string
+							return exportString
+						end,
+					},
+				},
+			},
+			import = {
+				order = 6,
+				type = "group",
+				name = L["Import"],
+				args = {
+					import_button = {
+						order = 1,
+						type = "execute",
+						name = L["Import"],
+						func = function()
+							local db, infos, success = WarpDeplete:ImportProfile(importString) -- actually we dont do anything with the return value here
+
+							if success and infos then
+								local profiles = WarpDeplete.db:GetProfiles() -- get all profiles
+
+								if profiles then
+									-- check if the profile exists
+									local profileExists = false
+									for _, name in ipairs(profiles) do
+										if  name == infos.name then
+											profileExists = true
+											break
+										end
+									end
+									if profileExists then
+										print("PROFILE EXISTS", infos.name) -- do something here, like ask for overwrite
+									end
+
+									-- if the profile does not exist, we add it to the db
+									WarpDeplete.db.profiles[infos.name] = db -- add the profile to the db
+									WarpDeplete.db:SetProfile(infos.name) -- and set the new profile
+
+									print("Profile imported:", infos.name) -- print the imported profile name
+								end
+
+								-- after import we reset the vars
+								profileInfos = nil
+								importString = nil
+							end
+						end,
+					},
+					import_field = {
+						order = 2,
+						name = L["Input"],
+						type = "input",
+						width = "full",
+						multiline = 10,
+						set = function(_, text)
+							-- this could be even better if the info was displayed directly after entering the string
+							local _, infos, success = WarpDeplete:ImportProfile(text)
+
+							-- set the input as profile input string
+							if success then
+								profileInfos = infos
+								importString = text
+							end
+						end,
+						get = function()
+							if profileInfos then
+								return format("Name: %s\nVersion: %s\n\nImport String:\n %s", profileInfos.name, profileInfos.version, importString)
+							end
+						end,
+					},
+				},
+			},
 		},
 	}
 
