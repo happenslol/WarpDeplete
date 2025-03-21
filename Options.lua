@@ -868,11 +868,13 @@ function WarpDeplete:InitOptions()
 									if profileExists then
 										print("PROFILE EXISTS", infos.name) -- do something here, like ask for overwrite
 									end
-									return
-								end
 
-								-- need to add here some checks, does a profile with the same name exists, if yes, ask for overwrite?
-								WarpDeplete.db.profile = db
+									-- if the profile does not exist, we add it to the db
+									WarpDeplete.db.profiles[infos.name] = db -- add the profile to the db
+									WarpDeplete.db:SetProfile(infos.name) -- and set the new profile
+
+									print("Profile imported:", infos.name) -- print the imported profile name
+								end
 
 								-- after import we reset the vars
 								profileInfos = nil
