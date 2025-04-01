@@ -550,10 +550,8 @@ function WarpDeplete:RenderTimer()
 			local best = self:GetBestSplit("challenge")
 
 			if best then
-				self.frames.root.timerSplitText:SetText("|c"
-					.. self.db.profile.splitFasterTimeColor
-					.. Util.formatTime(best / 1000)
-					.. "|r"
+				self.frames.root.timerSplitText:SetText(
+					"|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best / 1000) .. "|r"
 				)
 			end
 		end
@@ -595,7 +593,7 @@ function WarpDeplete:RenderForces()
 	else
 		local percentBeforePull = self.state.currentPercent
 		local percentAfterPull = percentBeforePull + self.state.pullPercent
-		local shouldGlow = percentBeforePull < 1 and percentAfterPull >= 1.0
+		local shouldGlow = (percentBeforePull < 1 and percentAfterPull >= 1.0) or self.db.profile.demoForcesGlow
 
 		if shouldGlow ~= self.state.pullGlowActive then
 			if shouldGlow then
@@ -669,7 +667,11 @@ function WarpDeplete:RenderObjectives()
 					end
 				end
 			end
-		elseif self.db.profile.splitsEnabled and self.db.profile.showPbsDuringCountdown and not self.state.timerStarted then
+		elseif
+			self.db.profile.splitsEnabled
+			and self.db.profile.showPbsDuringCountdown
+			and not self.state.timerStarted
+		then
 			local best = self:GetBestSplit(i)
 			if best then
 				local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"
