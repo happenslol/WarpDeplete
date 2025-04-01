@@ -234,6 +234,11 @@ function WarpDeplete:InitOptions()
 				lineBreak(),
 
 				group(L["Forces Display"], true, {
+					toggle(L["Show Forces above 100%"], "unClampForcesPercent", "RenderLayout", {
+						desc = L["Once the forces objective is completed, it'll go above 100%.\nNOTE: Disconnects or reloads will reset the count back down to 100%."],
+						width = 2,
+					}),
+					lineBreak(),
 					{
 						type = "select",
 						name = L["Forces Text Format"],
