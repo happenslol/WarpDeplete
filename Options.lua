@@ -225,7 +225,7 @@ function WarpDeplete:InitOptions()
 			},
 			general = group(L["General"], false, {
 				lineBreak(),
-				toggle(L["Insert keystone automatically"], "insertKeystoneAutomatically", "RenderLayout"),
+				toggle(L["Insert Keystone Automatically"], "insertKeystoneAutomatically", "RenderLayout"),
 				toggle(
 					L["Show millisecond precision after dungeon completion"],
 					"showMillisecondsWhenDungeonCompleted",
@@ -236,7 +236,7 @@ function WarpDeplete:InitOptions()
 				group(L["Forces Display"], true, {
 					{
 						type = "select",
-						name = L["Forces text format"],
+						name = L["Forces Text Format"],
 						desc = L["Choose how your forces progress will be displayed"],
 						sorting = {
 							":percent:",
@@ -266,7 +266,7 @@ function WarpDeplete:InitOptions()
 
 					{
 						type = "input",
-						name = L["Custom forces text format"],
+						name = L["Custom Forces Text Format"],
 						desc = L["Use the following tags to set your custom format"]
 							.. ":"
 							.. "\n- :percent: "
@@ -303,7 +303,7 @@ function WarpDeplete:InitOptions()
 
 					{
 						type = "select",
-						name = L["Current pull text format"],
+						name = L["Current Pull Text Format"],
 						desc = L["Choose how your current pull count will be displayed"],
 						sorting = {
 							"(+:percent:)",
@@ -331,7 +331,7 @@ function WarpDeplete:InitOptions()
 
 					{
 						type = "input",
-						name = L["Custom current pull text format"],
+						name = L["Custom Current Pull Text Format"],
 						desc = L["Use the following tags to set your custom format"]
 							.. ":"
 							.. "\n- :percent: "
@@ -366,8 +366,8 @@ function WarpDeplete:InitOptions()
 					},
 				}),
 
-				group(L["Forces count in tooltip"], true, {
-					toggle(L["Show forces count in tooltip"], "showTooltipCount", "RenderLayout", {
+				group(L["Forces Count in Tooltip"], true, {
+					toggle(L["Show Forces Count in Tooltip"], "showTooltipCount", "RenderLayout", {
 						desc = L["Add a line to the tooltip, showing how much count a mob will award upon death"],
 					}),
 					lineBreak(function()
@@ -376,7 +376,7 @@ function WarpDeplete:InitOptions()
 
 					{
 						type = "select",
-						name = L["Tooltip forces text format"],
+						name = L["Tooltip Forces Text Format"],
 						desc = L["Choose how count will be displayed in the tooltip"],
 						sorting = {
 							"+:count: / :percent:",
@@ -404,7 +404,7 @@ function WarpDeplete:InitOptions()
 
 					{
 						type = "input",
-						name = L["Custom tooltip forces count format"],
+						name = L["Custom Tooltip Forces Count Format"],
 						desc = L["Use the following tags to set your custom format"]
 							.. ":"
 							.. "\n- :percent: "
@@ -513,10 +513,10 @@ function WarpDeplete:InitOptions()
 					}),
 				}),
 
-				group(L["Death log tooltip"], true, {
+				group(L["Death Log Tooltip"], true, {
 					{
 						type = "toggle",
-						name = L["Show death log when hovering deaths text"],
+						name = L["Show Death Log When Hovering Deaths Text"],
 						desc = L["NOTE: This will only record deaths that happen while you're online. If you disconnect and/or reconnect, this will not show deaths that happened previously."],
 						get = function(_)
 							return WarpDeplete.db.profile.showDeathsTooltip
@@ -528,7 +528,7 @@ function WarpDeplete:InitOptions()
 					},
 					{
 						type = "select",
-						name = L["Death log style"],
+						name = L["Death Log Style"],
 						desc = L["Choose how players deaths will be displayed in the tooltip. Hover the deaths text while in demo mode for a preview."],
 						sorting = {
 							"count",
@@ -567,7 +567,7 @@ function WarpDeplete:InitOptions()
 					},
 					{
 						type = "toggle",
-						name = L["Show split records during countdown"],
+						name = L["Show Split Records During Countdown"],
 						desc = L["Show your personal best times for splits during the countdown at the start of runs"],
 						hidden = function()
 							return not WarpDeplete.db.profile.splitsEnabled
@@ -651,103 +651,106 @@ function WarpDeplete:InitOptions()
 				}),
 
 				group(L["Timer Colors"], true, {
-					color(L["Timer color"], "timerRunningColor", "RenderLayout"),
-					color(L["Timer success color"], "timerSuccessColor", "RenderLayout"),
-					color(L["Timer expired color"], "timerExpiredColor", "RenderLayout"),
+					color(L["Timer Color"], "timerRunningColor", "RenderLayout"),
+					color(L["Timer Success Color"], "timerSuccessColor", "RenderLayout"),
+					color(L["Timer Expired Color"], "timerExpiredColor", "RenderLayout"),
 				}, { desc = L["These colors are used for both the main timer, as well as the bar texts."] }),
 
 				group(L["Main Timer"], true, {
-					font(L["Timer font"], "timerFont", "RenderLayout"),
-					range(L["Timer font size"], "timerFontSize", "RenderLayout", { max = 80 }),
-					fontFlags(L["Timer font flags"], "timerFontFlags", "RenderLayout"),
+					font(L["Timer Font"], "timerFont", "RenderLayout"),
+					range(L["Timer Font Size"], "timerFontSize", "RenderLayout", { max = 80 }),
+					fontFlags(L["Timer Font Flags"], "timerFontFlags", "RenderLayout"),
 				}),
 
 				group(L["Deaths"], true, {
-					font(L["Deaths font"], "deathsFont", "RenderLayout"),
-					range(L["Deaths font size"], "deathsFontSize", "RenderLayout"),
-					fontFlags(L["Deaths font flags"], "deathsFontFlags", "RenderLayout"),
-					color(L["Deaths color"], "deathsColor", "RenderLayout"),
+					font(L["Deaths Font"], "deathsFont", "RenderLayout"),
+					range(L["Deaths Font Fize"], "deathsFontSize", "RenderLayout"),
+					fontFlags(L["Deaths Font Flags"], "deathsFontFlags", "RenderLayout"),
+					color(L["Deaths Color"], "deathsColor", "RenderLayout"),
 				}),
 
 				group(L["Key Details"], true, {
-					font(L["Key font"], "keyFont", "RenderLayout"),
-					range(L["Key font size"], "keyFontSize", "RenderLayout"),
-					fontFlags(L["Key font flags"], "keyFontFlags", "RenderLayout"),
-					color(L["Key color"], "keyColor", "RenderLayout"),
+					font(L["Key Font"], "keyFont", "RenderLayout"),
+					range(L["Key Font Size"], "keyFontSize", "RenderLayout"),
+					fontFlags(L["Key Font Flags"], "keyFontFlags", "RenderLayout"),
+					color(L["Key Color"], "keyColor", "RenderLayout"),
 
 					lineBreak(),
 
-					font(L["Key details font"], "keyDetailsFont", "RenderLayout"),
-					range(L["Key details font size"], "keyDetailsFontSize", "RenderLayout"),
-					fontFlags(L["Key details font flags"], "keyDetailsFontFlags", "RenderLayout"),
-					color(L["Key details color"], "keyDetailsColor", "RenderLayout"),
+					font(L["Key Details Font"], "keyDetailsFont", "RenderLayout"),
+					range(L["Key Details Font Size"], "keyDetailsFontSize", "RenderLayout"),
+					fontFlags(L["Key Details Font Flags"], "keyDetailsFontFlags", "RenderLayout"),
+					color(L["Key Details Color"], "keyDetailsColor", "RenderLayout"),
 				}),
 
 				group(L["Bars"], true, {
-					range(L["Bar width"], "barWidth", "RenderLayout", { width = "full", min = 10, max = 600 }),
-					range(L["Bar height"], "barHeight", "RenderLayout", { width = "full", min = 4, max = 50 }),
+					range(L["Bar Width"], "barWidth", "RenderLayout", { width = "full", min = 10, max = 600 }),
+					range(L["Bar Height"], "barHeight", "RenderLayout", { width = "full", min = 4, max = 50 }),
 				}),
 
 				group(L["+1 Timer"], true, {
-					font(L["+1 Timer font"], "bar1Font", "RenderLayout"),
-					range(L["+1 Timer font size"], "bar1FontSize", "RenderLayout"),
-					fontFlags(L["+1 Timer font flags"], "bar1FontFlags", "RenderLayout"),
+					font(L["+1 Timer Font"], "bar1Font", "RenderLayout"),
+					range(L["+1 Timer Font Size"], "bar1FontSize", "RenderLayout"),
+					fontFlags(L["+1 Timer Font Flags"], "bar1FontFlags", "RenderLayout"),
 
-					barTexture(L["+1 Timer bar texture"], "bar1Texture", "RenderLayout", { width = "double" }),
-					color(L["+1 Timer bar color"], "bar1TextureColor", "RenderLayout"),
+					barTexture(L["+1 Timer Bar Texture"], "bar1Texture", "RenderLayout", { width = "double" }),
+					color(L["+1 Timer Bar Color"], "bar1TextureColor", "RenderLayout"),
 				}),
 
 				group(L["+2 Timer"], true, {
-					font(L["+2 Timer font"], "bar2Font", "RenderLayout"),
-					range(L["+2 Timer font size"], "bar2FontSize", "RenderLayout"),
-					fontFlags(L["+2 Timer font flags"], "bar2FontFlags", "RenderLayout"),
+					font(L["+2 Timer Font"], "bar2Font", "RenderLayout"),
+					range(L["+2 Timer Font Size"], "bar2FontSize", "RenderLayout"),
+					fontFlags(L["+2 Timer Font Flags"], "bar2FontFlags", "RenderLayout"),
 
-					barTexture(L["+2 Timer bar texture"], "bar2Texture", "RenderLayout", { width = "double" }),
-					color(L["+2 Timer bar color"], "bar2TextureColor", "RenderLayout"),
+					barTexture(L["+2 Timer Bar Texture"], "bar2Texture", "RenderLayout", { width = "double" }),
+					color(L["+2 Timer Bar Color"], "bar2TextureColor", "RenderLayout"),
 				}),
 
 				group(L["+3 Timer"], true, {
-					font(L["+3 Timer font"], "bar3Font", "RenderLayout"),
-					range(L["+3 Timer font size"], "bar3FontSize", "RenderLayout"),
-					fontFlags(L["+3 Timer font flags"], "bar3FontFlags", "RenderLayout"),
+					font(L["+3 Timer Font"], "bar3Font", "RenderLayout"),
+					range(L["+3 Timer Font Size"], "bar3FontSize", "RenderLayout"),
+					fontFlags(L["+3 Timer Font Flags"], "bar3FontFlags", "RenderLayout"),
 
-					barTexture(L["+3 Timer bar texture"], "bar3Texture", "RenderLayout", { width = "double" }),
-					color(L["+3 Timer bar color"], "bar3TextureColor", "RenderLayout"),
+					barTexture(L["+3 Timer Bar Texture"], "bar3Texture", "RenderLayout", { width = "double" }),
+					color(L["+3 Timer Bar Color"], "bar3TextureColor", "RenderLayout"),
 				}),
 
 				group(L["Forces"], true, {
-					font(L["Forces font"], "forcesFont", "RenderLayout"),
-					range(L["Forces font size"], "forcesFontSize", "RenderLayout"),
-					fontFlags(L["Forces font flags"], "forcesFontFlags", "RenderLayout"),
-					color(L["Forces color"], "forcesColor", "RenderLayout"),
-					color(L["Completed forces color"], "completedForcesColor", "RenderLayout"),
+					font(L["Forces Font"], "forcesFont", "RenderLayout"),
+					range(L["Forces Font Size"], "forcesFontSize", "RenderLayout"),
+					fontFlags(L["Forces Font Flags"], "forcesFontFlags", "RenderLayout"),
+					color(L["Forces Color"], "forcesColor", "RenderLayout"),
+					color(L["Completed Forces Color"], "completedForcesColor", "RenderLayout"),
 
 					lineBreak(),
 
-					barTexture(L["Forces bar texture"], "forcesTexture", "RenderLayout", { width = "double" }),
-					color(L["Forces bar color"], "forcesTextureColor", "RenderLayout"),
+					barTexture(L["Forces Bar Texture"], "forcesTexture", "RenderLayout", { width = "double" }),
+					color(L["Forces Bar Color"], "forcesTextureColor", "RenderLayout"),
 
 					lineBreak(),
 
 					barTexture(
-						L["Current pull bar texture"],
+						L["Current Pull Bar Texture"],
 						"forcesOverlayTexture",
 						"RenderLayout",
 						{ width = "double" }
 					),
-					color(L["Current pull bar color"], "forcesOverlayTextureColor", "RenderLayout"),
+					color(L["Current Pull Bar Color"], "forcesOverlayTextureColor", "RenderLayout"),
 				}),
 
 				group(L["Objectives"], true, {
-					font(L["Objectives font"], "objectivesFont", "RenderLayout", { width = 3 / 2 }),
-					fontFlags(L["Objectives font flags"], "objectivesFontFlags", "RenderLayout", { width = 3 / 2 }),
-					range(L["Objectives font size"], "objectivesFontSize", "RenderLayout", { width = 3 / 2 }),
-					color(L["Objectives color"], "objectivesColor", "RenderLayout"),
-					color(L["Completed objective color"], "completedObjectivesColor", "RenderLayout"),
-					color(L["New best objective split"], "splitFasterTimeColor", "RenderLayout", {
-						desc = L["The color to use when you've set a new best objective clear time"],
+					font(L["Objectives Font"], "objectivesFont", "RenderLayout", { width = 3 / 2 }),
+					fontFlags(L["Objectives Font Flags"], "objectivesFontFlags", "RenderLayout", { width = 3 / 2 }),
+					range(L["Objectives Font Size"], "objectivesFontSize", "RenderLayout", { width = 3 / 2 }),
+					color(L["Objectives Color"], "objectivesColor", "RenderLayout"),
+					color(L["Completed Objective Color"], "completedObjectivesColor", "RenderLayout", {
+						width = 7 / 6,
 					}),
-					color(L["Slower objective split"], "splitSlowerTimeColor", "RenderLayout", {
+					color(L["New Best Objective Split"], "splitFasterTimeColor", "RenderLayout", {
+						desc = L["The color to use when you've set a new best objective clear time"],
+						width = 7 / 6,
+					}),
+					color(L["Slower Objective Split"], "splitSlowerTimeColor", "RenderLayout", {
 						desc = L["The color to use for objective clear times slower than your best time"],
 					}),
 				}),
