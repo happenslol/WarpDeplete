@@ -550,10 +550,8 @@ function WarpDeplete:RenderTimer()
 			local best = self:GetBestSplit("challenge")
 
 			if best then
-				self.frames.root.timerSplitText:SetText("|c"
-					.. self.db.profile.splitFasterTimeColor
-					.. Util.formatTime(best / 1000)
-					.. "|r"
+				self.frames.root.timerSplitText:SetText(
+					"|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best / 1000) .. "|r"
 				)
 			end
 		end
@@ -595,7 +593,7 @@ function WarpDeplete:RenderForces()
 	else
 		local percentBeforePull = self.state.currentPercent
 		local percentAfterPull = percentBeforePull + self.state.pullPercent
-		local shouldGlow = percentBeforePull < 1 and percentAfterPull >= 1.0
+		local shouldGlow = (percentBeforePull < 1 and percentAfterPull >= 1.0) or self.db.profile.demoForcesGlow
 
 		if shouldGlow ~= self.state.pullGlowActive then
 			if shouldGlow then
@@ -669,7 +667,11 @@ function WarpDeplete:RenderObjectives()
 					end
 				end
 			end
-		elseif self.db.profile.splitsEnabled and self.db.profile.showPbsDuringCountdown and not self.state.timerStarted then
+		elseif
+			self.db.profile.splitsEnabled
+			and self.db.profile.showPbsDuringCountdown
+			and not self.state.timerStarted
+		then
 			local best = self:GetBestSplit(i)
 			if best then
 				local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"
@@ -703,6 +705,7 @@ function WarpDeplete:FormatForcesText()
 	local customCurrentPullFormat = self.db.profile.customCurrentPullFormat
 	local pullCount = self.state.pullCount
 	local currentCount = self.state.currentCount
+	local extraCount = self.state.extraCount
 	local totalCount = self.state.totalCount
 	local completionTime = self.state.forcesCompleted and self.state.forcesCompletionTime or nil
 	local splitsEnabled = self.db.profile.splitsEnabled
@@ -715,10 +718,14 @@ function WarpDeplete:FormatForcesText()
 	local isStart = not self.state.timerStarted
 	local showPbsDuringCountdown = self.db.profile.showPbsDuringCountdown
 
-	local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100)
+	local currentPercent = Util.calcForcesPercent(((currentCount + extraCount) / totalCount) * 100)
+
+	if self.db.profile.unClampForcesPercent and MDT then
+		currentPercent = ((currentCount + extraCount) / totalCount) * 100
+	end
 
 	local percentText = ("%.2f"):format(currentPercent)
-	local countText = ("%d"):format(currentCount)
+	local countText = ("%d"):format(currentCount + extraCount)
 	local totalCountText = ("%d"):format(totalCount)
 	local remainingCountText = ("%d"):format(totalCount - currentCount)
 	local remainingPercentText = ("%.2f"):format(100 - currentPercent)
@@ -753,6 +760,11 @@ function WarpDeplete:FormatForcesText()
 		local remainingPercentAfterPullText = ("%.2f"):format(remainingPercentAfterPull)
 
 		local percentAfterPull = Util.calcForcesPercent(pullPercent + currentPercent)
+
+		if self.db.profile.unClampForcesPercent and MDT then
+			percentAfterPull = pullPercent + currentPercent
+		end
+
 		local pulledPercentText = ("%.2f"):format(percentAfterPull)
 
 		pullText = pullText:gsub(":count:", pullCountText)

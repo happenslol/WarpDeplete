@@ -31,8 +31,15 @@ WarpDeplete.defaultState = {
 	deathDetails = {},
 
 	pullCount = 0,
+	extraCount = 0,
 	currentCount = 0,
 	totalCount = 100,
+
+	-- Keep track of what function has ran since all 3 run when a mob
+	-- worth force dies.
+	combatLogExecuted = false,
+	scenarioCriteriaExecuted = false,
+	scenarioPOIExecuted = false,
 
 	pullPercent = 0,
 	currentPercent = 0,
@@ -75,10 +82,12 @@ function WarpDeplete:SetForcesCurrent(currentCount)
 		self.state.currentCount = currentCount
 	end
 
-	local currentPercent = self.state.totalCount > 0 and self.state.currentCount / self.state.totalCount or 0
+	local currentPercent = self.state.totalCount > 0 and (self.state.currentCount + self.state.extraCount) / self.state.totalCount or 0
 
-	if currentPercent > 1.0 then
-		currentPercent = 1.0
+	if not self.db.profile.unClampForcesPercent or not MDT then
+		if currentPercent > 1.0 then
+			currentPercent = 1.0
+		end
 	end
 	self.state.currentPercent = currentPercent
 
@@ -218,7 +227,7 @@ function WarpDeplete:GetEJObjectiveNames()
 	for i, bossName in ipairs(result) do
 		self:PrintDebug("Found boss name " .. tostring(i) .. ": " .. tostring(bossName))
 	end
-	
+
 	if #result == 0 then
 		return nil
 	end
@@ -233,6 +242,13 @@ function WarpDeplete:ResetCurrentPull()
 
 	self:SetForcesPull(0)
 end
+
+function WarpDeplete:ResetForceCountBooleans()
+	self:PrintDebug("Resetting source booleans")
+	self.state.combatLogExecuted = false
+	self.state.scenarioPOIExecuted = false
+	self.state.scenarioCriteriaExecuted = false
+  end
 
 function WarpDeplete:AddDeathDetails(time, name, class)
 	self.state.deathDetails[#self.state.deathDetails + 1] = {
@@ -312,8 +328,21 @@ function WarpDeplete:UpdateObjectives()
 			-- even though it's an absolute value.
 			local currentCount = info.quantityString and tonumber(info.quantityString:match("%d+")) or 0
 
-			if currentCount ~= self.state.currentCount then
-				self:SetForcesCurrent(currentCount)
+			self:PrintDebug("Count: " .. tostring(currentCount) .. "/" .. tostring(info.totalQuantity))
+			self:PrintDebug("self.state.currentCount: " .. self.state.currentCount)
+			self:PrintDebug("combatLogExecuted: " .. tostring(self.state.combatLogExecuted))
+			self:PrintDebug("scenarioPOIExecuted: " .. tostring(self.state.scenarioPOIExecuted))
+			self:PrintDebug("scenarioCriteriaExecuted: " .. tostring(self.state.scenarioCriteriaExecuted))
+			self:PrintDebug("self.state.forcesCompleted: " .. tostring(self.state.forcesCompleted))
+
+			if self.db.profile.unClampForcesPercent and MDT then
+				if currentCount ~= self.state.currentCount and currentCount < info.totalQuantity then
+					self:SetForcesCurrent(currentCount)
+				end
+			else
+				if currentCount ~= self.state.currentCount then
+					self:SetForcesCurrent(currentCount)
+				end
 			end
 
 			if info.totalQuantity ~= self.state.totalCount then
@@ -332,6 +361,15 @@ function WarpDeplete:UpdateObjectives()
 					self.state.forcesCompletionTime = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
 					completionChanged = true
 				end
+			end
+
+			-- The second condition sometimes happens due to OnScenarioPOIUpdate
+			-- executing after every other event has finished, leaving the values in a weird state.
+			-- The third condition sometimes happens on random mobs where combatLog doesn't get executed for some reason
+			if (self.state.combatLogExecuted and self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) or
+			(not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) or
+			(self.state.scenarioPOIExecuted and self.state.scenarioCriteriaExecuted) then
+				self:ResetForceCountBooleans()
 			end
 		end
 	end
