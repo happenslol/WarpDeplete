@@ -243,7 +243,7 @@ function WarpDeplete:ResetCurrentPull()
 	self:SetForcesPull(0)
 end
 
-function WarpDeplete:ResetForceCountBooleans()
+function WarpDeplete:ResetForceCountTriggers()
 	self:PrintDebug("Resetting source booleans")
 	self.state.combatLogExecuted = false
 	self.state.scenarioPOIExecuted = false
@@ -369,7 +369,7 @@ function WarpDeplete:UpdateObjectives()
 			if (self.state.combatLogExecuted and self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) or
 			(not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) or
 			(self.state.scenarioPOIExecuted and self.state.scenarioCriteriaExecuted) then
-				self:ResetForceCountBooleans()
+				self:ResetForceCountTriggers()
 			end
 		end
 	end

@@ -141,9 +141,9 @@ function WarpDeplete:SCENARIO_POI_UPDATE()
 end
 
 function WarpDeplete:SCENARIO_CRITERIA_UPDATE()
-	if self.state.scenarioPOIExecuted and (not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted) then
+	if self.state.scenarioPOIExecuted and not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted then
 		self:PrintDebug("Resetting sources - ScenarioPOI was false flagged.")
-		self:ResetForceCountBooleans()
+		self:ResetForceCountTriggers()
 	end
 	self.state.scenarioCriteriaExecuted = true
 	self:UpdateObjectives()
@@ -151,12 +151,12 @@ end
 
 function WarpDeplete:ENCOUNTER_END()
 	self:ResetCurrentPull()
-	self:ResetForceCountBooleans()
+	self:ResetForceCountTriggers()
 end
 
 function WarpDeplete:PLAYER_REGEN_ENABLED()
 	self:ResetCurrentPull()
-	self:ResetForceCountBooleans()
+	self:ResetForceCountTriggers()
 end
 
 function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
@@ -183,8 +183,6 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 	local pullCount = Util.calcPullCount(self.state.currentPull, self.state.totalCount)
 	self:SetForcesPull(pullCount)
 
-	-- need to re-implement self.db.profile.unClampForcesPercent toggle
-	-- set to true for now for everybody
 	if self.db.profile.unClampForcesPercent and MDT then
 		-- calculate the force count of mob that just died
 		local npcID = select(6, strsplit("-", guid))
@@ -195,7 +193,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 		if (self.state.scenarioPOIExecuted and not self.state.scenarioCriteriaExecuted) or
 		(self.state.scenarioPOIExecuted and self.state.scenarioCriteriaExecuted) then
 			self:PrintDebug("Resetting sources - ScenarioPOI was false flagged.")
-			self:ResetForceCountBooleans()
+			self:ResetForceCountTriggers()
 		end
 
 		-- we only care to run this once we've reached 100%
