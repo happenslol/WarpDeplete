@@ -195,7 +195,7 @@ local affixNameFilters = {
 	["ruRU"] = {},
 	["esES"] = { "Xal'atath", "contendiente", "Trato", "de", ":" },
 	["esMX"] = {},
-	["ptBR"] = {},
+	["ptBR"] = { "Barganha de Xal'atath:" },
 }
 
 ---@param name string
