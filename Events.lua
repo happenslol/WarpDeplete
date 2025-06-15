@@ -183,55 +183,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 	local pullCount = Util.calcPullCount(self.state.currentPull, self.state.totalCount)
 	self:SetForcesPull(pullCount)
 
-	if self.db.profile.unClampForcesPercent and MDT then
-		-- calculate the force count of mob that just died
-		local npcID = select(6, strsplit("-", guid))
-		local guidForceCount = MDT:GetEnemyForces(tonumber(npcID))
-		self:PrintDebug("Mob died worth: " .. guidForceCount)
-
-		-- check to states make sure it's consistent
-		if (self.state.scenarioPOIExecuted and not self.state.scenarioCriteriaExecuted) or
-		(self.state.scenarioPOIExecuted and self.state.scenarioCriteriaExecuted) then
-			self:PrintDebug("Resetting sources - ScenarioPOI was false flagged.")
-			self:ResetForceCountTriggers()
-		end
-
-		-- we only care to run this once we've reached 100%
-		if self.state.forcesCompleted and (self.state.currentCount == self.state.totalCount) then
-			self.state.extraCount = self.state.extraCount + guidForceCount
-			self:PrintDebug("extraCount: " .. self.state.extraCount)
-			self.state.combatLogExecuted = true
-			self:RenderForces()
-			return
-		end
-
-		-- hit 100% AND CombatLog didn't execute prior to ScenarioCriteriaUpdate
-		if self.state.forcesCompleted and (self.state.currentCount < self.state.totalCount) then
-			local rest = self.state.totalCount - self.state.currentCount
-			self.state.extraCount = guidForceCount - rest
-			self:PrintDebug("extraCount: " .. self.state.extraCount)
-			self:SetForcesCurrent(self.state.totalCount)
-			self.state.combatLogExecuted = true
-			self:RenderForces()
-			return
-		end
-
-		local newCurrentCount = self.state.currentCount + guidForceCount
-		-- hit 100% AND CombatLog executed prior to ScenarioCriteriaUpdate
-		if (newCurrentCount >= self.state.totalCount) and not self.state.forcesCompleted and not self.state.scenarioCriteriaExecuted then
-			local rest = self.state.totalCount - self.state.currentCount
-			self.state.extraCount = guidForceCount - rest
-			self:PrintDebug("extraCount: " .. self.state.extraCount)
-			self:SetForcesCurrent(self.state.totalCount)
-			self:RenderForces()
-		-- removing for now since there seems to be cases of mobs being detected
-		-- that the official API isn't including, making the count off.
-		-- else
-		-- 	self:SetForcesCurrent(newCurrentCount)
-		-- 	self:RenderForces()
-		end
-		self.state.combatLogExecuted = true
-	end
+	self:HandleExtraCount(guid)
 end
 
 function WarpDeplete:UNIT_THREAT_LIST_UPDATE(_, unit)

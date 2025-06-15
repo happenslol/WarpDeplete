@@ -35,8 +35,11 @@ WarpDeplete.defaultState = {
 	currentCount = 0,
 	totalCount = 100,
 
-	-- Keep track of what function has ran since all 3 run when a mob
-	-- worth force dies.
+	-- CombatLog, ScenarioCriteria, and ScenarioPOI execute in a random
+	-- order whenever a mob worth force dies. ScenarioCritera and ScenarioPOI
+	-- both automatically add the count of the mob that just died, but CombatLog does not.
+	-- Need to keep track of the order the functions were excuted to know if
+	-- we have to manually add the count in order for the count to stay accurate.
 	combatLogExecuted = false,
 	scenarioCriteriaExecuted = false,
 	scenarioPOIExecuted = false,
@@ -248,7 +251,7 @@ function WarpDeplete:ResetForceCountTriggers()
 	self.state.combatLogExecuted = false
 	self.state.scenarioPOIExecuted = false
 	self.state.scenarioCriteriaExecuted = false
-  end
+end
 
 function WarpDeplete:AddDeathDetails(time, name, class)
 	self.state.deathDetails[#self.state.deathDetails + 1] = {
@@ -297,6 +300,53 @@ function WarpDeplete:FindObjectiveName(description, index)
 		.. ", falling back to string filtering: "
 		.. description .. " -> " .. filtered)
 	return Util.utf8Sub(filtered, 40)
+end
+
+function WarpDeplete:HandleExtraCount(guid)
+	if self.db.profile.unClampForcesPercent and MDT then
+		-- calculate the force count of mob that just died
+		local npcID = select(6, strsplit("-", guid))
+		local guidForceCount = MDT:GetEnemyForces(tonumber(npcID))
+		self:PrintDebug("Mob died worth: " .. guidForceCount)
+
+		-- check to states make sure it's consistent
+		if (self.state.scenarioPOIExecuted and not self.state.scenarioCriteriaExecuted) or
+		(self.state.scenarioPOIExecuted and self.state.scenarioCriteriaExecuted) then
+			self:PrintDebug("Resetting sources - ScenarioPOI was false flagged.")
+			self:ResetForceCountTriggers()
+		end
+
+		-- we only care to run this once we've reached 100%  force count
+		if self.state.forcesCompleted and (self.state.currentCount == self.state.totalCount) then
+			self.state.extraCount = self.state.extraCount + guidForceCount
+			self:PrintDebug("extraCount: " .. self.state.extraCount)
+			self.state.combatLogExecuted = true
+			self:RenderForces()
+			return
+		end
+
+		-- hit 100% force count AND CombatLog didn't execute prior to ScenarioCriteriaUpdate
+		if self.state.forcesCompleted and (self.state.currentCount < self.state.totalCount) then
+			local rest = self.state.totalCount - self.state.currentCount
+			self.state.extraCount = guidForceCount - rest
+			self:PrintDebug("extraCount: " .. self.state.extraCount)
+			self:SetForcesCurrent(self.state.totalCount)
+			self.state.combatLogExecuted = true
+			self:RenderForces()
+			return
+		end
+
+		local newCurrentCount = self.state.currentCount + guidForceCount
+		-- hit 100% AND CombatLog executed prior to ScenarioCriteriaUpdate
+		if (newCurrentCount >= self.state.totalCount) and not self.state.forcesCompleted and not self.state.scenarioCriteriaExecuted then
+			local rest = self.state.totalCount - self.state.currentCount
+			self.state.extraCount = guidForceCount - rest
+			self:PrintDebug("extraCount: " .. self.state.extraCount)
+			self:SetForcesCurrent(self.state.totalCount)
+			self:RenderForces()
+		end
+		self.state.combatLogExecuted = true
+	end
 end
 
 function WarpDeplete:UpdateObjectives()
@@ -363,12 +413,16 @@ function WarpDeplete:UpdateObjectives()
 				end
 			end
 
-			-- The second condition sometimes happens due to OnScenarioPOIUpdate
-			-- executing after every other event has finished, leaving the values in a weird state.
-			-- The third condition sometimes happens on random mobs where combatLog doesn't get executed for some reason
-			if (self.state.combatLogExecuted and self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) or
-			(not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted) or
-			(self.state.scenarioPOIExecuted and self.state.scenarioCriteriaExecuted) then
+			-- All events happened, so we can reset the events again
+			local allEventsRan = self.state.combatLogExecuted and self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted
+
+			-- Happens sometimes due to OnScenarioPOIUpdate executing after every other event has finished, leaving the values in a partial state
+			local onlyScenarioPOIRan = not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted and self.state.scenarioPOIExecuted
+
+			-- Sometimes happens on random mobs where combatLog doesn't get executed for some reason
+			local allExceptCombatLogRan = self.state.scenarioPOIExecuted and self.state.scenarioCriteriaExecuted
+
+			if allEventsRan or onlyScenarioPOIRan or allExceptCombatLogRan then
 				self:ResetForceCountTriggers()
 			end
 		end
