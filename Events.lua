@@ -136,19 +136,27 @@ function WarpDeplete:CHALLENGE_MODE_DEATH_COUNT_UPDATED()
 end
 
 function WarpDeplete:SCENARIO_POI_UPDATE()
+	self.state.scenarioPOIExecuted = true
 	self:UpdateObjectives()
 end
 
 function WarpDeplete:SCENARIO_CRITERIA_UPDATE()
+	if self.state.scenarioPOIExecuted and not self.state.combatLogExecuted and not self.state.scenarioCriteriaExecuted then
+		self:PrintDebug("Resetting sources - ScenarioPOI was false flagged.")
+		self:ResetForceCountTriggers()
+	end
+	self.state.scenarioCriteriaExecuted = true
 	self:UpdateObjectives()
 end
 
 function WarpDeplete:ENCOUNTER_END()
 	self:ResetCurrentPull()
+	self:ResetForceCountTriggers()
 end
 
 function WarpDeplete:PLAYER_REGEN_ENABLED()
 	self:ResetCurrentPull()
+	self:ResetForceCountTriggers()
 end
 
 function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
@@ -174,6 +182,8 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 	self.state.currentPull[guid] = "DEAD"
 	local pullCount = Util.calcPullCount(self.state.currentPull, self.state.totalCount)
 	self:SetForcesPull(pullCount)
+
+	self:HandleExtraCount(guid)
 end
 
 function WarpDeplete:UNIT_THREAT_LIST_UPDATE(_, unit)
