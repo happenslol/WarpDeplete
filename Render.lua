@@ -60,7 +60,7 @@ function WarpDeplete:InitRender()
 	-- Objectives
 	local objectiveTexts = {}
 
-	for i = 1, 5 do
+	for i = 1, 10 do
 		local objectiveText = self.frames.root:CreateFontString(nil, "ARTWORK")
 		objectiveTexts[i] = objectiveText
 	end
@@ -454,7 +454,7 @@ function WarpDeplete:RenderLayout()
 	currentOffset = currentOffset + barFrameHeight + barFramePaddingBottom + verticalOffset
 
 	-- Objectives
-	for i = 1, 5 do
+	for i = 1, 10 do
 		local objectiveText = self.frames.root.objectiveTexts[i]
 		objectiveText:SetFont(self.LSM:Fetch("font", objectivesFont), objectivesFontSize, objectivesFontFlags)
 		objectiveText:SetNonSpaceWrap(false)
@@ -635,7 +635,7 @@ function WarpDeplete:RenderObjectives()
 	local alignStart = self.db.profile.alignBossClear == "start"
 
 	-- Clear existing objective list
-	for i = 1, 5 do
+	for i = 1, 10 do
 		self.frames.root.objectiveTexts[i]:SetText("")
 	end
 
