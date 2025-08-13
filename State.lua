@@ -293,54 +293,64 @@ function WarpDeplete:UpdateObjectives()
 	local bossesLoaded = false
 
 	for i = 1, 10 do
-        if i > stepCount then
-            if self.state.objectives[i] then 
-                bossesLoaded = true
-            end
-            self.state.objectives[i] = nil
-        else
-            local info = C_ScenarioInfo.GetCriteriaInfo(i)
-            if not info.isWeightedProgress then
-                if not self.state.objectives[i] then
-                    local name = self:FindObjectiveName(info.description, i)
-                    self.state.objectives[i] = { name = name, description = info.description, time = nil }
-                    bossesLoaded = true
-                end
+		-- Unload bosses if we initially got too many (e.g. tazavesh)
+		-- TODO: Find out how we can initially get the correct bosses only for the
+		-- current challenge. In tazavesh, we get all bosses for both challenges,
+		-- and then they update during the countdown.
+		if i > stepCount then
+			if self.state.objectives[i] then
+				bossesLoaded = true
+			end
+			self.state.objectives[i] = nil
 
-                local objective = self.state.objectives[i]
-                if not objective.time and info.completed then
-                    local time = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
-                    objective.time = time
-                    completionChanged = true
-                end
-            elseif info.isWeightedProgress and info.totalQuantity and info.totalQuantity > 0 then
-                -- NOTE: The current count contains a percentage sign
-                -- even though it's an absolute value.
-                local currentCount = info.quantityString and tonumber(info.quantityString:match("%d+")) or 0
+		-- Otherwise, load normally
+		else
+			local info = C_ScenarioInfo.GetCriteriaInfo(i)
+			if not info.isWeightedProgress then
+				if not self.state.objectives[i] then
+					local name = self:FindObjectiveName(info.description, i)
+					self.state.objectives[i] = { name = name, description = info.description, time = nil }
+					bossesLoaded = true
+				end
 
-                if currentCount ~= self.state.currentCount then
-                    self:SetForcesCurrent(currentCount)
-                end
+				local objective = self.state.objectives[i]
+				if not objective.time and info.completed then
+					local time = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
+					objective.time = time
+					completionChanged = true
+				end
+			elseif info.isWeightedProgress and info.totalQuantity and info.totalQuantity > 0 then
+				if self.state.objectives[i] then 
+					bossesLoaded = true
+				end
+				self.state.objectives[i] = nil
+				-- NOTE: The current count contains a percentage sign
+				-- even though it's an absolute value.
+				local currentCount = info.quantityString and tonumber(info.quantityString:match("%d+")) or 0
 
-                if info.totalQuantity ~= self.state.totalCount then
-                    self:SetForcesTotal(info.totalQuantity)
-                end
+				if currentCount ~= self.state.currentCount then
+					self:SetForcesCurrent(currentCount)
+				end
 
-                if currentCount >= info.totalQuantity then
-                    if not self.state.forcesCompleted then
-                        self:PrintDebug("Setting forces to completed")
-                        self.state.forcesCompleted = true
-                        self:RenderForces()
-                    end
+				if info.totalQuantity ~= self.state.totalCount then
+					self:SetForcesTotal(info.totalQuantity)
+				end
 
-                    if not self.state.forcesCompletionTime then
-                        self:PrintDebug("Setting forces completion time")
-                        self.state.forcesCompletionTime = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
-                        completionChanged = true
-                    end
-                end
-            end
-        end
+				if currentCount >= info.totalQuantity then
+					if not self.state.forcesCompleted then
+						self:PrintDebug("Setting forces to completed")
+						self.state.forcesCompleted = true
+						self:RenderForces()
+					end
+
+					if not self.state.forcesCompletionTime then
+						self:PrintDebug("Setting forces completion time")
+						self.state.forcesCompletionTime = select(2, GetWorldElapsedTime(1)) - (info.elapsed or 0)
+						completionChanged = true
+					end
+				end
+			end
+		end
 	end
 
 	if bossesLoaded then
