@@ -269,8 +269,8 @@ end
 ---@param index integer
 ---@return string name
 function WarpDeplete:FindObjectiveName(description, index)
-    local offset = C_ChallengeMode.GetActiveChallengeMapID() == 392 and 5 or 0 -- tazavesh gambit starts at boss 6
-    index = index + offset
+	local offset = C_ChallengeMode.GetActiveChallengeMapID() == 392 and 5 or 0 -- tazavesh gambit starts at boss 6
+	index = index + offset
 	if self.state.ejObjectiveNames and self.state.ejObjectiveNames[index] then
 		local name = self.state.ejObjectiveNames[index]
 		self:PrintDebug("Using EJ boss name at index " .. tostring(index)
