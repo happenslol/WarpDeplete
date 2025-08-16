@@ -164,11 +164,11 @@ function Util.showAlert(key, message, okMessage)
 	StaticPopup_Show(key)
 end
 
-function WarpDeplete:PrintDebug(str)
+function WarpDeplete:PrintDebug(...)
 	if not self.db.global.DEBUG then
 		return
 	end
-	self:Print("|cFF479AEDDEBUG|r " .. str)
+	self:Print("|cFF479AEDDEBUG|r", ...)
 end
 
 ---@param str string
