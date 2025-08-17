@@ -268,6 +268,7 @@ end
 
 ---@param description string
 ---@param index integer
+---@param dungeonEncounterID integer?
 ---@return string name
 function WarpDeplete:FindObjectiveName(description, index, dungeonEncounterID)
 	if dungeonEncounterID and self.state.ejEncounterNames and self.state.ejEncounterNames[dungeonEncounterID] then
@@ -314,6 +315,7 @@ function WarpDeplete:UpdateObjectives()
 			local info = C_ScenarioInfo.GetCriteriaInfo(i)
 			if not info.isWeightedProgress then
 				if not self.state.objectives[i] then
+					-- criteriaType 165 = Defeat DungeonEncounter, in which case the assetID will be the DungeonEncounterID
 					local dungeonEncounterID = info.criteriaType == 165 and info.assetID or nil
 					local name = self:FindObjectiveName(info.description, i, dungeonEncounterID)
 					self.state.objectives[i] = { name = name, description = info.description, time = nil, dungeonEncounterID = dungeonEncounterID }
