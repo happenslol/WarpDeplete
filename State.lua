@@ -5,6 +5,7 @@ local L = WarpDeplete.L
 ---@field name? string
 ---@field description string
 ---@field time integer|nil
+---@field dungeonEncounterID integer|nil
 
 ---@class WarpDepleteState
 WarpDeplete.defaultState = {
@@ -41,6 +42,7 @@ WarpDeplete.defaultState = {
 
 	objectives = {}, ---@type WarpDepleteObjective[]
 	ejObjectiveNames = nil, ---@type string[]|nil
+	ejEncounterNames = nil, ---@type table<integer, string>|nil
 
 	forcesCompleted = false,
 	forcesCompletionTime = nil,
@@ -201,6 +203,7 @@ function WarpDeplete:GetEJObjectiveNames()
 	end
 
 	local result = {}
+	local encounterResults = {}
 
 	-- EJ_GetEncounterInfoByIndex requires EJ_SelectInstance to be called at least once during the session when passing a journalInstanceID to not return nil
 	EJ_SelectInstance(1267)
@@ -208,22 +211,20 @@ function WarpDeplete:GetEJObjectiveNames()
 	-- There are never more than 20 objectives
 	-- (probably way less, but let's be safe here)
 	for i = 1, 20 do
-		local name = EJ_GetEncounterInfoByIndex(i, instanceID)
+		local name, _, _, _, _, _, dungeonEncounterID = EJ_GetEncounterInfoByIndex(i, instanceID)
 
 		if name then
 			result[#result + 1] = name
+			encounterResults[dungeonEncounterID] = name
+			self:PrintDebug("Found boss name ", i, ":", name, " (dungeonEncounterID: ", dungeonEncounterID, ")")
 		end
 	end
 
-	for i, bossName in ipairs(result) do
-		self:PrintDebug("Found boss name " .. tostring(i) .. ": " .. tostring(bossName))
-	end
-	
 	if #result == 0 then
 		return nil
 	end
 
-	return result
+	return result, encounterResults
 end
 
 function WarpDeplete:ResetCurrentPull()
@@ -247,7 +248,7 @@ function WarpDeplete:RefreshObjectiveNames(count)
 	count = count or 6
 	self:PrintDebug("Refreshing boss names (" .. tostring(count) .. ")")
 
-	self.state.ejObjectiveNames = self:GetEJObjectiveNames()
+	self.state.ejObjectiveNames, self.state.ejEncounterNames = self:GetEJObjectiveNames()
 	if not self.state.ejObjectiveNames then
 		self:PrintDebug("No EJ objective names received")
 
@@ -261,27 +262,31 @@ function WarpDeplete:RefreshObjectiveNames(count)
 	end
 
 	for i, boss in ipairs(self.state.objectives) do
-		boss.name = self:FindObjectiveName(boss.description, i)
+		boss.name = self:FindObjectiveName(boss.description, i, boss.dungeonEncounterID)
 	end
 end
 
 ---@param description string
 ---@param index integer
+---@param dungeonEncounterID integer?
 ---@return string name
-function WarpDeplete:FindObjectiveName(description, index)
+function WarpDeplete:FindObjectiveName(description, index, dungeonEncounterID)
+	if dungeonEncounterID and self.state.ejEncounterNames and self.state.ejEncounterNames[dungeonEncounterID] then
+		local name = self.state.ejEncounterNames[dungeonEncounterID]
+		self:PrintDebug("Using EJ boss name for dungeonEncounterID", dungeonEncounterID, ":", description, "->" .. name)
+		return Util.utf8Sub(name, 40)
+	end
+
 	local offset = C_ChallengeMode.GetActiveChallengeMapID() == 392 and 5 or 0 -- tazavesh gambit starts at boss 6
 	index = index + offset
 	if self.state.ejObjectiveNames and self.state.ejObjectiveNames[index] then
 		local name = self.state.ejObjectiveNames[index]
-		self:PrintDebug("Using EJ boss name at index " .. tostring(index)
-			.. ": " .. description .. " -> " .. name)
+		self:PrintDebug("Using EJ boss name at index ", index, ":", description, "->", name)
 		return Util.utf8Sub(name, 40)
 	end
 
 	local filtered = Util.formatObjectiveName(description)
-	self:PrintDebug("No EJ boss name at index " .. tostring(index)
-		.. ", falling back to string filtering: "
-		.. description .. " -> " .. filtered)
+	self:PrintDebug("No EJ boss name at index", index, ", falling back to string filtering:", description, "->", filtered)
 	return Util.utf8Sub(filtered, 40)
 end
 
@@ -310,8 +315,10 @@ function WarpDeplete:UpdateObjectives()
 			local info = C_ScenarioInfo.GetCriteriaInfo(i)
 			if not info.isWeightedProgress then
 				if not self.state.objectives[i] then
-					local name = self:FindObjectiveName(info.description, i)
-					self.state.objectives[i] = { name = name, description = info.description, time = nil }
+					-- criteriaType 165 = Defeat DungeonEncounter, in which case the assetID will be the DungeonEncounterID
+					local dungeonEncounterID = info.criteriaType == 165 and info.assetID or nil
+					local name = self:FindObjectiveName(info.description, i, dungeonEncounterID)
+					self.state.objectives[i] = { name = name, description = info.description, time = nil, dungeonEncounterID = dungeonEncounterID }
 					bossesLoaded = true
 				end
 
@@ -390,7 +397,7 @@ function WarpDeplete:EnableChallengeMode()
 	self:LoadKeyDetails()
 	self:LoadDeathCount()
 
-	self.state.ejObjectiveNames = self:GetEJObjectiveNames()
+	self.state.ejObjectiveNames, self.state.ejEncounterNames = self:GetEJObjectiveNames()
 	self:UpdateObjectives()
 
 	self:Show()
