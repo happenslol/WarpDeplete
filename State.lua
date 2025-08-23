@@ -314,10 +314,10 @@ function WarpDeplete:UpdateObjectives()
 		else
 			local info = C_ScenarioInfo.GetCriteriaInfo(i)
 			if not info.isWeightedProgress then
-				if not self.state.objectives[i] then
-					-- criteriaType 165 = Defeat DungeonEncounter, in which case the assetID will be the DungeonEncounterID
-					local dungeonEncounterID = info.criteriaType == 165 and info.assetID or nil
-					local name = self:FindObjectiveName(info.description, i, dungeonEncounterID)
+				-- criteriaType 165 = Defeat DungeonEncounter, in which case the assetID will be the DungeonEncounterID
+				local dungeonEncounterID = info.criteriaType == 165 and info.assetID or nil
+				local name = self:FindObjectiveName(info.description, i, dungeonEncounterID)
+				if not self.state.objectives[i] or self.state.objectives[i].name ~= name then
 					self.state.objectives[i] = { name = name, description = info.description, time = nil, dungeonEncounterID = dungeonEncounterID }
 					bossesLoaded = true
 				end
