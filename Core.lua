@@ -37,7 +37,7 @@ function WarpDeplete:OnEnable()
 	self:RegisterGlobalEvents()
 	self:Hide()
 
-	if not self.db.global.mdtAlertShown and not MDT then
+	if not self.db.global.mdtAlertShown and ((PlayerGetTimerunningSeasonID() and not C_AddOns.IsAddOnLoaded("MDT Legacy")) or not MDT) then
 		self.db.global.mdtAlertShown = true
 		self:ShowMDTAlert()
 	end
