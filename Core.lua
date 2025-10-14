@@ -44,6 +44,18 @@ function WarpDeplete:OnEnable()
 end
 
 function WarpDeplete:ShowMDTAlert()
+	if PlayerGetTimerunningSeasonID() then
+		Util.showAlert(
+			"MDT_LEGACY_NOT_FOUND",
+			L["Mythic Dungeon Tools (MDT) Legacy is not installed."]
+				.. "\n\n"
+				.. L["WarpDeplete will not display the count for your current pull."]
+				.. " \n\n"
+				.. L["Install MDT Legacy to enable this functionality."]
+		)
+		return
+	end
+
 	Util.showAlert(
 		"MDT_NOT_FOUND",
 		L["Mythic Dungeon Tools (MDT) is not installed."]
