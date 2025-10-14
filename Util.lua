@@ -185,7 +185,7 @@ end
 
 -- TODO: Add missing locales
 local affixNameFilters = {
-	["enUS"] = { "Xal'atath's", "Challenger's", "Bargain:" },
+	["enUS"] = { "Xal'atath's", "Challenger's", "Bargain:", "Eternus's", "Trial:", "Dusk", "of", "the", "Sands", "Timeways", "Twilight" },
 	["deDE"] = { "Xal'ataths", "des Herausforderers", "Handel:" },
 	["frFR"] = {},
 	["itIT"] = {},
