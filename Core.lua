@@ -14,6 +14,8 @@ WarpDeplete.Util = Util
 WarpDeplete.LSM = LibStub("LibSharedMedia-3.0")
 WarpDeplete.Glow = LibStub("LibCustomGlow-1.0")
 
+WarpDeplete.Midnight = select(4, GetBuildInfo()) >= 120000
+
 function WarpDeplete:OnInitialize()
 	local frames = {}
 
@@ -37,7 +39,7 @@ function WarpDeplete:OnEnable()
 	self:RegisterGlobalEvents()
 	self:Hide()
 
-	if not self.db.global.mdtAlertShown and ((PlayerGetTimerunningSeasonID() and not C_AddOns.IsAddOnLoaded("MDT Legacy")) or not MDT) then
+	if not self.Midnight and not self.db.global.mdtAlertShown and ((PlayerGetTimerunningSeasonID() and not C_AddOns.IsAddOnLoaded("MDT Legacy")) or not MDT) then
 		self.db.global.mdtAlertShown = true
 		self:ShowMDTAlert()
 	end
@@ -93,9 +95,9 @@ function WarpDeplete:EnableDemoMode()
 	self.state.objectives = objectives
 	self:RenderObjectives()
 
+	self:SetTimeLimit(35 * 60)
 	self:SetKeyDetails(30, true, { L["Ascendance"], L["Tyrannical"], L["Fortified"], L["Peril"] }, { 9, 7, 123, 152 }, 1)
 
-	self:SetTimeLimit(35 * 60)
 	self:SetTimer(20 * 60)
 	self:SetDeathCount(3, 45)
 
