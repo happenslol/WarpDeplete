@@ -36,11 +36,15 @@ function WarpDeplete:RegisterGlobalEvents()
 	self:RegisterGlobalEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN")
 
 	-- Register tooltip count display
-	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, WarpDeplete.DisplayCountInTooltip)
+	if not self.Midnight then
+		TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, WarpDeplete.DisplayCountInTooltip)
+	end
 
 	-- Tooltip events
-	self.frames.deathsTooltip:SetScript("OnEnter", WarpDeplete.TooltipOnEnter)
-	self.frames.deathsTooltip:SetScript("OnLeave", WarpDeplete.TooltipOnLeave)
+	if not self.Midnight then
+		self.frames.deathsTooltip:SetScript("OnEnter", WarpDeplete.TooltipOnEnter)
+		self.frames.deathsTooltip:SetScript("OnLeave", WarpDeplete.TooltipOnLeave)
+	end
 end
 
 function WarpDeplete:RegisterChallengeEvents()
@@ -57,8 +61,10 @@ function WarpDeplete:RegisterChallengeEvents()
 	self:RegisterChallengeEvent("ENCOUNTER_END")
 	self:RegisterChallengeEvent("PLAYER_REGEN_ENABLED")
 
-	self:RegisterChallengeEvent("COMBAT_LOG_EVENT_UNFILTERED")
-	self:RegisterChallengeEvent("UNIT_THREAT_LIST_UPDATE")
+	if not self.Midnight then
+		self:RegisterChallengeEvent("COMBAT_LOG_EVENT_UNFILTERED")
+		self:RegisterChallengeEvent("UNIT_THREAT_LIST_UPDATE")
+	end
 end
 
 function WarpDeplete:PLAYER_ENTERING_WORLD()
