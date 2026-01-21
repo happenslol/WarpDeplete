@@ -41,10 +41,8 @@ function WarpDeplete:RegisterGlobalEvents()
 	end
 
 	-- Tooltip events
-	if not self.Midnight then
-		self.frames.deathsTooltip:SetScript("OnEnter", WarpDeplete.TooltipOnEnter)
-		self.frames.deathsTooltip:SetScript("OnLeave", WarpDeplete.TooltipOnLeave)
-	end
+	self.frames.deathsTooltip:SetScript("OnEnter", WarpDeplete.TooltipOnEnter)
+	self.frames.deathsTooltip:SetScript("OnLeave", WarpDeplete.TooltipOnLeave)
 end
 
 function WarpDeplete:RegisterChallengeEvents()
@@ -65,6 +63,8 @@ function WarpDeplete:RegisterChallengeEvents()
 		self:RegisterChallengeEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		self:RegisterChallengeEvent("UNIT_THREAT_LIST_UPDATE")
 	end
+
+	self:RegisterChallengeEvent("UNIT_DIED")
 end
 
 function WarpDeplete:PLAYER_ENTERING_WORLD()
@@ -209,6 +209,20 @@ function WarpDeplete:UNIT_THREAT_LIST_UPDATE(_, unit)
 	self.state.currentPull[guid] = count
 	local pullCount = Util.calcPullCount(self.state.currentPull, self.state.totalCount)
 	self:SetForcesPull(pullCount)
+end
+
+function WarpDeplete:UNIT_DIED(_, guid)
+	if not guid then
+		return
+	end
+
+	local name = UnitNameFromGUID(guid)
+	local class = UnitClassFromGUID(guid)
+
+	if UnitInParty(name) then
+		self:AddDeathDetails(self.state.timer, name, class)
+		return
+	end
 end
 
 function WarpDeplete.TooltipOnEnter()
