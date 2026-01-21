@@ -27,7 +27,7 @@ function TooltipDataProcessor.AddTooltipPostCall(type, func) end
 ---@class Settings
 Settings = {}
 
----@param category string
+---@param category number
 function Settings.OpenToCategory(category) end
 
 ---@param difficultyID integer
