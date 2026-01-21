@@ -875,7 +875,7 @@ function WarpDeplete:InitOptions()
 
 	local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 	LibStub("AceConfig-3.0"):RegisterOptionsTable("WarpDeplete", options)
-	self.optionsGeneralFrame = AceConfigDialog:AddToBlizOptions("WarpDeplete", "WarpDeplete")
+	self.optionsGeneralFrame, self.categoryID = AceConfigDialog:AddToBlizOptions("WarpDeplete", "WarpDeplete")
 
 	self.configDialog = AceConfigDialog
 end
@@ -958,7 +958,7 @@ function WarpDeplete:HandleChatCommand(input)
 		return
 	end
 
-	Settings.OpenToCategory("WarpDeplete")
+	Settings.OpenToCategory(self.categoryID)
 end
 
 function WarpDeplete.SetUnlocked(_, value)
