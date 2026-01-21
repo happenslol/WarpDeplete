@@ -422,7 +422,9 @@ function WarpDeplete:CompleteChallenge()
 	self:ResetCurrentPull()
 
 	self.state.challengeCompleted = true
-	local _, _, timeMs, onTime = C_ChallengeMode.GetCompletionInfo()
+	local ChallengeCompletionInfo = C_ChallengeMode.GetChallengeCompletionInfo()
+	local timeMs = ChallengeCompletionInfo.time
+	local onTime = ChallengeCompletionInfo.onTime
 
 	self.state.completedOnTime = onTime
 	self.state.completionTimeMs = timeMs
