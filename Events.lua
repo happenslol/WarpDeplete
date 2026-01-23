@@ -212,7 +212,7 @@ function WarpDeplete:UNIT_THREAT_LIST_UPDATE(_, unit)
 end
 
 function WarpDeplete:UNIT_DIED(_, guid)
-	if not guid then
+	if not guid or issecretvalue(guid) then
 		return
 	end
 
