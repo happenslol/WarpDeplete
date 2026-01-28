@@ -135,8 +135,8 @@ function WarpDeplete:CreateProgressBar(frame)
 		barFrame:SetSize(width, height)
 		barFrame:SetPoint("LEFT", xOffset, yOffset)
 		barFrame:SetBackdrop({
-			bgFile = WarpDeplete.LSM:Fetch("statusbar", "ElvUI Blank"),
-			edgeFile = WarpDeplete.LSM:Fetch("border", "Square Full White"),
+			bgFile = WarpDeplete.LSM:Fetch("statusbar", "WarpDeplete Blank"),
+			edgeFile = WarpDeplete.LSM:Fetch("border", "WarpDeplete Blank"),
 			edgeSize = 1,
 			insets = { top = 1, right = 1, bottom = 1, left = 1 },
 		})

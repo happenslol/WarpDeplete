@@ -16,6 +16,13 @@ WarpDeplete.Glow = LibStub("LibCustomGlow-1.0")
 
 WarpDeplete.Midnight = select(4, GetBuildInfo()) >= 120000
 
+local ruRU, western = WarpDeplete.LSM.LOCALE_BIT_ruRU, WarpDeplete.LSM.LOCALE_BIT_western
+
+-- Register media
+WarpDeplete.LSM:Register("border", "WarpDeplete Blank", [[Interface\AddOns\WarpDeplete\Media\Textures\white.tga]])
+WarpDeplete.LSM:Register("statusbar", "WarpDeplete Blank", [[Interface\AddOns\WarpDeplete\Media\Textures\white.tga]])
+WarpDeplete.LSM:Register("font", "Expressway", [[Interface\AddOns\WarpDeplete\Media\Fonts\Expressway.ttf]], ruRU + western)
+
 function WarpDeplete:OnInitialize()
 	local frames = {}
 
