@@ -190,22 +190,16 @@ function WarpDeplete:GetEJObjectiveNames()
 		return nil
 	end
 
-	local wasShown = EncounterJournal and EncounterJournal:IsShown()
-	if not wasShown then
-		self:PrintDebug("Opening encounter journal")
-		C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
-	end
-
-	EncounterJournal_OpenJournal(8, instanceID)
-
-	if not wasShown then
-		HideUIPanel(EncounterJournal)
-	end
+	C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
 
 	local result = {}
 	local encounterResults = {}
 
-	-- EJ_GetEncounterInfoByIndex requires EJ_SelectInstance to be called at least once during the session when passing a journalInstanceID to not return nil
+	-- EJ_GetEncounterInfoByIndex requires EJ_SelectInstance to be called at least once
+	-- during the session when passing a journalInstanceID to not return nil.
+	-- We use direct C API calls instead of EncounterJournal_OpenJournal to avoid
+	-- tainting the Encounter Journal UI state.
+	EJ_SetDifficulty(8)
 	EJ_SelectInstance(1267)
 
 	-- There are never more than 20 objectives
