@@ -199,6 +199,8 @@ function WarpDeplete:GetEJObjectiveNames()
 	-- during the session when passing a journalInstanceID to not return nil.
 	-- We use direct C API calls instead of EncounterJournal_OpenJournal to avoid
 	-- tainting the Encounter Journal UI state.
+	-- NOTE: EJ_SetDifficulty is not strictly needed since boss names don't change
+	-- across difficulties, but we set it to match the original behavior.
 	EJ_SetDifficulty(8)
 	EJ_SelectInstance(1267)
 
