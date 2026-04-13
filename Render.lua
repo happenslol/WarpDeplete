@@ -543,16 +543,23 @@ function WarpDeplete:RenderTimer()
 		self.bars[i].text:SetText(timerState.timeText)
 	end
 
-	self.frames.root.timerSplitText:SetText("")
+self.frames.root.timerSplitText:SetText("")
 	if self.db.profile.splitsEnabled then
-		-- Show PBs during countdown
-		if self.db.profile.showPbsDuringCountdown and not self.state.timerStarted then
-			local best = self:GetBestSplit("challenge")
+		-- Show PBs during countdown OR always
+		if self.db.profile.showPbsAlways or (self.db.profile.showPbsDuringCountdown and not self.state.timerStarted) then
+			-- GetBestSplit  returns both the time and the level it was recorded at
+			local best, sourceLevel = self:GetBestSplit("challenge")
 
 			if best then
+				local pbLabel = "PB"
+				-- If the record comes from a different level (fallback), indicate which one
+				if sourceLevel and sourceLevel ~= self.state.level then
+					pbLabel = ("PB (+%d)"):format(sourceLevel)
+				end
+
 				self.frames.root.timerSplitText:SetText("|c"
 					.. self.db.profile.splitFasterTimeColor
-					.. Util.formatTime(best / 1000)
+					.. pbLabel .. " " .. Util.formatTime(best / 1000)
 					.. "|r"
 				)
 			end
@@ -669,8 +676,7 @@ function WarpDeplete:RenderObjectives()
 					end
 				end
 			end
-		elseif self.db.profile.splitsEnabled and self.db.profile.showPbsDuringCountdown and not self.state.timerStarted then
-			local best = self:GetBestSplit(i)
+		elseif self.db.profile.splitsEnabled and (self.db.profile.showPbsAlways or (self.db.profile.showPbsDuringCountdown and not self.state.timerStarted)) then			local best = self:GetBestSplit(i)
 			if best then
 				local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"
 
@@ -796,7 +802,7 @@ function WarpDeplete:FormatForcesText()
 				result = result .. " " .. diffStr
 			end
 		end
-	elseif splitsEnabled and isStart and showPbsDuringCountdown and best then
+	elseif splitsEnabled and (self.db.profile.showPbsAlways or (isStart and showPbsDuringCountdown)) and best then
 		local bestStr = "|c" .. splitFasterTimeColor .. Util.formatTime(best) .. "|r"
 		if align == "right" then
 			result = bestStr .. " " .. result

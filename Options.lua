@@ -577,6 +577,53 @@ function WarpDeplete:InitOptions()
 						end,
 						set = function(_, value)
 							WarpDeplete.db.profile.showPbsDuringCountdown = value
+							-- If enabled, disable the "always show" option
+							if value then
+								WarpDeplete.db.profile.showPbsAlways = false
+							end
+							WarpDeplete:RenderLayout()
+						end,
+						width = 3 / 2,
+					},
+					{
+						type = "toggle",
+						name = L["Show split records always"],
+						desc = L["Always show your personal best times for splits, even after the run has started"],
+						hidden = function()
+							return not WarpDeplete.db.profile.splitsEnabled
+						end,
+						get = function(_)
+							return WarpDeplete.db.profile.showPbsAlways
+						end,
+						set = function(_, value)
+							WarpDeplete.db.profile.showPbsAlways = value
+							-- If enabled, disable the "only during countdown" option
+							if value then
+								WarpDeplete.db.profile.showPbsDuringCountdown = false
+							end
+							WarpDeplete:RenderLayout()
+						end,
+						width = 3 / 2,
+					},
+					{
+						type = "select",
+						name = L["Fallback Split Level"],
+						desc = L["If there is no record for the current key level, fallback to the highest or lowest recorded level for this dungeon."],
+						sorting = { "none", "highest", "lowest" },
+						values = {
+							["none"] = L["None"],
+							["highest"] = L["Highest Level"],
+							["lowest"] = L["Lowest Level"],
+						},
+						hidden = function()
+							return not WarpDeplete.db.profile.splitsEnabled
+						end,
+						get = function(_)
+							return WarpDeplete.db.profile.fallbackSplitBehavior or "none"
+						end,
+						set = function(_, value)
+							WarpDeplete.db.profile.fallbackSplitBehavior = value
+							WarpDeplete:RenderLayout()
 						end,
 						width = 3 / 2,
 					},

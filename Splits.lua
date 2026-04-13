@@ -30,8 +30,9 @@ function WarpDeplete:UpdateSplits()
 			self:PrintDebug("Setting current time for " .. tostring(i) .. ": " .. tostring(boss.time))
 			current[i] = boss.time
 
-			if best[i] then
-				currentDiff[i] = boss.time - best[i]
+			local bestTime = self:GetBestSplit(i)
+			if bestTime then
+				currentDiff[i] = boss.time - bestTime
 				self:PrintDebug("Setting diff for " .. tostring(i) .. " to " .. tostring(currentDiff[i]))
 			end
 		elseif not boss.time then
@@ -44,8 +45,9 @@ function WarpDeplete:UpdateSplits()
 		self:PrintDebug("Setting current time for forces")
 		current.forces = self.state.forcesCompletionTime
 
-		if best.forces then
-			currentDiff.forces = self.state.forcesCompletionTime - best.forces
+		local bestForces = self:GetBestSplit("forces")
+		if bestForces then
+			currentDiff.forces = self.state.forcesCompletionTime - bestForces
 			self:PrintDebug("Setting diff for forces to " .. tostring(currentDiff.forces))
 		end
 	elseif not self.state.forcesCompleted then
@@ -57,8 +59,9 @@ function WarpDeplete:UpdateSplits()
 		self:PrintDebug("Setting current time for challenge")
 		current.challenge = self.state.completionTimeMs
 
-		if best.challenge then
-			currentDiff.challenge = self.state.completionTimeMs - best.challenge
+		local bestChallenge = self:GetBestSplit("challenge")
+		if bestChallenge then
+			currentDiff.challenge = self.state.completionTimeMs - bestChallenge
 			self:PrintDebug("Setting diff for challenge to " .. tostring(currentDiff.challenge))
 		end
 	elseif not self.state.challengeCompleted then
@@ -101,34 +104,50 @@ function WarpDeplete:GetCurrentDiff(objective)
 end
 
 ---@param objective integer|"forces"|"challenge"
+---@return number|nil, number|nil @returns (time, sourceLevel)
 function WarpDeplete:GetBestSplit(objective)
 	if self.state.demoModeActive then
-		if type(objective) == "number" then
-			return 60 * 3 * objective
-		end
-
-		if objective == "forces" then
-			return 60 * 30
-		end
-
-		if objective == "challenge" then
-			return 60 * 36 * 1000
-		end
-
-		return 0
+		if type(objective) == "number" then return 60 * 3 * objective, 30 end
+		if objective == "forces" then return 60 * 30, 30 end
+		if objective == "challenge" then return 60 * 36 * 1000, 30 end
+		return 0, 30
 	end
 
-	local splits = self:GetSplitsForCurrentInstance()
-	if not splits then
-		return nil
+	if not self.state.mapId or not self.state.level then
+		return nil, nil
 	end
 
-	local best = splits.best
-	if not best then
-		return nil
+	local mapSplits = self.db.global.splits[self.state.mapId]
+	if not mapSplits then return nil, nil end
+
+	-- 1. Look for the exact time for this key level
+	if mapSplits[self.state.level] and mapSplits[self.state.level].best and mapSplits[self.state.level].best[objective] then
+		return mapSplits[self.state.level].best[objective], self.state.level
 	end
 
-	return best[objective]
+	-- 2. Fallback option if no record was found for the current level
+	local fallback = self.db.profile.fallbackSplitBehavior
+	if not fallback or fallback == "none" then return nil, nil end
+
+	local targetLevel = nil
+	local bestTime = nil
+
+	for level, splits in pairs(mapSplits) do
+		if splits.best and splits.best[objective] then
+			if not targetLevel then
+				targetLevel = level
+				bestTime = splits.best[objective]
+			elseif fallback == "highest" and level > targetLevel then
+				targetLevel = level
+				bestTime = splits.best[objective]
+			elseif fallback == "lowest" and level < targetLevel then
+				targetLevel = level
+				bestTime = splits.best[objective]
+			end
+		end
+	end
+
+	return bestTime, targetLevel
 end
 
 function WarpDeplete:GetSplitsForCurrentInstance()

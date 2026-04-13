@@ -133,6 +133,8 @@ local defaults = {
     -- Splits
     splitsEnabled = true,
     showPbsDuringCountdown = true,
+    showPbsAlways = false,
+    fallbackSplitBehavior = "none",
     splitFasterTimeColor = "FF64FF64",
     splitSlowerTimeColor = "FFFF5656"
   },
