@@ -587,7 +587,7 @@ function WarpDeplete:InitOptions()
 					},
 					{
 						type = "toggle",
-						name = L["Show split records always"],
+						name = L["Always show split records"],
 						desc = L["Always show your personal best times for splits, even after the run has started"],
 						hidden = function()
 							return not WarpDeplete.db.profile.splitsEnabled
