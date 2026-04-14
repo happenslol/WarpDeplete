@@ -131,18 +131,68 @@ function WarpDeplete:GetBestSplit(objective)
 
 	local targetLevel = nil
 	local bestTime = nil
+	local currentLevel = self.state.level
 
 	for level, splits in pairs(mapSplits) do
 		if splits.best and splits.best[objective] then
 			if not targetLevel then
+				-- First valid record found
 				targetLevel = level
 				bestTime = splits.best[objective]
-			elseif fallback == "highest" and level > targetLevel then
-				targetLevel = level
-				bestTime = splits.best[objective]
-			elseif fallback == "lowest" and level < targetLevel then
-				targetLevel = level
-				bestTime = splits.best[objective]
+			elseif fallback == "highest" then
+				-- Strictly pick the highest key level available
+				if level > targetLevel then
+					targetLevel = level
+					bestTime = splits.best[objective]
+				end
+			elseif fallback == "lowest" then
+				-- Strictly pick the lowest key level available
+				if level < targetLevel then
+					targetLevel = level
+					bestTime = splits.best[objective]
+				end
+			elseif fallback == "closest_lower" then
+				local currentIsLower = level < currentLevel
+				local bestIsLower = targetLevel < currentLevel
+				
+				if currentIsLower and not bestIsLower then
+					-- Prioritize any lower level over a higher one
+					targetLevel = level
+					bestTime = splits.best[objective]
+				elseif currentIsLower and bestIsLower then
+					-- If both are lower, take the highest one (closest to current level)
+					if level > targetLevel then
+						targetLevel = level
+						bestTime = splits.best[objective]
+					end
+				elseif not currentIsLower and not bestIsLower then
+					-- If no lower level exists, fallback to the lowest of the higher ones (closest to current level)
+					if level < targetLevel then
+						targetLevel = level
+						bestTime = splits.best[objective]
+					end
+				end
+			elseif fallback == "closest_higher" then
+				local currentIsHigher = level > currentLevel
+				local bestIsHigher = targetLevel > currentLevel
+				
+				if currentIsHigher and not bestIsHigher then
+					-- Prioritize any higher level over a lower one
+					targetLevel = level
+					bestTime = splits.best[objective]
+				elseif currentIsHigher and bestIsHigher then
+					-- If both are higher, take the lowest one (closest to current level)
+					if level < targetLevel then
+						targetLevel = level
+						bestTime = splits.best[objective]
+					end
+				elseif not currentIsHigher and not bestIsHigher then
+					-- If no higher level exists, fallback to the highest of the lower ones (closest to current level)
+					if level > targetLevel then
+						targetLevel = level
+						bestTime = splits.best[objective]
+					end
+				end
 			end
 		end
 	end

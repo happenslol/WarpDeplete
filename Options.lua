@@ -609,10 +609,12 @@ function WarpDeplete:InitOptions()
 						type = "select",
 						name = L["Fallback Split Level"],
 						desc = L["If there is no record for the current key level, fallback to the highest or lowest recorded level for this dungeon."],
-						sorting = { "none", "highest", "lowest" },
+						sorting = { "none", "highest", "closest_higher", "closest_lower", "lowest" },
 						values = {
 							["none"] = L["None"],
 							["highest"] = L["Highest Level"],
+							["closest_higher"] = L["Closest Higher Level"],
+							["closest_lower"] = L["Closest Lower Level"],
 							["lowest"] = L["Lowest Level"],
 						},
 						hidden = function()
