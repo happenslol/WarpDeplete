@@ -545,21 +545,23 @@ function WarpDeplete:RenderTimer()
 
 self.frames.root.timerSplitText:SetText("")
 	if self.db.profile.splitsEnabled then
-		-- Show PBs during countdown OR always
-		if self.db.profile.showPbsAlways or (self.db.profile.showPbsDuringCountdown and not self.state.timerStarted) then
-			-- GetBestSplit  returns both the time and the level it was recorded at
+		local shouldShowSplits = self.db.profile.showSplitRecords == "always"
+			or (self.db.profile.showSplitRecords == "countdown" and not self.state.timerStarted)
+
+		if shouldShowSplits then
+			-- GetBestSplit returns both the time and the level it was recorded at
 			local best, sourceLevel = self:GetBestSplit("challenge")
 
 			if best then
-				local pbLabel = "PB"
-				-- If the record comes from a different level (fallback), indicate which one
+				local bestStr = Util.formatTime(best / 1000)
+				-- Append the source key level if it doesn't match (fallback)
 				if sourceLevel and sourceLevel ~= self.state.level then
-					pbLabel = ("PB (+%d)"):format(sourceLevel)
+					bestStr = bestStr .. " (+" .. sourceLevel .. ")"
 				end
 
 				self.frames.root.timerSplitText:SetText("|c"
-					.. self.db.profile.splitFasterTimeColor
-					.. pbLabel .. " " .. Util.formatTime(best / 1000)
+					.. self.db.profile.splitReferenceColor
+					.. "[" .. bestStr .. "]"
 					.. "|r"
 				)
 			end
@@ -640,6 +642,9 @@ end
 function WarpDeplete:RenderObjectives()
 	local completionColor = self.db.profile.completedObjectivesColor
 	local alignStart = self.db.profile.alignBossClear == "start"
+	local shouldShowSplits = self.db.profile.splitsEnabled
+		and (self.db.profile.showSplitRecords == "always"
+			or (self.db.profile.showSplitRecords == "countdown" and not self.state.timerStarted))
 
 	-- Clear existing objective list
 	for i = 1, 10 do
@@ -676,9 +681,12 @@ function WarpDeplete:RenderObjectives()
 					end
 				end
 			end
-		elseif self.db.profile.splitsEnabled and (self.db.profile.showPbsAlways or (self.db.profile.showPbsDuringCountdown and not self.state.timerStarted)) then			local best = self:GetBestSplit(i)
+		elseif shouldShowSplits then
+			local best = self:GetBestSplit(i)
 			if best then
-				local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"
+				local bestStr = "|c" .. self.db.profile.splitReferenceColor
+					.. "[" .. Util.formatTime(best) .. "]"
+					.. "|r"
 
 				if alignStart then
 					objectiveStr = bestStr .. " " .. objectiveStr
@@ -718,8 +726,8 @@ function WarpDeplete:FormatForcesText()
 	local align = self.db.profile.alignBarTexts
 
 	local best = self:GetBestSplit("forces")
-	local isStart = not self.state.timerStarted
-	local showPbsDuringCountdown = self.db.profile.showPbsDuringCountdown
+	local shouldShowSplits = self.db.profile.showSplitRecords == "always"
+		or (self.db.profile.showSplitRecords == "countdown" and not self.state.timerStarted)
 
 	local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100)
 
@@ -802,8 +810,11 @@ function WarpDeplete:FormatForcesText()
 				result = result .. " " .. diffStr
 			end
 		end
-	elseif splitsEnabled and (self.db.profile.showPbsAlways or (isStart and showPbsDuringCountdown)) and best then
-		local bestStr = "|c" .. splitFasterTimeColor .. Util.formatTime(best) .. "|r"
+	elseif splitsEnabled and shouldShowSplits and best then
+		local bestStr = "|c" .. self.db.profile.splitReferenceColor
+			.. "[" .. Util.formatTime(best) .. "]"
+			.. "|r"
+
 		if align == "right" then
 			result = bestStr .. " " .. result
 		else

@@ -565,46 +565,43 @@ function WarpDeplete:InitOptions()
 						end,
 						width = 3 / 2,
 					},
-					{
-						type = "toggle",
-						name = L["Show split records during countdown"],
-						desc = L["Show your personal best times for splits during the countdown at the start of runs"],
+					group(L["Show Split Records"], true, {
+						{
+							type = "toggle",
+							name = L["Always"],
+							get = function(_) return WarpDeplete.db.profile.showSplitRecords == "always" end,
+							set = function(_, _)
+								WarpDeplete.db.profile.showSplitRecords = "always"
+								WarpDeplete:RenderLayout()
+							end,
+							width = 0.6,
+						},
+						{
+							type = "toggle",
+							name = L["During Countdown"],
+							get = function(_) return WarpDeplete.db.profile.showSplitRecords == "countdown" end,
+							set = function(_, _)
+								WarpDeplete.db.profile.showSplitRecords = "countdown"
+								WarpDeplete:RenderLayout()
+							end,
+							width = 1.1,
+						},
+						{
+							type = "toggle",
+							name = L["Never"],
+							get = function(_) return WarpDeplete.db.profile.showSplitRecords == "never" end,
+							set = function(_, _)
+								WarpDeplete.db.profile.showSplitRecords = "never"
+								WarpDeplete:RenderLayout()
+							end,
+							width = 0.6,
+						},
+					}, {
 						hidden = function()
 							return not WarpDeplete.db.profile.splitsEnabled
 						end,
-						get = function(_)
-							return WarpDeplete.db.profile.showPbsDuringCountdown
-						end,
-						set = function(_, value)
-							WarpDeplete.db.profile.showPbsDuringCountdown = value
-							-- If enabled, disable the "always show" option
-							if value then
-								WarpDeplete.db.profile.showPbsAlways = false
-							end
-							WarpDeplete:RenderLayout()
-						end,
-						width = 3 / 2,
-					},
-					{
-						type = "toggle",
-						name = L["Always show split records"],
-						desc = L["Always show your personal best times for splits, even after the run has started"],
-						hidden = function()
-							return not WarpDeplete.db.profile.splitsEnabled
-						end,
-						get = function(_)
-							return WarpDeplete.db.profile.showPbsAlways
-						end,
-						set = function(_, value)
-							WarpDeplete.db.profile.showPbsAlways = value
-							-- If enabled, disable the "only during countdown" option
-							if value then
-								WarpDeplete.db.profile.showPbsDuringCountdown = false
-							end
-							WarpDeplete:RenderLayout()
-						end,
-						width = 3 / 2,
-					},
+					}),
+					lineBreak(),
 					{
 						type = "select",
 						name = L["Fallback Split Level"],
@@ -798,6 +795,9 @@ function WarpDeplete:InitOptions()
 					}),
 					color(L["Slower objective split"], "splitSlowerTimeColor", "RenderLayout", {
 						desc = L["The color to use for objective clear times slower than your best time"],
+					}),
+					color(L["Reference Split Color"], "splitReferenceColor", "RenderLayout", {
+						desc = L["The color to use for personal best splits shown during the run"],
 					}),
 				}),
 			}, { order = 4 }),
