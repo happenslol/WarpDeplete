@@ -374,7 +374,7 @@ function WarpDeplete:InitOptions()
 						return not WarpDeplete.db.profile.showTooltipCount
 					end, 3),
 
-					{
+					--[[{
 						type = "select",
 						name = L["Tooltip forces text format"],
 						desc = L["Choose how count will be displayed in the tooltip"],
@@ -424,7 +424,7 @@ function WarpDeplete:InitOptions()
 							WarpDeplete.db.profile.customTooltipCountFormat = value
 							WarpDeplete:RenderLayout()
 						end,
-					},
+					},]]
 				}),
 
 				group(L["Forces Glow"], true, {
