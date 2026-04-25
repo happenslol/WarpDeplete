@@ -25,7 +25,8 @@ function WarpDeplete:UpdateSplits()
 		splits.currentDiff = currentDiff
 	end
 
-	-- Also get reference best for fallback diff calculation
+	-- Resolve reference best times: uses fallback level if no record exists for the current level.
+	-- This ensures diffs are calculated even when comparing against a different key level.
 	local referenceSplits = self:GetReferenceSplits()
 	local referenceBest = (referenceSplits and referenceSplits.best) or best
 
@@ -73,6 +74,8 @@ function WarpDeplete:UpdateSplits()
 	self:PrintDebug("Splits updated")
 end
 
+--- Returns the time difference between the current run and the reference best for a given objective.
+--- Reads from the current instance splits, where UpdateSplits writes the diffs.
 ---@param objective integer|"forces"|"challenge"
 function WarpDeplete:GetCurrentDiff(objective)
 	if self.state.demoModeActive then
@@ -104,7 +107,9 @@ function WarpDeplete:GetCurrentDiff(objective)
 	return currentDiff[objective]
 end
 
+--- Returns the reference best time for a given objective, plus the key level it was recorded at.
 ---@param objective integer|"forces"|"challenge"
+---@return number|nil best, number|nil sourceLevel
 function WarpDeplete:GetBestSplit(objective)
 	if self.state.demoModeActive then
 		if type(objective) == "number" then
@@ -122,6 +127,7 @@ function WarpDeplete:GetBestSplit(objective)
 		return 0
 	end
 
+	-- Resolve the reference splits (current level or fallback) along with its source level
 	local splits, sourceLevel = self:GetReferenceSplits()
 	if not splits then
 		return nil
@@ -132,6 +138,7 @@ function WarpDeplete:GetBestSplit(objective)
 		return nil
 	end
 
+	-- Return the best time for this objective and the level it came from
 	return best[objective], sourceLevel
 end
 
@@ -143,6 +150,10 @@ function WarpDeplete:GetSplitsForCurrentInstance()
 	return self:GetSplits(self.state.mapId, self.state.level)
 end
 
+--- Returns the split data to use as reference, and the key level it belongs to.
+--- If the current level has records, returns those. Otherwise, falls back to another
+--- level based on the user's fallbackSplitBehavior setting (highest, lowest, closest).
+---@return table|nil splits, number|nil sourceLevel
 function WarpDeplete:GetReferenceSplits()
 	if not self.state.mapId or not self.state.level then
 		return nil
