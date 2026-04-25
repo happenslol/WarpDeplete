@@ -122,7 +122,7 @@ function WarpDeplete:GetBestSplit(objective)
 		return 0
 	end
 
-	local splits = self:GetReferenceSplits()
+	local splits, sourceLevel = self:GetReferenceSplits()
 	if not splits then
 		return nil
 	end
@@ -132,7 +132,7 @@ function WarpDeplete:GetBestSplit(objective)
 		return nil
 	end
 
-	return best[objective]
+	return best[objective], sourceLevel
 end
 
 function WarpDeplete:GetSplitsForCurrentInstance()
@@ -152,17 +152,17 @@ function WarpDeplete:GetReferenceSplits()
 
 	-- If we have best splits for the current level, use them
 	if currentSplits and currentSplits.best and next(currentSplits.best) then
-		return currentSplits
+		return currentSplits, self.state.level
 	end
 
 	local behavior = self.db.profile.fallbackSplitBehavior or "none"
 	if behavior == "none" then
-		return currentSplits
+		return currentSplits, nil
 	end
 
 	local mapSplits = self.db.global.splits[self.state.mapId]
 	if not mapSplits then
-		return currentSplits
+		return currentSplits, nil
 	end
 
 	local levels = {}
@@ -173,7 +173,7 @@ function WarpDeplete:GetReferenceSplits()
 	end
 
 	if #levels == 0 then
-		return currentSplits
+		return currentSplits, nil
 	end
 
 	table.sort(levels)
@@ -206,10 +206,10 @@ function WarpDeplete:GetReferenceSplits()
 	end
 
 	if targetLevel then
-		return mapSplits[targetLevel]
+		return mapSplits[targetLevel], targetLevel
 	end
 
-	return currentSplits
+	return currentSplits, nil
 end
 
 function WarpDeplete:GetSplits(mapId, keystoneLevel)
