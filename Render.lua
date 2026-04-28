@@ -64,18 +64,6 @@ function WarpDeplete:InitRender()
 	end
 	self.frames.root.objectiveTexts = objectiveTexts
 
-	-- Objective Badges
-	self.objectiveBadges = {}
-	for i = 1, 10 do
-		self.objectiveBadges[i] = self:CreateBadge(self.frames.root)
-	end
-
-	-- Timer Badge
-	self.timerBadge = self:CreateBadge(self.frames.root)
-
-	-- Forces Badge
-	self.forcesBadge = self:CreateBadge(self.frames.root)
-
 	self:RenderLayout()
 
 	self.frames.root:SetMovable(self.isUnlocked)
@@ -107,30 +95,6 @@ function WarpDeplete:InitRender()
 
 	-- Disable mouse for the entire frame
 	self.frames.root:EnableMouse(false)
-end
-
-function WarpDeplete:CreateBadge(parent)
-	local badge = CreateFrame("Frame", nil, parent)
-	badge:SetSize(1, 1)
-	badge:SetFrameLevel(parent:GetFrameLevel() + 10)
-
-	badge.text = badge:CreateFontString(nil, "OVERLAY")
-	badge.text:SetPoint("LEFT", 0, 0)
-
-	function badge:SetBadgeText(text, font, size, flags, colorHex)
-		self.text:SetFont(font, size, flags)
-		self.text:SetText(text)
-		local r, g, b = WarpDeplete.Util.hexToRGB(colorHex)
-		-- Solid color to avoid "glitchy" look on bars
-		self.text:SetTextColor(r, g, b, 1)
-
-		local width = self.text:GetStringWidth()
-		local height = self.text:GetStringHeight()
-		self:SetSize(width, height)
-	end
-
-	badge:Hide()
-	return badge
 end
 
 ---@return number bar1 The fraction that the +1 bar should take up
@@ -294,7 +258,16 @@ function WarpDeplete:RenderLayout()
 	-- Timer splits text
 	local timerSplitText = self.frames.root.timerSplitText
 	timerSplitText:SetFont(self.LSM:Fetch("font", timerFont), timerFontSize * 0.6, timerFontFlags)
-	timerSplitText:Hide() -- We use the badge for PB, text for diffs
+	timerSplitText:SetNonSpaceWrap(false)
+	timerSplitText:SetJustifyH(alignRight and "RIGHT" or "LEFT")
+	timerSplitText:ClearAllPoints()
+	timerSplitText:SetPoint(
+		alignRight and "BOTTOMRIGHT" or "BOTTOMLEFT",
+		self.frames.root.timerText,
+		alignRight and "BOTTOMLEFT" or "BOTTOMRIGHT",
+		alignRight and -8 or 8,
+		2
+	)
 
 	currentOffset = currentOffset + timerText:GetStringHeight() + verticalOffset
 
@@ -567,50 +540,21 @@ function WarpDeplete:RenderTimer()
 		self.bars[i].text:SetText(timerState.timeText)
 	end
 
-self.frames.root.timerSplitText:SetText("")
+	self.frames.root.timerSplitText:SetText("")
+	self.frames.root.timerSplitText:Hide()
 	if self.db.profile.splitsEnabled then
 		local shouldShowSplits = self.db.profile.showSplitRecords == "always"
 			or (self.db.profile.showSplitRecords == "countdown" and not self.state.timerStarted)
 
 		if shouldShowSplits then
-			-- GetBestSplit returns both the time and the level it was recorded at
 			local best, sourceLevel = self:GetBestSplit("challenge")
-
 			if best then
 				local bestStr = Util.formatTime(best / 1000)
-				-- Append the source key level if it doesn't match (fallback)
 				if sourceLevel and sourceLevel ~= self.state.level then
 					bestStr = bestStr .. " (+" .. sourceLevel .. ")"
 				end
-
-				-- Main timer badge positioning (aligned with the timer text)
-				local alignRight = self.db.profile.alignTexts == "right"
-				local timerFont = self.db.profile.timerFont
-				local timerFontSize = self.db.profile.timerFontSize
-				local timerFontFlags = self.db.profile.timerFontFlags
-
-				local alignRight = self.db.profile.alignTexts == "right"
-				local timerFont = self.db.profile.timerFont
-				local timerFontSize = self.db.profile.timerFontSize
-				local timerFontFlags = self.db.profile.timerFontFlags
-
-				self.timerBadge:SetBadgeText(
-					bestStr,
-					self.LSM:Fetch("font", timerFont),
-					timerFontSize * 0.6,
-					timerFontFlags,
-					self.db.profile.splitReferenceColor
-				)
-
-				self.timerBadge:ClearAllPoints()
-				self.timerBadge:SetPoint(
-					alignRight and "BOTTOMRIGHT" or "BOTTOMLEFT",
-					self.frames.root.timerText,
-					alignRight and "BOTTOMLEFT" or "BOTTOMRIGHT",
-					alignRight and -8 or 8,
-					2
-				)
-				self.timerBadge:Show()
+				self.frames.root.timerSplitText:SetText("|c" .. self.db.profile.splitReferenceColor .. bestStr .. "|r")
+				self.frames.root.timerSplitText:Show()
 			end
 		end
 
@@ -621,7 +565,6 @@ self.frames.root.timerSplitText:SetText("")
 				local diffColor = diff <= 0 and self.db.profile.splitFasterTimeColor
 					or self.db.profile.splitSlowerTimeColor
 				local diffStr = "|c" .. diffColor .. Util.formatTime(diff / 1000, true) .. "|r"
-				self.timerBadge:Hide()
 				self.frames.root.timerSplitText:SetText(diffStr)
 				self.frames.root.timerSplitText:Show()
 			end
@@ -646,39 +589,6 @@ function WarpDeplete:RenderForces()
 	self.forces.bar:SetValue(self.state.currentPercent)
 
 	self.forces.text:SetText(self:FormatForcesText())
-
-	local splitsEnabled = self.db.profile.splitsEnabled
-	local shouldShowSplits = self.db.profile.showSplitRecords == "always"
-		or (self.db.profile.showSplitRecords == "countdown" and not self.state.timerStarted)
-	local forcesCompleted = self.state.forcesCompleted
-
-	self.forcesBadge:Hide()
-	if splitsEnabled and shouldShowSplits and not forcesCompleted then
-		local best = self:GetBestSplit("forces")
-		if best then
-			local alignRight = self.db.profile.alignBarTexts == "right"
-			local forcesFont = self.db.profile.forcesFont
-			local forcesFontSize = self.db.profile.forcesFontSize
-			local forcesFontFlags = self.db.profile.forcesFontFlags
-
-			self.forcesBadge:SetBadgeText(
-				Util.formatTime(best),
-				self.LSM:Fetch("font", forcesFont),
-				forcesFontSize * 0.8,
-				forcesFontFlags,
-				self.db.profile.splitReferenceColor
-			)
-
-			self.forcesBadge:ClearAllPoints()
-			-- Anchor the badge to the forces text for consistency with legacy positioning
-			if alignRight then
-				self.forcesBadge:SetPoint("RIGHT", self.forces.text, "LEFT", -8, 0)
-			else
-				self.forcesBadge:SetPoint("LEFT", self.forces.text, "RIGHT", 8, 0)
-			end
-			self.forcesBadge:Show()
-		end
-	end
 
 	-- Update glow state
 	if self.state.pullGlowActive and (self.state.challengeCompleted or self.state.forcesCompleted) then
@@ -731,7 +641,6 @@ function WarpDeplete:RenderObjectives()
 	-- Clear existing objective list
 	for i = 1, 10 do
 		self.frames.root.objectiveTexts[i]:SetText("")
-		self.objectiveBadges[i]:Hide()
 	end
 
 	for i, boss in ipairs(self.state.objectives) do
@@ -767,27 +676,13 @@ function WarpDeplete:RenderObjectives()
 		elseif shouldShowSplits then
 			local best = self:GetBestSplit(i)
 			if best then
-				-- We use badges here to allow smaller font size for PBs compared to boss names
-				local objectivesFont = self.db.profile.objectivesFont
-				local objectivesFontSize = self.db.profile.objectivesFontSize
-				local objectivesFontFlags = self.db.profile.objectivesFontFlags
+				local bestStr = "|c" .. self.db.profile.splitReferenceColor .. Util.formatTime(best) .. "|r"
 
-				self.objectiveBadges[i]:SetBadgeText(
-					Util.formatTime(best),
-					self.LSM:Fetch("font", objectivesFont),
-					objectivesFontSize * 0.8,
-					objectivesFontFlags,
-					self.db.profile.splitReferenceColor
-				)
-
-				self.objectiveBadges[i]:ClearAllPoints()
 				if alignStart then
-					self.objectiveBadges[i]:SetPoint("LEFT", self.frames.root.objectiveTexts[i], "LEFT", 0, 0)
-					objectiveStr = "    " .. objectiveStr -- Space for badge
+					objectiveStr = bestStr .. " " .. objectiveStr
 				else
-					self.objectiveBadges[i]:SetPoint("LEFT", self.frames.root.objectiveTexts[i], "RIGHT", 8, 0)
+					objectiveStr = objectiveStr .. " " .. bestStr
 				end
-				self.objectiveBadges[i]:Show()
 			end
 		end
 
@@ -887,8 +782,7 @@ function WarpDeplete:FormatForcesText()
 		result = result:gsub(":remainingpercentafterpull:", remainingPercentText .. "%%")
 	end
 
-	-- Record split display (PB) is handled by separate badge frames in RenderForces
-	-- to allow for different font scaling and cleaner positioning.
+	-- Record split display (PB)
 	if completionTime then
 		local completedText = ("%s"):format(Util.formatTime(completionTime))
 		if align == "right" then
@@ -906,6 +800,13 @@ function WarpDeplete:FormatForcesText()
 			else
 				result = result .. " " .. diffStr
 			end
+		end
+	elseif splitsEnabled and shouldShowSplits and best then
+		local bestStr = "|c" .. self.db.profile.splitReferenceColor .. Util.formatTime(best) .. "|r"
+		if align == "right" then
+			result = bestStr .. " " .. result
+		else
+			result = result .. " " .. bestStr
 		end
 	end
 
