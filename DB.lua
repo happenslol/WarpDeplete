@@ -136,7 +136,7 @@ local defaults = {
     fallbackSplitBehavior = "none",
     splitFasterTimeColor = "FF64FF64",
     splitSlowerTimeColor = "FFFF5656",
-    splitReferenceColor = "FFAAAAAA"
+    splitRecordsColor = "FFAAAAAA"
   },
 }
 

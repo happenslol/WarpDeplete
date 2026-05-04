@@ -602,6 +602,10 @@ function WarpDeplete:InitOptions()
 						end,
 					}),
 					lineBreak(),
+					color(L["Split Records Color"], "splitRecordsColor", "RenderLayout", {
+						desc = L["The color to use for personal best splits shown during the run"],
+					}),
+					lineBreak(),
 					{
 						type = "select",
 						name = L["Fallback Split Level"],
@@ -795,9 +799,6 @@ function WarpDeplete:InitOptions()
 					}),
 					color(L["Slower objective split"], "splitSlowerTimeColor", "RenderLayout", {
 						desc = L["The color to use for objective clear times slower than your best time"],
-					}),
-					color(L["Reference Split Color"], "splitReferenceColor", "RenderLayout", {
-						desc = L["The color to use for personal best splits shown during the run"],
 					}),
 				}),
 			}, { order = 4 }),

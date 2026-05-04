@@ -553,7 +553,7 @@ function WarpDeplete:RenderTimer()
 				if sourceLevel and sourceLevel ~= self.state.level then
 					bestStr = bestStr .. " (+" .. sourceLevel .. ")"
 				end
-				self.frames.root.timerSplitText:SetText("|c" .. self.db.profile.splitReferenceColor .. bestStr .. "|r")
+				self.frames.root.timerSplitText:SetText("|c" .. self.db.profile.splitRecordsColor .. bestStr .. "|r")
 				self.frames.root.timerSplitText:Show()
 			end
 		end
@@ -676,7 +676,7 @@ function WarpDeplete:RenderObjectives()
 		elseif shouldShowSplits then
 			local best = self:GetBestSplit(i)
 			if best then
-				local bestStr = "|c" .. self.db.profile.splitReferenceColor .. Util.formatTime(best) .. "|r"
+				local bestStr = "|c" .. self.db.profile.splitRecordsColor .. Util.formatTime(best) .. "|r"
 
 				if alignStart then
 					objectiveStr = bestStr .. " " .. objectiveStr
@@ -802,7 +802,7 @@ function WarpDeplete:FormatForcesText()
 			end
 		end
 	elseif splitsEnabled and shouldShowSplits and best then
-		local bestStr = "|c" .. self.db.profile.splitReferenceColor .. Util.formatTime(best) .. "|r"
+		local bestStr = "|c" .. self.db.profile.splitRecordsColor .. Util.formatTime(best) .. "|r"
 		if align == "right" then
 			result = bestStr .. " " .. result
 		else
