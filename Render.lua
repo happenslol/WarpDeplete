@@ -59,12 +59,9 @@ function WarpDeplete:InitRender()
 
 	-- Objectives
 	local objectiveTexts = {}
-
 	for i = 1, 10 do
-		local objectiveText = self.frames.root:CreateFontString(nil, "ARTWORK")
-		objectiveTexts[i] = objectiveText
+		objectiveTexts[i] = self.frames.root:CreateFontString(nil, "ARTWORK")
 	end
-
 	self.frames.root.objectiveTexts = objectiveTexts
 
 	self:RenderLayout()
@@ -544,17 +541,20 @@ function WarpDeplete:RenderTimer()
 	end
 
 	self.frames.root.timerSplitText:SetText("")
+	self.frames.root.timerSplitText:Hide()
 	if self.db.profile.splitsEnabled then
-		-- Show PBs during countdown
-		if self.db.profile.showPbsDuringCountdown and not self.state.timerStarted then
-			local best = self:GetBestSplit("challenge")
+		local shouldShowSplits = self.db.profile.showSplitRecords == "always"
+			or (self.db.profile.showSplitRecords == "countdown" and not self.state.timerStarted)
 
+		if shouldShowSplits then
+			local best, sourceLevel = self:GetBestSplit("challenge")
 			if best then
-				self.frames.root.timerSplitText:SetText("|c"
-					.. self.db.profile.splitFasterTimeColor
-					.. Util.formatTime(best / 1000)
-					.. "|r"
-				)
+				local bestStr = Util.formatTime(best / 1000)
+				if sourceLevel and sourceLevel ~= self.state.level then
+					bestStr = bestStr .. " (+" .. sourceLevel .. ")"
+				end
+				self.frames.root.timerSplitText:SetText("|c" .. self.db.profile.splitRecordsColor .. bestStr .. "|r")
+				self.frames.root.timerSplitText:Show()
 			end
 		end
 
@@ -566,6 +566,7 @@ function WarpDeplete:RenderTimer()
 					or self.db.profile.splitSlowerTimeColor
 				local diffStr = "|c" .. diffColor .. Util.formatTime(diff / 1000, true) .. "|r"
 				self.frames.root.timerSplitText:SetText(diffStr)
+				self.frames.root.timerSplitText:Show()
 			end
 		end
 	end
@@ -633,6 +634,9 @@ end
 function WarpDeplete:RenderObjectives()
 	local completionColor = self.db.profile.completedObjectivesColor
 	local alignStart = self.db.profile.alignBossClear == "start"
+	local shouldShowSplits = self.db.profile.splitsEnabled
+		and (self.db.profile.showSplitRecords == "always"
+			or (self.db.profile.showSplitRecords == "countdown" and not self.state.timerStarted))
 
 	-- Clear existing objective list
 	for i = 1, 10 do
@@ -644,7 +648,7 @@ function WarpDeplete:RenderObjectives()
 
 		if boss.time then
 			objectiveStr = Util.colorText(objectiveStr, completionColor)
-			local completionTimeStr = "[" .. Util.formatTime(boss.time) .. "]"
+			local completionTimeStr = Util.formatTime(boss.time)
 			completionTimeStr = Util.colorText(completionTimeStr, completionColor)
 
 			if alignStart then
@@ -669,10 +673,10 @@ function WarpDeplete:RenderObjectives()
 					end
 				end
 			end
-		elseif self.db.profile.splitsEnabled and self.db.profile.showPbsDuringCountdown and not self.state.timerStarted then
+		elseif shouldShowSplits then
 			local best = self:GetBestSplit(i)
 			if best then
-				local bestStr = "|c" .. self.db.profile.splitFasterTimeColor .. Util.formatTime(best) .. "|r"
+				local bestStr = "|c" .. self.db.profile.splitRecordsColor .. Util.formatTime(best) .. "|r"
 
 				if alignStart then
 					objectiveStr = bestStr .. " " .. objectiveStr
@@ -712,8 +716,8 @@ function WarpDeplete:FormatForcesText()
 	local align = self.db.profile.alignBarTexts
 
 	local best = self:GetBestSplit("forces")
-	local isStart = not self.state.timerStarted
-	local showPbsDuringCountdown = self.db.profile.showPbsDuringCountdown
+	local shouldShowSplits = self.db.profile.showSplitRecords == "always"
+		or (self.db.profile.showSplitRecords == "countdown" and not self.state.timerStarted)
 
 	local currentPercent = Util.calcForcesPercent((currentCount / totalCount) * 100)
 
@@ -778,8 +782,9 @@ function WarpDeplete:FormatForcesText()
 		result = result:gsub(":remainingpercentafterpull:", remainingPercentText .. "%%")
 	end
 
+	-- Record split display (PB)
 	if completionTime then
-		local completedText = ("[%s]"):format(Util.formatTime(completionTime))
+		local completedText = ("%s"):format(Util.formatTime(completionTime))
 		if align == "right" then
 			result = "|c" .. completedColor .. completedText .. " " .. result .. "|r"
 		else
@@ -796,8 +801,8 @@ function WarpDeplete:FormatForcesText()
 				result = result .. " " .. diffStr
 			end
 		end
-	elseif splitsEnabled and isStart and showPbsDuringCountdown and best then
-		local bestStr = "|c" .. splitFasterTimeColor .. Util.formatTime(best) .. "|r"
+	elseif splitsEnabled and shouldShowSplits and best then
+		local bestStr = "|c" .. self.db.profile.splitRecordsColor .. Util.formatTime(best) .. "|r"
 		if align == "right" then
 			result = bestStr .. " " .. result
 		else

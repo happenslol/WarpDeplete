@@ -25,13 +25,18 @@ function WarpDeplete:UpdateSplits()
 		splits.currentDiff = currentDiff
 	end
 
+	-- Resolve reference best times: uses fallback level if no record exists for the current level.
+	-- This ensures diffs are calculated even when comparing against a different key level.
+	local referenceSplits = self:GetReferenceSplits()
+	local referenceBest = (referenceSplits and referenceSplits.best) or best
+
 	for i, boss in ipairs(self.state.objectives) do
 		if boss.time and boss.time ~= current[i] then
 			self:PrintDebug("Setting current time for " .. tostring(i) .. ": " .. tostring(boss.time))
 			current[i] = boss.time
 
-			if best[i] then
-				currentDiff[i] = boss.time - best[i]
+			if referenceBest[i] then
+				currentDiff[i] = boss.time - referenceBest[i]
 				self:PrintDebug("Setting diff for " .. tostring(i) .. " to " .. tostring(currentDiff[i]))
 			end
 		elseif not boss.time then
@@ -44,8 +49,8 @@ function WarpDeplete:UpdateSplits()
 		self:PrintDebug("Setting current time for forces")
 		current.forces = self.state.forcesCompletionTime
 
-		if best.forces then
-			currentDiff.forces = self.state.forcesCompletionTime - best.forces
+		if referenceBest.forces then
+			currentDiff.forces = self.state.forcesCompletionTime - referenceBest.forces
 			self:PrintDebug("Setting diff for forces to " .. tostring(currentDiff.forces))
 		end
 	elseif not self.state.forcesCompleted then
@@ -57,8 +62,8 @@ function WarpDeplete:UpdateSplits()
 		self:PrintDebug("Setting current time for challenge")
 		current.challenge = self.state.completionTimeMs
 
-		if best.challenge then
-			currentDiff.challenge = self.state.completionTimeMs - best.challenge
+		if referenceBest.challenge then
+			currentDiff.challenge = self.state.completionTimeMs - referenceBest.challenge
 			self:PrintDebug("Setting diff for challenge to " .. tostring(currentDiff.challenge))
 		end
 	elseif not self.state.challengeCompleted then
@@ -69,6 +74,8 @@ function WarpDeplete:UpdateSplits()
 	self:PrintDebug("Splits updated")
 end
 
+--- Returns the time difference between the current run and the reference best for a given objective.
+--- Reads from the current instance splits, where UpdateSplits writes the diffs.
 ---@param objective integer|"forces"|"challenge"
 function WarpDeplete:GetCurrentDiff(objective)
 	if self.state.demoModeActive then
@@ -100,7 +107,9 @@ function WarpDeplete:GetCurrentDiff(objective)
 	return currentDiff[objective]
 end
 
+--- Returns the reference best time for a given objective, plus the key level it was recorded at.
 ---@param objective integer|"forces"|"challenge"
+---@return number|nil best, number|nil sourceLevel
 function WarpDeplete:GetBestSplit(objective)
 	if self.state.demoModeActive then
 		if type(objective) == "number" then
@@ -118,7 +127,8 @@ function WarpDeplete:GetBestSplit(objective)
 		return 0
 	end
 
-	local splits = self:GetSplitsForCurrentInstance()
+	-- Resolve the reference splits (current level or fallback) along with its source level
+	local splits, sourceLevel = self:GetReferenceSplits()
 	if not splits then
 		return nil
 	end
@@ -128,7 +138,8 @@ function WarpDeplete:GetBestSplit(objective)
 		return nil
 	end
 
-	return best[objective]
+	-- Return the best time for this objective and the level it came from
+	return best[objective], sourceLevel
 end
 
 function WarpDeplete:GetSplitsForCurrentInstance()
@@ -137,6 +148,79 @@ function WarpDeplete:GetSplitsForCurrentInstance()
 	end
 
 	return self:GetSplits(self.state.mapId, self.state.level)
+end
+
+--- Returns the split data to use as reference, and the key level it belongs to.
+--- If the current level has records, returns those. Otherwise, falls back to another
+--- level based on the user's fallbackSplitBehavior setting (highest, lowest, closest).
+---@return table|nil splits, number|nil sourceLevel
+function WarpDeplete:GetReferenceSplits()
+	if not self.state.mapId or not self.state.level then
+		return nil
+	end
+
+	local currentSplits = self:GetSplits(self.state.mapId, self.state.level)
+
+	-- If we have best splits for the current level, use them
+	if currentSplits and currentSplits.best and next(currentSplits.best) then
+		return currentSplits, self.state.level
+	end
+
+	local behavior = self.db.profile.fallbackSplitBehavior or "none"
+	if behavior == "none" then
+		return currentSplits, nil
+	end
+
+	local mapSplits = self.db.global.splits[self.state.mapId]
+	if not mapSplits then
+		return currentSplits, nil
+	end
+
+	local levels = {}
+	for level, data in pairs(mapSplits) do
+		if data.best and next(data.best) then
+			table.insert(levels, level)
+		end
+	end
+
+	if #levels == 0 then
+		return currentSplits, nil
+	end
+
+	table.sort(levels)
+
+	local targetLevel = nil
+	if behavior == "highest" then
+		targetLevel = levels[#levels]
+	elseif behavior == "lowest" then
+		targetLevel = levels[1]
+	elseif behavior == "closest_higher" then
+		for _, l in ipairs(levels) do
+			if l > self.state.level then
+				targetLevel = l
+				break
+			end
+		end
+		if not targetLevel then
+			targetLevel = levels[#levels]
+		end
+	elseif behavior == "closest_lower" then
+		for i = #levels, 1, -1 do
+			if levels[i] < self.state.level then
+				targetLevel = levels[i]
+				break
+			end
+		end
+		if not targetLevel then
+			targetLevel = levels[1]
+		end
+	end
+
+	if targetLevel then
+		return mapSplits[targetLevel], targetLevel
+	end
+
+	return currentSplits, nil
 end
 
 function WarpDeplete:GetSplits(mapId, keystoneLevel)

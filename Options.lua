@@ -565,18 +565,68 @@ function WarpDeplete:InitOptions()
 						end,
 						width = 3 / 2,
 					},
+					group(L["Show Split Records"], true, {
+						{
+							type = "toggle",
+							name = L["Always"],
+							get = function(_) return WarpDeplete.db.profile.showSplitRecords == "always" end,
+							set = function(_, _)
+								WarpDeplete.db.profile.showSplitRecords = "always"
+								WarpDeplete:RenderLayout()
+							end,
+							width = 0.6,
+						},
+						{
+							type = "toggle",
+							name = L["During Countdown"],
+							get = function(_) return WarpDeplete.db.profile.showSplitRecords == "countdown" end,
+							set = function(_, _)
+								WarpDeplete.db.profile.showSplitRecords = "countdown"
+								WarpDeplete:RenderLayout()
+							end,
+							width = 1.1,
+						},
+						{
+							type = "toggle",
+							name = L["Never"],
+							get = function(_) return WarpDeplete.db.profile.showSplitRecords == "never" end,
+							set = function(_, _)
+								WarpDeplete.db.profile.showSplitRecords = "never"
+								WarpDeplete:RenderLayout()
+							end,
+							width = 0.6,
+						},
+					}, {
+						hidden = function()
+							return not WarpDeplete.db.profile.splitsEnabled
+						end,
+					}),
+					lineBreak(),
+					color(L["Split Records Color"], "splitRecordsColor", "RenderLayout", {
+						desc = L["The color to use for personal best splits shown during the run"],
+					}),
+					lineBreak(),
 					{
-						type = "toggle",
-						name = L["Show split records during countdown"],
-						desc = L["Show your personal best times for splits during the countdown at the start of runs"],
+						type = "select",
+						name = L["Fallback Split Level"],
+						desc = L["If there is no record for the current key level, fallback to the highest or lowest recorded level for this dungeon."],
+						sorting = { "none", "highest", "closest_higher", "closest_lower", "lowest" },
+						values = {
+							["none"] = L["None"],
+							["highest"] = L["Highest Level"],
+							["closest_higher"] = L["Closest Higher Level"],
+							["closest_lower"] = L["Closest Lower Level"],
+							["lowest"] = L["Lowest Level"],
+						},
 						hidden = function()
 							return not WarpDeplete.db.profile.splitsEnabled
 						end,
 						get = function(_)
-							return WarpDeplete.db.profile.showPbsDuringCountdown
+							return WarpDeplete.db.profile.fallbackSplitBehavior or "none"
 						end,
 						set = function(_, value)
-							WarpDeplete.db.profile.showPbsDuringCountdown = value
+							WarpDeplete.db.profile.fallbackSplitBehavior = value
+							WarpDeplete:RenderLayout()
 						end,
 						width = 3 / 2,
 					},
