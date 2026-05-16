@@ -663,20 +663,31 @@ function WarpDeplete:InitOptions()
 							-- Populate the level dropdown with the levels actually recorded for the selected dungeon
 							values = function()
 								local values = { ["ALL"] = L["All Levels"] }
+								local levelsToInclude = {}
 								if selectedClearMapId ~= "ALL" then
 									local mapSplits = WarpDeplete.db.global.splits[tonumber(selectedClearMapId)]
 									if mapSplits then
 										for level, _ in pairs(mapSplits) do
-											values[tostring(level)] = "+" .. tostring(level)
+											levelsToInclude[level] = true
+										end
+									end
+								else
+									-- Aggregate levels from all dungeons
+									for _, mapSplits in pairs(WarpDeplete.db.global.splits) do
+										for level, _ in pairs(mapSplits) do
+											levelsToInclude[level] = true
 										end
 									end
 								end
+								
+								for level, _ in pairs(levelsToInclude) do
+									values[tostring(level)] = "+" .. tostring(level)
+								end
+								
 								return values
 							end,
 							get = function() return selectedClearLevel end,
 							set = function(_, value) selectedClearLevel = value end,
-							-- Disable this dropdown if "All Dungeons" is selected
-							disabled = function() return selectedClearMapId == "ALL" end,
 							width = 0.8,
 						},
 						{
@@ -687,20 +698,33 @@ function WarpDeplete:InitOptions()
 							confirm = function()
 								local count = 0
 								if selectedClearMapId == "ALL" then
-									for _, mapSplits in pairs(WarpDeplete.db.global.splits) do
-										for _ in pairs(mapSplits) do
-											count = count + 1
+									if selectedClearLevel == "ALL" then
+										-- Counting all levels across all dungeons
+										for _, mapSplits in pairs(WarpDeplete.db.global.splits) do
+											for _ in pairs(mapSplits) do
+												count = count + 1
+											end
+										end
+									else
+										-- Counting a specific level across all dungeons
+										local level = tonumber(selectedClearLevel)
+										for _, mapSplits in pairs(WarpDeplete.db.global.splits) do
+											if mapSplits[level] then
+												count = count + 1
+											end
 										end
 									end
 								else
 									local mapId = tonumber(selectedClearMapId)
 									if selectedClearLevel == "ALL" then
+										-- Counting all levels for a specific dungeon
 										if WarpDeplete.db.global.splits[mapId] then
 											for _ in pairs(WarpDeplete.db.global.splits[mapId]) do
 												count = count + 1
 											end
 										end
 									else
+										-- Deleting exactly one level for one dungeon
 										count = 1
 									end
 								end
@@ -714,8 +738,21 @@ function WarpDeplete:InitOptions()
 							confirmText = L["Are you sure you want to delete these splits?"],
 							func = function()
 								if selectedClearMapId == "ALL" then
-									-- Wipe the entire splits database
-									WarpDeplete.db.global.splits = {}
+									if selectedClearLevel == "ALL" then
+										-- Wipe the entire splits database
+										WarpDeplete.db.global.splits = {}
+									else
+										local level = tonumber(selectedClearLevel)
+										-- Wipe this specific level from ALL dungeons
+										for mapId, mapSplits in pairs(WarpDeplete.db.global.splits) do
+											if mapSplits[level] then
+												mapSplits[level] = nil
+												if next(mapSplits) == nil then
+													WarpDeplete.db.global.splits[mapId] = nil
+												end
+											end
+										end
+									end
 								else
 									local mapId = tonumber(selectedClearMapId)
 									if selectedClearLevel == "ALL" then
