@@ -2,7 +2,7 @@
 ## Title: WarpDeplete
 ## Notes-ruRU: WarpDeplete - таймер для М+ подземелий с гибкими настройками
 ## Author: Happens
-## Version: 5.2.0
+## Version: 5.3.0
 ## SavedVariables: WarpDepleteDB
 ## IconTexture: Interface\AddOns\WarpDeplete\logo
 ## X-Curse-Project-ID: 460155
