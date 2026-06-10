@@ -166,3 +166,4 @@ L["Unlocked"] = true
 L["Unlocks the timer window and allows it to be moved around"] = true
 L["Use the following tags to set your custom format"] = true
 L["WarpDeplete will not display the count for your current pull."] = true
+L["OUTLINESLUG"] = true

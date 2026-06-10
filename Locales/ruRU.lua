@@ -188,3 +188,4 @@ L["Unlocked"] = "Разблокировать"
 L["Unlocks the timer window and allows it to be moved around"] = "Разблокировать фрейм таймера и позволить перемещать его"
 L["Use the following tags to set your custom format"] = "Используйте следующие теги, чтобы установить собственный формат"
 L["WarpDeplete will not display the count for your current pull."] = "WarpDeplete не будет отображать количество Ваших текущих пуллов."
+L["OUTLINESLUG"] = true

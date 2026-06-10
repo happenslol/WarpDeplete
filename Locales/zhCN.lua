@@ -166,3 +166,4 @@ L["Unlocked"] = "解锁"
 L["Unlocks the timer window and allows it to be moved around"] = "解锁计时器窗口并允许其移动"
 L["Use the following tags to set your custom format"] = "使用以下标签设置自定义格式"
 L["WarpDeplete will not display the count for your current pull."] = "WarpDeplete 不会显示当前波次的进度。"
+L["OUTLINESLUG"] = true

@@ -166,3 +166,4 @@ L["Unlocked"] = "Entsperrt"
 L["Unlocks the timer window and allows it to be moved around"] = "Entsperrt das Timerfenster und ermöglicht es, es zu verschieben"
 L["Use the following tags to set your custom format"] = "Verwende die folgenden Tags, um Dein benutzerdefiniertes Format festzulegen"
 L["WarpDeplete will not display the count for your current pull."] = true
+L["OUTLINESLUG"] = true

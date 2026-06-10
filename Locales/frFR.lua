@@ -190,3 +190,4 @@ L["Unlocked"] = "Déverrouillé"
 L["Unlocks the timer window and allows it to be moved around"] = "Déverrouille la fenêtre pour la déplacer librement"
 L["Use the following tags to set your custom format"] = "Utilisez les balises suivantes pour créer votre format"
 L["WarpDeplete will not display the count for your current pull."] = "WarpDeplete n'affichera pas les valeurs du pack en combat."
+L["OUTLINESLUG"] = true

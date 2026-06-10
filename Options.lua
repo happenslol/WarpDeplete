@@ -82,9 +82,10 @@ local function fontFlags(name, profileVar, updateFn, extraOptions)
 		desc = L["Default:"] .. " " .. L["OUTLINE"],
 		values = {
 			["OUTLINE"] = L["OUTLINE"],
+			["OUTLINE SLUG"] = L["OUTLINESLUG"],
 			["THICKOUTLINE"] = L["THICKOUTLINE"],
 			["MONOCHROME"] = L["MONOCHROME"],
-			["NONE"] = L["NONE"],
+			[""] = L["NONE"],
 		},
 		get = function(_)
 			return WarpDeplete.db.profile[profileVar]

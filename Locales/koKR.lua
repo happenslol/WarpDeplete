@@ -166,3 +166,4 @@ L["Unlocked"] = "잠금 해제"
 L["Unlocks the timer window and allows it to be moved around"] = "타이머 창의 잠금을 해제하면 위치를 옮길 수 있습니다"
 L["Use the following tags to set your custom format"] = "형식을 사용자 임의로 설정하려면 다음의 태그를 사용하세요"
 L["WarpDeplete will not display the count for your current pull."] = "WarpDeplete는 현재 풀링한 몹의 기여도를 표시하지 않습니다."
+L["OUTLINESLUG"] = true
