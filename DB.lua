@@ -79,6 +79,7 @@ local defaults = {
     completedObjectivesColor = "FF00FF24",
 
     -- Bar textures
+    backdropTexture = "WarpDeplete Blank",
     bar1Texture = "WarpDeplete Blank",
     bar2Texture = "WarpDeplete Blank",
     bar3Texture = "WarpDeplete Blank",
@@ -86,6 +87,7 @@ local defaults = {
     forcesOverlayTexture = "WarpDeplete Blank",
 
     -- Bar colors
+    backdropTextureColor = "80000000",
     bar1TextureColor = "FF979797",
     bar2TextureColor = "FF979797",
     bar3TextureColor = "FF979797",

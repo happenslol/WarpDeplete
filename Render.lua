@@ -132,18 +132,19 @@ function WarpDeplete:CreateProgressBar(frame)
 		barFrame:SetSize(width, height)
 		barFrame:SetPoint("LEFT", xOffset, yOffset)
 		barFrame:SetBackdrop({
-			bgFile = WarpDeplete.LSM:Fetch("statusbar", "WarpDeplete Blank"),
+			bgFile = WarpDeplete.LSM:Fetch("statusbar", WarpDeplete.db.profile.backdropTexture),
 			edgeFile = WarpDeplete.LSM:Fetch("border", "WarpDeplete Blank"),
 			edgeSize = 1,
 			insets = { top = 1, right = 1, bottom = 1, left = 1 },
 		})
-		barFrame:SetBackdropColor(0, 0, 0, 0.5)
+		local backdropColorR, backdropColorG, backdropColorB, backdropColorA = Util.hexToRGB(WarpDeplete.db.profile.backdropTextureColor)
+		barFrame:SetBackdropColor(backdropColorR, backdropColorG, backdropColorB, backdropColorA)
 		barFrame:SetBackdropBorderColor(0, 0, 0, 1)
 
 		bar:SetPoint("CENTER", 0, 0)
 		bar:SetSize(width - 2, height - 2)
 
-		bar:SetStatusBarTexture(WarpDeplete.LSM:Fetch("statusbar", barTexture)--[[@as string]])
+		bar:SetStatusBarTexture(WarpDeplete.LSM:Fetch("statusbar", barTexture))
 		bar:SetStatusBarColor(r, g, b)
 	end
 

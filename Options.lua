@@ -885,6 +885,8 @@ function WarpDeplete:InitOptions()
 				group(L["Bars"], true, {
 					range(L["Bar width"], "barWidth", "RenderLayout", { width = "full", min = 10, max = 600 }),
 					range(L["Bar height"], "barHeight", "RenderLayout", { width = "full", min = 4, max = 50 }),
+					color(L["Bar background color"], "backdropTextureColor", "RenderLayout", { hasAlpha = true }),
+					barTexture(L["Bar background texture"], "backdropTexture", "RenderLayout", { width = "full" }),
 				}),
 
 				group(L["+1 Timer"], true, {
