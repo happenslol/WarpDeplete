@@ -164,8 +164,7 @@ function WarpDeplete:COMBAT_LOG_EVENT_UNFILTERED()
 		return
 	end
 
-	-- NOTE: We have to check health since we'd count feign death otherwise
-	if UnitInParty(name) and UnitHealth(name) <= 1 then
+	if UnitInParty(name) and UnitIsDead(name) then
 		local unitName = UnitName(name)
 		local class = select(2, UnitClass(name))
 		self:AddDeathDetails(self.state.timer, unitName, class)
