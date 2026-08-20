@@ -33,6 +33,8 @@ function WarpDeplete:OnInitialize()
 	self.frames = frames
 
 	self:HookObjectiveTracker()
+	self.hiddenParent = CreateFrame("Frame", "WarpDepleteSecureParent", UIParent, "SecureHandlerBaseTemplate")
+	self.hiddenParent:Show()
 end
 
 function WarpDeplete:OnEnable()
@@ -148,10 +150,10 @@ end
 function WarpDeplete:HookObjectiveTracker()
 	if not ObjectiveTrackerFrame then return end
 
-	hooksecurefunc(ObjectiveTrackerFrame, "Show", function()
-		-- Prevent objective tracker from re-showing
+	hooksecurefunc(ObjectiveTrackerFrame, "SetParent", function(_, newParent)
+		-- Prevent objective tracker from re-parenting
 		-- while WarpDeplete is shown
-		if self.isShown then ObjectiveTrackerFrame:Hide() end
+		if self.isShown and newParent ~= self.hiddenParent then self:HideObjectiveTracker() end
 	end)
 end
 
@@ -167,10 +169,15 @@ function WarpDeplete:ShowObjectiveTracker()
 		return
 	end
 
-	-- Just calling Show here is incorrect, since the frame
-	-- might actually be hidden (due to no quests being tracked).
-	-- Calling Update will correctly show/hide the frame.
-	ObjectiveTrackerFrame:Update()
+	if not InCombatLockdown() and self.originalObjectiveTrackerParent then
+		self.hiddenParent:Show()
+		ObjectiveTrackerFrame:SetParent(self.originalObjectiveTrackerParent)
+		-- Just calling Show here is incorrect, since the frame
+		-- might actually be hidden (due to no quests being tracked).
+		-- Calling Update will correctly show/hide the frame.
+		ObjectiveTrackerFrame:Show()
+		ObjectiveTrackerFrame:Update()
+	end
 end
 
 function WarpDeplete:HideObjectiveTracker()
@@ -179,7 +186,13 @@ function WarpDeplete:HideObjectiveTracker()
 		return
 	end
 
-	ObjectiveTrackerFrame:Hide()
+	if not InCombatLockdown() then
+		self.hiddenParent:Show()
+		self.originalObjectiveTrackerParent = ObjectiveTrackerFrame:GetParent()
+		ObjectiveTrackerFrame:SetParent(self.hiddenParent)
+		-- Securely hide the parent to avoid tainted execution of OnHide
+		self.hiddenParent:Execute("self:Hide()")
+	end
 end
 
 function WarpDeplete:Show()
