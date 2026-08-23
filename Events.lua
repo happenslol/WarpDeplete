@@ -217,6 +217,11 @@ function WarpDeplete:UNIT_DIED(_, guid)
 	local class = UnitClassFromGUID(guid)
 
 	if UnitInParty(name) then
+		for i = 1, 4 do
+			if UnitGUID("party" .. i) == guid and UnitIsFeignDeath("party" .. i) then
+				return
+			end
+		end
 		self:AddDeathDetails(self.state.timer, name, class)
 		return
 	end
