@@ -32,9 +32,13 @@ function WarpDeplete:OnInitialize()
 
 	self.frames = frames
 
-	self.hiddenParent = CreateFrame("Frame", "WarpDepleteSecureParent", UIParent, "SecureHandlerBaseTemplate")
-	self.hiddenParent:Show()
-	self:HookObjectiveTracker()
+	if ObjectiveTrackerFrame then
+		self.objectiveTrackerHandler = CreateFrame("Frame", nil, ObjectiveTrackerFrame, "SecureHandlerBaseTemplate")
+		self.objectiveTrackerHandler:SetFrameRef("tracker", ObjectiveTrackerFrame)
+		self.objectiveTrackerHandler:SetAttribute("hideTracker", false)
+		self.objectiveTrackerHandler:SetAttribute("restoreTracker", false)
+		self:HookObjectiveTracker()
+	end
 end
 
 function WarpDeplete:OnEnable()
@@ -148,31 +152,36 @@ function WarpDeplete:DisableDemoMode()
 end
 
 function WarpDeplete:HookObjectiveTracker()
-	if not ObjectiveTrackerFrame then return end
+	local handler = self.objectiveTrackerHandler
+	if not handler then return end
 
-	hooksecurefunc(ObjectiveTrackerFrame, "SetParent", function(_, newParent)
-		if self.isShown and newParent ~= self.hiddenParent then
-			self:HideObjectiveTracker()
+	handler:WrapScript(ObjectiveTrackerFrame, "OnShow", [[
+		if control:GetAttribute("hideTracker") then
+			control:SetAttribute("restoreTracker", true)
+			self:Hide()
+			return false
 		end
-	end)
+	]])
 end
 
 function WarpDeplete:ShowObjectiveTracker()
-	-- If SylingTracker is loaded, it will re-show itself
-	-- and we don't need to do anything.
-	if C_AddOns.IsAddOnLoaded("SylingTracker") then
-		return
-	end
-
 	if KalielsTracker and KalielsTracker.Toggle then
 		KalielsTracker:Toggle(true)
 		return
 	end
 
-	if not InCombatLockdown() and self.originalObjectiveTrackerParent then
-		self.hiddenParent:Show()
-		ObjectiveTrackerFrame:SetParent(self.originalObjectiveTrackerParent)
-		self.originalObjectiveTrackerParent = nil
+	local handler = self.objectiveTrackerHandler
+	if not handler or InCombatLockdown() then return end
+
+	local restoreTracker = handler:GetAttribute("restoreTracker")
+	handler:SetAttribute("hideTracker", false)
+	handler:SetAttribute("restoreTracker", false)
+
+	-- SylingTracker restores its own tracker state.
+	if C_AddOns.IsAddOnLoaded("SylingTracker") then return end
+
+	if restoreTracker then
+		handler:Execute([[self:GetFrameRef("tracker"):Show()]])
 	end
 end
 
@@ -182,14 +191,15 @@ function WarpDeplete:HideObjectiveTracker()
 		return
 	end
 
-	if not InCombatLockdown() then
-	if ObjectiveTrackerFrame:GetParent() ~= self.hiddenParent then
-		self.originalObjectiveTrackerParent = ObjectiveTrackerFrame:GetParent()
-		ObjectiveTrackerFrame:SetParent(self.hiddenParent)
+	local handler = self.objectiveTrackerHandler
+	if not handler or InCombatLockdown() then return end
+
+	if not handler:GetAttribute("hideTracker") then
+		handler:SetAttribute("restoreTracker", ObjectiveTrackerFrame:IsShown())
+		handler:SetAttribute("hideTracker", true)
 	end
 
-		self.hiddenParent:Execute("self:Hide()")
-	end
+	handler:Execute([[self:GetFrameRef("tracker"):Hide()]])
 end
 
 function WarpDeplete:Show()
