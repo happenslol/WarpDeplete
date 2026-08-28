@@ -32,6 +32,8 @@ function WarpDeplete:OnInitialize()
 
 	self.frames = frames
 
+	self.hiddenParent = CreateFrame("Frame", "WarpDepleteSecureParent", UIParent, "SecureHandlerBaseTemplate")
+	self.hiddenParent:Show()
 	self:HookObjectiveTracker()
 end
 
@@ -148,10 +150,10 @@ end
 function WarpDeplete:HookObjectiveTracker()
 	if not ObjectiveTrackerFrame then return end
 
-	hooksecurefunc(ObjectiveTrackerFrame, "Show", function()
-		-- Prevent objective tracker from re-showing
-		-- while WarpDeplete is shown
-		if self.isShown then ObjectiveTrackerFrame:Hide() end
+	hooksecurefunc(ObjectiveTrackerFrame, "SetParent", function(_, newParent)
+		if self.isShown and newParent ~= self.hiddenParent then
+			self:HideObjectiveTracker()
+		end
 	end)
 end
 
@@ -167,10 +169,11 @@ function WarpDeplete:ShowObjectiveTracker()
 		return
 	end
 
-	-- Just calling Show here is incorrect, since the frame
-	-- might actually be hidden (due to no quests being tracked).
-	-- Calling Update will correctly show/hide the frame.
-	ObjectiveTrackerFrame:Update()
+	if not InCombatLockdown() and self.originalObjectiveTrackerParent then
+		self.hiddenParent:Show()
+		ObjectiveTrackerFrame:SetParent(self.originalObjectiveTrackerParent)
+		self.originalObjectiveTrackerParent = nil
+	end
 end
 
 function WarpDeplete:HideObjectiveTracker()
@@ -179,7 +182,14 @@ function WarpDeplete:HideObjectiveTracker()
 		return
 	end
 
-	ObjectiveTrackerFrame:Hide()
+	if not InCombatLockdown() then
+	if ObjectiveTrackerFrame:GetParent() ~= self.hiddenParent then
+		self.originalObjectiveTrackerParent = ObjectiveTrackerFrame:GetParent()
+		ObjectiveTrackerFrame:SetParent(self.hiddenParent)
+	end
+
+		self.hiddenParent:Execute("self:Hide()")
+	end
 end
 
 function WarpDeplete:Show()
