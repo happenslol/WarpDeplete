@@ -33,6 +33,7 @@ function WarpDeplete:OnInitialize()
 	self.frames = frames
 
 	self:HookObjectiveTracker()
+	self:ApplyMawBuffsTaintWorkaround()
 end
 
 function WarpDeplete:OnEnable()
@@ -143,6 +144,18 @@ function WarpDeplete:DisableDemoMode()
 
 	self:Hide()
 	self:ResetState()
+end
+
+function WarpDeplete:ApplyMawBuffsTaintWorkaround()
+	-- The objective tracker checks ShouldShowMawBuffs before interacting with "MAW" auras (aka torghast powers)
+	-- When the tracker is tainted, this results in the tracker crashing mid-update, often leaving the tracker in a "frozen" state
+	-- Returning false when auras are secret, prevents the crash, with limited or no side-effects
+	local orig = ShouldShowMawBuffs
+	ShouldShowMawBuffs = function()
+		if C_Secrets.ShouldAurasBeSecret() then return false end
+
+		return orig()
+	end
 end
 
 function WarpDeplete:HookObjectiveTracker()
