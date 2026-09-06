@@ -30,6 +30,12 @@ function WarpDeplete:OnInitialize()
 	frames.bars = CreateFrame("Frame", "WarpDepleteBars", frames.root)
 	frames.deathsTooltip = CreateFrame("Frame", "WarpDepleteDeathsTooltip", frames.root)
 
+	-- Our own tooltip, so that showing the deaths list does not taint the shared
+	-- GameTooltip. Since 12.0, tainting it makes Blizzard code that later builds
+	-- widget-backed tooltips (area POI pins, for example) error on secret values.
+	frames.deathsGameTooltip =
+		CreateFrame("GameTooltip", "WarpDepleteDeathsGameTooltip", UIParent, "GameTooltipTemplate")
+
 	self.frames = frames
 
 	self:HookObjectiveTracker()
