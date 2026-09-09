@@ -31,9 +31,6 @@ function WarpDeplete:OnInitialize()
 	frames.deathsTooltip = CreateFrame("Frame", "WarpDepleteDeathsTooltip", frames.root)
 
 	self.frames = frames
-
-	self:HookObjectiveTracker()
-	self:ApplyMawBuffsTaintWorkaround()
 end
 
 function WarpDeplete:OnEnable()
@@ -146,28 +143,6 @@ function WarpDeplete:DisableDemoMode()
 	self:ResetState()
 end
 
-function WarpDeplete:ApplyMawBuffsTaintWorkaround()
-	-- The objective tracker checks ShouldShowMawBuffs before interacting with "MAW" auras (aka torghast powers)
-	-- When the tracker is tainted, this results in the tracker crashing mid-update, often leaving the tracker in a "frozen" state
-	-- Returning false when auras are secret, prevents the crash, with limited or no side-effects
-	local orig = ShouldShowMawBuffs
-	ShouldShowMawBuffs = function()
-		if C_Secrets.ShouldAurasBeSecret() then return false end
-
-		return orig()
-	end
-end
-
-function WarpDeplete:HookObjectiveTracker()
-	if not ObjectiveTrackerFrame then return end
-
-	hooksecurefunc(ObjectiveTrackerFrame, "Show", function()
-		-- Prevent objective tracker from re-showing
-		-- while WarpDeplete is shown
-		if self.isShown then ObjectiveTrackerFrame:Hide() end
-	end)
-end
-
 function WarpDeplete:ShowObjectiveTracker()
 	-- If SylingTracker is loaded, it will re-show itself
 	-- and we don't need to do anything.
@@ -180,10 +155,7 @@ function WarpDeplete:ShowObjectiveTracker()
 		return
 	end
 
-	-- Just calling Show here is incorrect, since the frame
-	-- might actually be hidden (due to no quests being tracked).
-	-- Calling Update will correctly show/hide the frame.
-	ObjectiveTrackerFrame:Update()
+	ObjectiveTrackerFrame:SetRolesets(nil)
 end
 
 function WarpDeplete:HideObjectiveTracker()
@@ -192,7 +164,7 @@ function WarpDeplete:HideObjectiveTracker()
 		return
 	end
 
-	ObjectiveTrackerFrame:Hide()
+	ObjectiveTrackerFrame:SetRolesets("alwaysBlocked")
 end
 
 function WarpDeplete:Show()
