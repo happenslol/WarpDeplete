@@ -233,18 +233,20 @@ function WarpDeplete.TooltipOnEnter()
 		return
 	end
 
-	GameTooltip:SetOwner(self.frames.deathsTooltip, "ANCHOR_BOTTOMLEFT", self.frames.deathsTooltip.offsetWidth)
+	local tooltip = self.frames.deathsGameTooltip
 
-	GameTooltip:ClearLines()
+	tooltip:SetOwner(self.frames.deathsTooltip, "ANCHOR_BOTTOMLEFT", self.frames.deathsTooltip.offsetWidth)
+
+	tooltip:ClearLines()
 
 	local count = #self.state.deathDetails
 	if count == 0 then
-		GameTooltip:AddLine(L["No Recorded Player Deaths"], 1, 1, 1)
-		GameTooltip:Show()
+		tooltip:AddLine(L["No Recorded Player Deaths"], 1, 1, 1)
+		tooltip:Show()
 		return
 	end
 
-	GameTooltip:AddLine(L["Player Deaths"], 1, 1, 1)
+	tooltip:AddLine(L["Player Deaths"], 1, 1, 1)
 	if self.db.profile.deathLogStyle == "time" then
 		local showFrom = 0
 		if count > 20 then
@@ -255,7 +257,7 @@ function WarpDeplete.TooltipOnEnter()
 			if i >= showFrom then
 				local color = select(4, GetClassColor(d.class))
 				local time = Util.formatTime(d.time)
-				GameTooltip:AddLine(time .. " - |c" .. color .. d.name .. "|r")
+				tooltip:AddLine(time .. " - |c" .. color .. d.name .. "|r")
 			end
 		end
 	elseif self.db.profile.deathLogStyle == "count" then
@@ -272,15 +274,15 @@ function WarpDeplete.TooltipOnEnter()
 		end
 
 		for name, deaths in pairs(countTable) do
-			GameTooltip:AddLine("|c" .. deaths.color .. name .. "|r|cFFFFFFFF: " .. tostring(deaths.count) .. "|r")
+			tooltip:AddLine("|c" .. deaths.color .. name .. "|r|cFFFFFFFF: " .. tostring(deaths.count) .. "|r")
 		end
 	end
 
-	GameTooltip:Show()
+	tooltip:Show()
 end
 
 function WarpDeplete.TooltipOnLeave()
-	GameTooltip_Hide()
+	WarpDeplete.frames.deathsGameTooltip:Hide()
 end
 
 function WarpDeplete.DisplayCountInTooltip(tt)
